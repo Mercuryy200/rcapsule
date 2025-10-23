@@ -7,5 +7,3 @@ export const login = async () => {
 export const logout = async () => {
     await signOut({ redirectTo: "/" });  
 };
-
-export { signOut, signIn };

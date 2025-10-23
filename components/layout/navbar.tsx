@@ -17,6 +17,7 @@ import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { SearchIcon } from "@/components/icons";
 import { SignOutButton } from "@/components/login/button";
+import AvatarIcon from "@/components/Avatar";
 export const NavbarLoggedIn = () => {
   const searchInput = (
     <Input
@@ -61,7 +62,9 @@ export const NavbarLoggedIn = () => {
         </NavbarItem>
         <NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>
         <NavbarItem className="hidden md:flex"></NavbarItem>
-        <NavbarMenuToggle className="justify-end" />
+        <NavbarMenuToggle className="justify-end">
+          <AvatarIcon />
+        </NavbarMenuToggle>
       </NavbarContent>
 
       <NavbarMenu>
@@ -128,12 +131,16 @@ export const NavbarLoggedOut = () => {
           <ThemeSwitch />
         </NavbarItem>
         <NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>
-        <Button>
-          <Link href="/login">Login</Link>
-        </Button>
-        <Button>
-          <Link href="/signUp">Sign Up</Link>
-        </Button>
+        <NavbarItem>
+          <Button as={NextLink} color="primary" href="/login" variant="flat">
+            Login
+          </Button>
+        </NavbarItem>
+        <NavbarItem>
+          <Button as={NextLink} color="primary" href="/signUp" variant="flat">
+            Sign Up
+          </Button>
+        </NavbarItem>
       </NavbarContent>
     </HeroUINavbar>
   );

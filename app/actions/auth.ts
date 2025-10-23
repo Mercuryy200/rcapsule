@@ -1,5 +1,5 @@
 "use server";
-import { signIn, signOut } from "@/auth";
+import { signIn, signOut } from "@/lib/actions/auth";
 
 export const login = async () => {
     await signIn("github", { redirectTo: "/" }); 
@@ -7,5 +7,3 @@ export const login = async () => {
 export const logout = async () => {
     await signOut({ redirectTo: "/" });  
 };
-
-export { signOut, signIn };

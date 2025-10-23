@@ -2,7 +2,6 @@
 import React from "react";
 import { Form, Input, Button } from "@heroui/react";
 import { SignInButtonGithub } from "./button";
-import { GithubIcon } from "../icons";
 
 export const LoginForm = () => {
   return (
@@ -33,7 +32,7 @@ export const LoginForm = () => {
           </Button>
           <Button type="reset" variant="flat" className="w-1/2">
             Reset
-          </Button>{" "}
+          </Button>
         </div>
         <SignInButtonGithub />
       </Form>

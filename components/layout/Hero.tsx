@@ -13,7 +13,7 @@ export default function Hero() {
           viewport={{ once: true }}
         >
           <span className={title()}>Organize your&nbsp;</span>
-          <span className={title({ color: "pink" })}>Closet&nbsp;</span>
+          <span className={title({ color: "blue" })}>Closet&nbsp;</span>
           <br />
           <span className={title()}>and find an outfit for the day</span>
         </motion.h1>
