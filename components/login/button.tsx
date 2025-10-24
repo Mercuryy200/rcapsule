@@ -1,6 +1,6 @@
 "use client";
 import { Button, Link } from "@heroui/react";
-import { login, logout } from "@/app/lib/actions/auth";
+import { login, logout } from "@/lib/actions/auth";
 import { GithubIcon } from "../icons";
 
 export const SignInButtonGoogle = () => {

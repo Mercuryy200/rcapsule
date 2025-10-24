@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import postgres from "postgres";
-import {users } from "../lib/placeholder-data";
+import {users } from "../../lib/placeholder-data";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
