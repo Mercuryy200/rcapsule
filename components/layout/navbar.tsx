@@ -137,7 +137,7 @@ export const NavbarLoggedOut = () => {
           </Button>
         </NavbarItem>
         <NavbarItem>
-          <Button as={NextLink} color="primary" href="/signUp" variant="flat">
+          <Button as={NextLink} color="primary" href="/signup" variant="flat">
             Sign Up
           </Button>
         </NavbarItem>

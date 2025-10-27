@@ -7,17 +7,18 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Auth models
 model User {
   id            String          @id @default(cuid())
   name          String?
   email         String          @unique
   emailVerified DateTime?
   image         String?
-  password      String?         // For credentials auth
+  password      String?
   accounts      Account[]
   sessions      Session[]
+  clothes       Clothes[]       // Add this relation
   
-  // Add your app-specific fields here
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 }
@@ -59,4 +60,28 @@ model VerificationToken {
   expires    DateTime
  
   @@id([identifier, token])
+}
+
+// Clothing tracker model
+model Clothes {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name         String
+  category     String   // 'shirt', 'pants', 'dress', 'shoes', 'jacket'
+  price        Float?
+  colors       String[] // Array of colors
+  season       String?  // 'spring', 'summer', 'fall', 'winter', 'all-season'
+  size         String?  // 'XS', 'S', 'M', 'L', 'XL', '32', '34'
+  link         String?  // URL to product page
+  imageUrl     String?  // URL to image
+  placesToWear String[] // Array of occasions: 'school', 'work', 'night out', etc.
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([category])
+  @@index([season])
 }
