@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
 
+import { auth } from "@/auth";
+
 const prisma = new PrismaClient();
+
 export async function GET() {
   try {
     const session = await auth();
@@ -21,12 +23,14 @@ export async function GET() {
         createdAt: "desc",
       },
     });
+
     return NextResponse.json(clothes);
   } catch (error) {
     console.error("Error fetching clothes:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch clothes" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -45,7 +49,7 @@ export async function POST(req: Request) {
     if (!data.name || !data.category) {
       return NextResponse.json(
         { error: "Name and category are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -67,9 +71,10 @@ export async function POST(req: Request) {
     return NextResponse.json(clothing, { status: 201 });
   } catch (error) {
     console.error("Error creating clothing:", error);
+
     return NextResponse.json(
       { error: "Failed to create clothing" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

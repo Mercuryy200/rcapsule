@@ -1,6 +1,5 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { logout } from "@/lib/actions/auth";
 import {
   Dropdown,
   DropdownTrigger,
@@ -9,6 +8,8 @@ import {
   DropdownItem,
   Link,
 } from "@heroui/react";
+
+import { logout } from "@/lib/actions/auth";
 
 export function ProfileDropdown() {
   const { data: session } = useSession();
@@ -35,13 +36,13 @@ export function ProfileDropdown() {
           <p className="font-semibold">Signed in as</p>
           <p className="font-semibold">{session.user.email}</p>
         </DropdownItem>
-        <DropdownItem as={Link} href="/settings" key="settings">
+        <DropdownItem key="settings" as={Link} href="/settings">
           My Settings
         </DropdownItem>
-        <DropdownItem as={Link} href="/closet" key="closet">
+        <DropdownItem key="closet" as={Link} href="/closet">
           My Closet
         </DropdownItem>
-        <DropdownItem key="logout" onPress={() => logout()} color="danger">
+        <DropdownItem key="logout" color="danger" onPress={() => logout()}>
           Log Out
         </DropdownItem>
       </DropdownMenu>

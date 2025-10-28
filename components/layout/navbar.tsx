@@ -3,20 +3,18 @@ import {
   Navbar as HeroUINavbar,
   NavbarContent,
   NavbarMenu,
-  NavbarMenuToggle,
   NavbarItem,
-  NavbarMenuItem,
   Button,
 } from "@heroui/react";
 import { Input } from "@heroui/input";
 import { link as linkStyles } from "@heroui/theme";
 import NextLink from "next/link";
 import clsx from "clsx";
+
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { SearchIcon } from "@/components/icons";
 import { ProfileDropdown } from "@/components/login/dropdown";
-import AvatarIcon from "@/components/Avatar";
 export const NavbarLoggedIn = () => {
   const searchInput = (
     <Input
@@ -43,7 +41,7 @@ export const NavbarLoggedIn = () => {
               <NextLink
                 className={clsx(
                   linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium"
+                  "data-[active=true]:text-primary data-[active=true]:font-medium",
                 )}
                 color="foreground"
                 href={item.href}
@@ -60,7 +58,7 @@ export const NavbarLoggedIn = () => {
           <ThemeSwitch />
         </NavbarItem>
         <NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>
-        <NavbarItem className="hidden md:flex"></NavbarItem>
+        <NavbarItem className="hidden md:flex" />
         <NavbarItem>
           <ProfileDropdown />
         </NavbarItem>
@@ -102,7 +100,7 @@ export const NavbarLoggedOut = () => {
               <NextLink
                 className={clsx(
                   linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium"
+                  "data-[active=true]:text-primary data-[active=true]:font-medium",
                 )}
                 color="foreground"
                 href={item.href}

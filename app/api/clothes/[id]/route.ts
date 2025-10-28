@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
+
+import { auth } from "@/auth";
 
 const prisma = new PrismaClient();
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -27,23 +28,24 @@ export async function GET(
     if (!clothing) {
       return NextResponse.json(
         { error: "Clothing not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     return NextResponse.json(clothing);
   } catch (error) {
     console.error("Error fetching clothing:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch clothing" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -76,23 +78,24 @@ export async function PUT(
     if (clothing.count === 0) {
       return NextResponse.json(
         { error: "Clothing not found or unauthorized" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     return NextResponse.json({ message: "Updated successfully" });
   } catch (error) {
     console.error("Error updating clothing:", error);
+
     return NextResponse.json(
       { error: "Failed to update clothing" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -113,16 +116,17 @@ export async function DELETE(
     if (clothing.count === 0) {
       return NextResponse.json(
         { error: "Clothing not found or unauthorized" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     return NextResponse.json({ message: "Deleted successfully" });
   } catch (error) {
     console.error("Error deleting clothing:", error);
+
     return NextResponse.json(
       { error: "Failed to delete clothing" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

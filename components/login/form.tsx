@@ -1,9 +1,10 @@
 "use client";
 import React, { Suspense, useState } from "react";
 import { Form, Input, Button, Link } from "@heroui/react";
-import { SignInButtonGithub } from "./button";
 import { useSearchParams, useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+
+import { SignInButtonGithub } from "./button";
 
 function LoginFormContent() {
   const searchParams = useSearchParams();
@@ -73,14 +74,14 @@ function LoginFormContent() {
 
         <div className="flex w-full gap-2">
           <Button
-            color="primary"
-            type="submit"
             className="w-1/2"
+            color="primary"
             isLoading={isLoading}
+            type="submit"
           >
             Sign In
           </Button>
-          <Button type="reset" variant="flat" className="w-1/2">
+          <Button className="w-1/2" type="reset" variant="flat">
             Reset
           </Button>
         </div>
@@ -100,7 +101,7 @@ function LoginFormContent() {
 
         <div className="text-center text-sm mt-4">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-primary hover:underline">
+          <Link className="text-primary hover:underline" href="/signup">
             Sign up
           </Link>
         </div>

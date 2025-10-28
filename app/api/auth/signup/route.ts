@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     }
 
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
 
     if (existingUser) {
@@ -33,13 +33,13 @@ export async function POST(req: Request) {
         email,
         password: hashedPassword,
         name: name || null,
-      }
+      },
     });
 
     return NextResponse.json(
-      { 
+      {
         message: "User created successfully",
-        user: { id: user.id, email: user.email, name: user.name }
+        user: { id: user.id, email: user.email, name: user.name },
       },
       { status: 201 }
     );

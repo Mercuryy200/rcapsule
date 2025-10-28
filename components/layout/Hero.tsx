@@ -1,6 +1,7 @@
 "use client";
-import { title, subtitle } from "@/components/primitives";
 import { motion } from "framer-motion";
+
+import { title, subtitle } from "@/components/primitives";
 export default function Hero() {
   return (
     <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
@@ -8,9 +9,9 @@ export default function Hero() {
         <motion.h1
           className="text-5xl"
           initial={{ opacity: 0, x: -100 }}
-          whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
+          whileInView={{ opacity: 1, x: 0 }}
         >
           <span className={title()}>Organize your&nbsp;</span>
           <span className={title({ color: "blue" })}>Closet&nbsp;</span>
@@ -21,9 +22,9 @@ export default function Hero() {
         <motion.h2
           className="text-xl mt-4"
           initial={{ opacity: 0, x: -100 }}
-          whileInView={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}
           viewport={{ once: true }}
+          whileInView={{ opacity: 1, x: 0 }}
         >
           <div className={subtitle({ class: "mt-4" })}>
             Simplify your wardrobe management with our intuitive closet

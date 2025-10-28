@@ -40,9 +40,32 @@ const categories = [
   "shoes",
   "jacket",
   "accessories",
+  "tank top",
+  "denim",
+  "underwear",
 ];
 const seasons = ["spring", "summer", "fall", "winter", "all-season"];
-const occasions = ["casual", "work", "formal", "sports", "party", "school"];
+const occasions = [
+  "casual",
+  "work",
+  "formal",
+  "sports",
+  "party",
+  "school",
+  "home",
+];
+const colors = [
+  "red",
+  "blue",
+  "green",
+  "black",
+  "white",
+  "gray",
+  "brown",
+  "pink",
+  "yellow",
+  "purple",
+];
 
 export default function ClosetPage() {
   const { data: session, status } = useSession();
@@ -57,12 +80,12 @@ export default function ClosetPage() {
     name: "",
     category: "",
     price: "",
-    colors: "",
+    colors: [] as string[],
     season: "",
     size: "",
     link: "",
     imageUrl: "",
-    placesToWear: "",
+    placesToWear: [] as string[],
   });
 
   useEffect(() => {
@@ -76,8 +99,10 @@ export default function ClosetPage() {
   const fetchClothes = async () => {
     try {
       const response = await fetch("/api/clothes");
+
       if (response.ok) {
         const data = await response.json();
+
         setClothes(data);
       }
     } catch (error) {
@@ -93,12 +118,12 @@ export default function ClosetPage() {
       name: "",
       category: "",
       price: "",
-      colors: "",
+      colors: [] as string[],
       season: "",
       size: "",
       link: "",
       imageUrl: "",
-      placesToWear: "",
+      placesToWear: [] as string[],
     });
     onOpen();
   };
@@ -110,33 +135,26 @@ export default function ClosetPage() {
       name: item.name,
       category: item.category,
       price: item.price?.toString() || "",
-      colors: item.colors.join(", "),
+      colors: item.colors || [],
       season: item.season || "",
       size: item.size || "",
       link: item.link || "",
       imageUrl: item.imageUrl || "",
-      placesToWear: item.placesToWear.join(", "),
+      placesToWear: item.placesToWear || [],
     });
     onOpen();
   };
-
   const handleSubmit = async () => {
     const data = {
       name: formData.name,
       category: formData.category,
       price: formData.price ? parseFloat(formData.price) : null,
-      colors: formData.colors
-        .split(",")
-        .map((c) => c.trim())
-        .filter(Boolean),
+      colors: formData.colors,
       season: formData.season || null,
       size: formData.size || null,
       link: formData.link || null,
       imageUrl: formData.imageUrl || null,
-      placesToWear: formData.placesToWear
-        .split(",")
-        .map((p) => p.trim())
-        .filter(Boolean),
+      placesToWear: formData.placesToWear,
     };
 
     try {
@@ -202,9 +220,9 @@ export default function ClosetPage() {
             <Card key={item.id} className="w-full">
               <CardBody className="p-0">
                 <Image
-                  src={item.imageUrl || "/images/placeholder.png"}
                   alt={item.name}
-                  className="w-full h-64 object-cover"
+                  className="w-full object-cover"
+                  src={item.imageUrl || "/images/placeholder.png"}
                 />
               </CardBody>
               <CardFooter className="flex flex-col items-start gap-2">
@@ -226,20 +244,20 @@ export default function ClosetPage() {
                 </div>
                 <div className="flex gap-2 w-full mt-2">
                   <Button
-                    size="sm"
+                    className="flex-1"
                     color="primary"
+                    size="sm"
                     variant="flat"
                     onPress={() => handleOpenEdit(item)}
-                    className="flex-1"
                   >
                     Edit
                   </Button>
                   <Button
-                    size="sm"
+                    className="flex-1"
                     color="danger"
+                    size="sm"
                     variant="flat"
                     onPress={() => handleDelete(item.id)}
-                    className="flex-1"
                   >
                     Delete
                   </Button>
@@ -250,28 +268,28 @@ export default function ClosetPage() {
         </div>
       )}
 
-      <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+      <Modal isOpen={isOpen} size="2xl" onClose={onClose}>
         <ModalContent>
           <ModalHeader>{isEditing ? "Edit Item" : "Add New Item"}</ModalHeader>
           <ModalBody>
             <div className="flex flex-col gap-4">
               <Input
+                isRequired
                 label="Name"
                 placeholder="e.g., Blue Denim Jacket"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                isRequired
               />
               <Select
+                isRequired
                 label="Category"
                 placeholder="Select category"
                 selectedKeys={formData.category ? [formData.category] : []}
                 onChange={(e) =>
                   setFormData({ ...formData, category: e.target.value })
                 }
-                isRequired
               >
                 {categories.map((cat) => (
                   <SelectItem key={cat}>{cat}</SelectItem>
@@ -286,14 +304,21 @@ export default function ClosetPage() {
                   setFormData({ ...formData, price: e.target.value })
                 }
               />
-              <Input
+              <Select
                 label="Colors"
-                placeholder="blue, white (comma separated)"
-                value={formData.colors}
-                onChange={(e) =>
-                  setFormData({ ...formData, colors: e.target.value })
-                }
-              />
+                placeholder="Select colors"
+                selectionMode="multiple"
+                selectedKeys={new Set(formData.colors || [])}
+                onSelectionChange={(keys) => {
+                  const selectedArray = Array.from(keys) as string[];
+                  setFormData({ ...formData, colors: selectedArray });
+                }}
+              >
+                {colors.map((color) => (
+                  <SelectItem key={color}>{color}</SelectItem>
+                ))}
+              </Select>
+
               <Select
                 label="Season"
                 placeholder="Select season"
@@ -330,14 +355,20 @@ export default function ClosetPage() {
                   setFormData({ ...formData, imageUrl: e.target.value })
                 }
               />
-              <Input
+              <Select
                 label="Places to Wear"
-                placeholder="casual, work, party (comma separated)"
-                value={formData.placesToWear}
-                onChange={(e) =>
-                  setFormData({ ...formData, placesToWear: e.target.value })
-                }
-              />
+                placeholder="Select places"
+                selectionMode="multiple"
+                selectedKeys={new Set(formData.placesToWear || [])}
+                onSelectionChange={(keys) => {
+                  const selectedArray = Array.from(keys) as string[];
+                  setFormData({ ...formData, placesToWear: selectedArray });
+                }}
+              >
+                {occasions.map((occasion) => (
+                  <SelectItem key={occasion}>{occasion}</SelectItem>
+                ))}
+              </Select>
             </div>
           </ModalBody>
           <ModalFooter>

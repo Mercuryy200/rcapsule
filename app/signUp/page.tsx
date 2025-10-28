@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Form, Input, Button } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
 import { title } from "@/components/primitives";
 import { SignInButtonGithub } from "@/components/login/button";
 
@@ -26,6 +27,7 @@ export default function SignUpPage() {
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       setIsLoading(false);
+
       return;
     }
 
@@ -43,6 +45,7 @@ export default function SignUpPage() {
       if (!response.ok) {
         setError(data.error || "Something went wrong");
         setIsLoading(false);
+
         return;
       }
 
@@ -52,6 +55,7 @@ export default function SignUpPage() {
       setIsLoading(false);
     }
   };
+
   return (
     <div>
       <h1 className={title()}>Sign Up</h1>
@@ -85,10 +89,10 @@ export default function SignUpPage() {
             errorMessage="Please enter a password"
             label="Password"
             labelPlacement="outside"
+            minLength={6}
             name="password"
             placeholder="Enter your password"
             type="password"
-            minLength={6}
           />
 
           <Input
@@ -105,21 +109,21 @@ export default function SignUpPage() {
 
           <div className="flex w-full gap-2">
             <Button
-              color="primary"
-              type="submit"
               className="w-1/2"
+              color="primary"
               isLoading={isLoading}
+              type="submit"
             >
               Sign Up
             </Button>
-            <Button type="reset" variant="flat" className="w-1/2">
+            <Button className="w-1/2" type="reset" variant="flat">
               Reset
             </Button>
           </div>
-          <SignInButtonGithub></SignInButtonGithub>
+          <SignInButtonGithub />
           <div className="text-center text-sm mt-4">
             Already have an account?{" "}
-            <Link href="/login" className="text-primary hover:underline">
+            <Link className="text-primary hover:underline" href="/login">
               Sign in
             </Link>
           </div>
