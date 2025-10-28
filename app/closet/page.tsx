@@ -53,7 +53,6 @@ export default function ClosetPage() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isEditing, setIsEditing] = useState(false);
 
-  // Form state
   const [formData, setFormData] = useState({
     name: "",
     category: "",

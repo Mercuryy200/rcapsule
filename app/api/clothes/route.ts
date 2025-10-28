@@ -7,6 +7,9 @@ export async function GET() {
   try {
     const session = await auth();
 
+    console.log("Session:", JSON.stringify(session, null, 2));
+    console.log("User ID:", session?.user?.id);
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -31,6 +34,8 @@ export async function POST(req: Request) {
   try {
     const session = await auth();
 
+    console.log("Session:", JSON.stringify(session, null, 2));
+    console.log("User ID:", session?.user?.id);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
