@@ -24,6 +24,7 @@ interface ClothingItem {
   id: string;
   name: string;
   category: string;
+  brand?: string;
   price?: number;
   colors: string[];
   season?: string;
@@ -84,6 +85,7 @@ export default function ClosetPage() {
     season: "",
     size: "",
     link: "",
+    brand: "",
     imageUrl: "",
     placesToWear: [] as string[],
   });
@@ -122,6 +124,7 @@ export default function ClosetPage() {
       season: "",
       size: "",
       link: "",
+      brand: "",
       imageUrl: "",
       placesToWear: [] as string[],
     });
@@ -139,6 +142,7 @@ export default function ClosetPage() {
       season: item.season || "",
       size: item.size || "",
       link: item.link || "",
+      brand: item.brand || "",
       imageUrl: item.imageUrl || "",
       placesToWear: item.placesToWear || [],
     });
@@ -280,6 +284,14 @@ export default function ClosetPage() {
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
+                }
+              />
+              <Input
+                label="Brand"
+                placeholder="e.g., Nike, Zara, H&M"
+                value={formData.brand}
+                onChange={(e) =>
+                  setFormData({ ...formData, brand: e.target.value })
                 }
               />
               <Select

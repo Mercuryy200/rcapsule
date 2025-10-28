@@ -56,6 +56,7 @@ CREATE TABLE "Clothes" (
     "userId" TEXT NOT NULL,
     "wardrobeId" TEXT,
     "name" TEXT NOT NULL,
+    "brand" TEXT,
     "category" TEXT NOT NULL,
     "price" DOUBLE PRECISION,
     "colors" TEXT[],

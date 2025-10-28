@@ -65,6 +65,7 @@ model Clothes {
   wardrobeId   String?
   name         String
   category     String
+  brand        String?
   price        Float?
   colors       String[]
   season       String?

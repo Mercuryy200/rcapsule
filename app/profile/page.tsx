@@ -173,6 +173,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {wardrobes.map((wardrobe) => (
             <Card
+              as="div"
               key={wardrobe.id}
               isPressable
               onPress={() => router.push(`/wardrobe/${wardrobe.id}`)}
