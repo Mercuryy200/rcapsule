@@ -90,7 +90,6 @@ export async function PUT(
   }
 }
 
-// DELETE - Delete a clothing item
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -102,7 +101,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params; // Await params here
+    const { id } = await params;
 
     const clothing = await prisma.clothes.deleteMany({
       where: {
