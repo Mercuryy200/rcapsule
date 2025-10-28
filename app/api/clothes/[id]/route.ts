@@ -4,7 +4,6 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// GET - Fetch a single clothing item
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -16,7 +15,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params; // Await params here
+    const { id } = await params;
 
     const clothing = await prisma.clothes.findFirst({
       where: {
@@ -42,7 +41,6 @@ export async function GET(
   }
 }
 
-// PUT - Update a clothing item
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -54,7 +52,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params; // Await params here
+    const { id } = await params;
     const data = await req.json();
 
     const clothing = await prisma.clothes.updateMany({

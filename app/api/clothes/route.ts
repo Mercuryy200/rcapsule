@@ -44,7 +44,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create the clothing item
     const clothing = await prisma.clothes.create({
       data: {
         userId: session.user.id,
