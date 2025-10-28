@@ -9,15 +9,13 @@ export async function GET() {
   try {
     const session = await auth();
 
-    console.log("Session:", JSON.stringify(session, null, 2));
-    console.log("User ID:", session?.user?.id);
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const clothes = await prisma.clothes.findMany({
       where: {
         userId: session.user.id,
+        ...(wardrobeId && { wardrobeId }),
       },
       orderBy: {
         createdAt: "desc",
@@ -30,7 +28,7 @@ export async function GET() {
 
     return NextResponse.json(
       { error: "Failed to fetch clothes" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -49,7 +47,7 @@ export async function POST(req: Request) {
     if (!data.name || !data.category) {
       return NextResponse.json(
         { error: "Name and category are required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -74,7 +72,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { error: "Failed to create clothing" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

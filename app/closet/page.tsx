@@ -218,10 +218,10 @@ export default function ClosetPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {clothes.map((item) => (
             <Card key={item.id} className="w-full">
-              <CardBody className="p-0">
+              <CardBody className="p-0 w-relative h-80">
                 <Image
                   alt={item.name}
-                  className="w-full object-cover"
+                  className="object-center "
                   src={item.imageUrl || "/images/placeholder.png"}
                 />
               </CardBody>
