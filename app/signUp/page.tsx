@@ -4,6 +4,7 @@ import { Form, Input, Button } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { title } from "@/components/primitives";
+import { SignInButtonGithub } from "@/components/login/button";
 
 export default function SignUpPage() {
   const [error, setError] = useState<string>("");
@@ -115,7 +116,7 @@ export default function SignUpPage() {
               Reset
             </Button>
           </div>
-
+          <SignInButtonGithub></SignInButtonGithub>
           <div className="text-center text-sm mt-4">
             Already have an account?{" "}
             <Link href="/login" className="text-primary hover:underline">

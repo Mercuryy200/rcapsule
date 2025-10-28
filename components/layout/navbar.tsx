@@ -8,7 +8,6 @@ import {
   NavbarMenuItem,
   Button,
 } from "@heroui/react";
-import { Link } from "@heroui/link";
 import { Input } from "@heroui/input";
 import { link as linkStyles } from "@heroui/theme";
 import NextLink from "next/link";
@@ -16,7 +15,7 @@ import clsx from "clsx";
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { SearchIcon } from "@/components/icons";
-import { SignOutButton } from "@/components/login/button";
+import { ProfileDropdown } from "@/components/login/dropdown";
 import AvatarIcon from "@/components/Avatar";
 export const NavbarLoggedIn = () => {
   const searchInput = (
@@ -62,27 +61,16 @@ export const NavbarLoggedIn = () => {
         </NavbarItem>
         <NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>
         <NavbarItem className="hidden md:flex"></NavbarItem>
-        <NavbarMenuToggle className="justify-end">
-          <AvatarIcon />
-        </NavbarMenuToggle>
+        <NavbarItem>
+          <ProfileDropdown />
+        </NavbarItem>
       </NavbarContent>
 
       <NavbarMenu>
         {searchInput}
-        <div className="mx-4 mt-2 flex flex-col gap-2">
-          <NavbarMenuItem>
-            <Link>Profile</Link>
-          </NavbarMenuItem>
-          <NavbarMenuItem>
-            <Link>Dashboard</Link>
-          </NavbarMenuItem>
-          <NavbarMenuItem>
-            <Link>Settings</Link>
-          </NavbarMenuItem>
-          <NavbarMenuItem>
-            <SignOutButton />
-          </NavbarMenuItem>
-        </div>
+        <NavbarItem>
+          <ProfileDropdown />
+        </NavbarItem>
       </NavbarMenu>
     </HeroUINavbar>
   );
