@@ -10,8 +10,8 @@ export function middleware(req: NextRequest) {
 
   if (isProtected) {
     const sessionToken =
-      req.cookies.get("next-auth.session-token")?.value || // Production
-      req.cookies.get("__Secure-next-auth.session-token")?.value; // HTTPS
+      req.cookies.get("next-auth.session-token")?.value ||
+      req.cookies.get("__Secure-next-auth.session-token")?.value;
 
     if (!sessionToken) {
       const loginUrl = new URL("/login", req.url);

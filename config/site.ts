@@ -8,10 +8,13 @@ export const siteConfig = {
       label: "Home",
       href: "/",
     },
-
     {
-      label: "About",
-      href: "/about",
+      label: "Closet",
+      href: "/closet",
+    },
+    {
+      label: "Profile",
+      href: "/profile",
     },
   ],
   navMenuItems: [
@@ -33,6 +36,6 @@ export const siteConfig = {
     },
   ],
   links: {
-    github: "https://github.com/Mercuryy200/StockPortfolioTracker",
+    github: "https://github.com/Mercuryy200/ClosetOrganizer",
   },
 };
