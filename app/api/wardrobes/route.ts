@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
+
+import { auth } from "@/auth";
 
 const prisma = new PrismaClient();
 
@@ -40,9 +41,10 @@ export async function GET() {
     return NextResponse.json(wardrobesWithCount);
   } catch (error) {
     console.error("Error fetching wardrobes:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch wardrobes" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -74,9 +76,10 @@ export async function POST(req: Request) {
     return NextResponse.json(wardrobe, { status: 201 });
   } catch (error) {
     console.error("Error creating wardrobe:", error);
+
     return NextResponse.json(
       { error: "Failed to create wardrobe" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

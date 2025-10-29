@@ -119,6 +119,7 @@ export default function ProfilePage() {
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6">
+      {/* Profile Header */}
       <div className="flex items-start gap-6 mb-8">
         <Avatar
           src={session?.user?.image || undefined}
@@ -149,6 +150,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Wardrobes Section */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">My Wardrobes</h2>
         <Button
@@ -173,7 +175,6 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {wardrobes.map((wardrobe) => (
             <Card
-              as="div"
               key={wardrobe.id}
               isPressable
               onPress={() => router.push(`/wardrobe/${wardrobe.id}`)}
@@ -187,12 +188,20 @@ export default function ProfilePage() {
                   </p>
                 </div>
                 <div
+                  role="button"
+                  tabIndex={0}
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleWardrobeVisibility(wardrobe.id, wardrobe.isPublic);
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.stopPropagation();
+                      toggleWardrobeVisibility(wardrobe.id, wardrobe.isPublic);
+                    }
+                  }}
                 >
-                  <Button isIconOnly size="sm" variant="light">
+                  <Button as="div" isIconOnly size="sm" variant="light">
                     {wardrobe.isPublic ? (
                       <GlobeAltIcon className="w-5 h-5 text-success" />
                     ) : (
@@ -220,6 +229,7 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* Create Wardrobe Modal */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalContent>
           <ModalHeader>Create New Wardrobe</ModalHeader>

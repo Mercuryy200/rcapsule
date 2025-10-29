@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
 
+import { auth } from "@/auth";
+
 const prisma = new PrismaClient();
+
 export async function PUT(req: Request) {
   try {
     const session = await auth();
@@ -27,9 +29,10 @@ export async function PUT(req: Request) {
     });
   } catch (error) {
     console.error("Error updating profile:", error);
+
     return NextResponse.json(
       { error: "Failed to update profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

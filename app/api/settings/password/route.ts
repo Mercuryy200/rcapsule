@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+
+import { auth } from "@/auth";
 
 const prisma = new PrismaClient();
 
@@ -18,7 +19,7 @@ export async function PUT(req: Request) {
     if (!data.currentPassword || !data.newPassword) {
       return NextResponse.json(
         { error: "Current and new password are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -29,7 +30,7 @@ export async function PUT(req: Request) {
     if (!user || !user.password) {
       return NextResponse.json(
         { error: "User not found or no password set" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -38,7 +39,7 @@ export async function PUT(req: Request) {
     if (!isValid) {
       return NextResponse.json(
         { error: "Current password is incorrect" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -52,9 +53,10 @@ export async function PUT(req: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error changing password:", error);
+
     return NextResponse.json(
       { error: "Failed to change password" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

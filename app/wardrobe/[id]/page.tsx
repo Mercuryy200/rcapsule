@@ -1,6 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -8,6 +8,7 @@ import {
   CardBody,
   CardFooter,
   Image,
+  Chip,
   Modal,
   ModalContent,
   ModalHeader,
@@ -16,9 +17,10 @@ import {
   Input,
   Select,
   SelectItem,
-  Chip,
   useDisclosure,
+  Spinner,
 } from "@heroui/react";
+import { ArrowLeftIcon, PlusIcon } from "@heroicons/react/24/outline";
 
 interface ClothingItem {
   id: string;
@@ -34,6 +36,14 @@ interface ClothingItem {
   placesToWear: string[];
 }
 
+interface Wardrobe {
+  id: string;
+  title: string;
+  description?: string;
+  isPublic: boolean;
+  clothes: ClothingItem[];
+}
+
 const categories = [
   "shirt",
   "pants",
@@ -43,7 +53,6 @@ const categories = [
   "accessories",
   "tank top",
   "denim",
-  "underwear",
 ];
 const seasons = ["spring", "summer", "fall", "winter", "all-season"];
 const occasions = [
@@ -67,25 +76,27 @@ const colors = [
   "yellow",
   "purple",
 ];
-
-export default function ClosetPage() {
+export default function WardrobePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [clothes, setClothes] = useState<ClothingItem[]>([]);
+  const params = useParams();
+  const wardrobeId = params.id as string;
+
+  const [wardrobe, setWardrobe] = useState<Wardrobe | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
     category: "",
+    brand: "",
     price: "",
     colors: [] as string[],
     season: "",
     size: "",
     link: "",
-    brand: "",
     imageUrl: "",
     placesToWear: [] as string[],
   });
@@ -94,21 +105,22 @@ export default function ClosetPage() {
     if (status === "unauthenticated") {
       router.push("/login");
     } else if (status === "authenticated") {
-      fetchClothes();
+      fetchWardrobe();
     }
-  }, [status, router]);
+  }, [status, router, wardrobeId]);
 
-  const fetchClothes = async () => {
+  const fetchWardrobe = async () => {
     try {
-      const response = await fetch("/api/clothes");
+      const response = await fetch(`/api/wardrobes/${wardrobeId}`);
 
       if (response.ok) {
         const data = await response.json();
-
-        setClothes(data);
+        setWardrobe(data);
+      } else if (response.status === 404) {
+        router.push("/profile");
       }
     } catch (error) {
-      console.error("Error fetching clothes:", error);
+      console.error("Error fetching wardrobe:", error);
     } finally {
       setLoading(false);
     }
@@ -119,12 +131,12 @@ export default function ClosetPage() {
     setFormData({
       name: "",
       category: "",
+      brand: "",
       price: "",
       colors: [] as string[],
       season: "",
       size: "",
       link: "",
-      brand: "",
       imageUrl: "",
       placesToWear: [] as string[],
     });
@@ -137,21 +149,23 @@ export default function ClosetPage() {
     setFormData({
       name: item.name,
       category: item.category,
+      brand: item.brand || "",
       price: item.price?.toString() || "",
       colors: item.colors || [],
       season: item.season || "",
       size: item.size || "",
       link: item.link || "",
-      brand: item.brand || "",
       imageUrl: item.imageUrl || "",
       placesToWear: item.placesToWear || [],
     });
     onOpen();
   };
+
   const handleSubmit = async () => {
     const data = {
       name: formData.name,
       category: formData.category,
+      brand: formData.brand || null,
       price: formData.price ? parseFloat(formData.price) : null,
       colors: formData.colors,
       season: formData.season || null,
@@ -159,6 +173,7 @@ export default function ClosetPage() {
       link: formData.link || null,
       imageUrl: formData.imageUrl || null,
       placesToWear: formData.placesToWear,
+      wardrobeId: wardrobeId, // Link to this wardrobe
     };
 
     try {
@@ -174,7 +189,7 @@ export default function ClosetPage() {
       });
 
       if (response.ok) {
-        fetchClothes();
+        fetchWardrobe();
         onClose();
       }
     } catch (error) {
@@ -191,43 +206,98 @@ export default function ClosetPage() {
       });
 
       if (response.ok) {
-        fetchClothes();
+        fetchWardrobe();
       }
     } catch (error) {
       console.error("Error deleting item:", error);
     }
   };
 
+  const handleRemoveFromWardrobe = async (id: string) => {
+    if (!confirm("Remove this item from the wardrobe?")) return;
+
+    try {
+      const response = await fetch(`/api/clothes/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wardrobeId: null }),
+      });
+
+      if (response.ok) {
+        fetchWardrobe();
+      }
+    } catch (error) {
+      console.error("Error removing item:", error);
+    }
+  };
+
   if (status === "loading" || loading) {
-    return <div className="text-center p-8">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (!wardrobe) {
+    return <div className="text-center p-8">Wardrobe not found</div>;
   }
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">My Closet</h1>
-        <Button color="primary" onPress={handleOpenAdd}>
-          Add New Item
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <Button
+            isIconOnly
+            variant="light"
+            onPress={() => router.push("/profile")}
+          >
+            <ArrowLeftIcon className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">{wardrobe.title}</h1>
+            {wardrobe.description && (
+              <p className="text-gray-500">{wardrobe.description}</p>
+            )}
+          </div>
+        </div>
+        <Button
+          color="primary"
+          startContent={<PlusIcon className="w-5 h-5" />}
+          onPress={handleOpenAdd}
+        >
+          Add Item
         </Button>
       </div>
 
-      {clothes.length === 0 ? (
-        <div className="text-center p-12">
-          <p className="text-lg text-gray-500 mb-4">Your closet is empty</p>
-          <Button color="primary" onPress={handleOpenAdd}>
-            Add Your First Item
-          </Button>
-        </div>
+      {/* Clothes Grid */}
+      {wardrobe.clothes.length === 0 ? (
+        <Card className="p-12">
+          <div className="text-center">
+            <p className="text-lg text-gray-500 mb-4">
+              No items in this wardrobe yet
+            </p>
+            <Button color="primary" onPress={handleOpenAdd}>
+              Add Your First Item
+            </Button>
+          </div>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {clothes.map((item) => (
+          {wardrobe.clothes.map((item) => (
             <Card key={item.id} className="w-full">
-              <CardBody className="p-0 w-relative h-80">
-                <Image
-                  alt={item.name}
-                  className="object-center "
-                  src={item.imageUrl || "/images/placeholder.png"}
-                />
+              <CardBody className="p-0 overflow-hidden">
+                <div className="w-full h-64 relative">
+                  <Image
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                    classNames={{
+                      img: "w-full h-full object-cover",
+                    }}
+                    src={item.imageUrl || "/images/placeholder.png"}
+                  />
+                </div>
               </CardBody>
               <CardFooter className="flex flex-col items-start gap-2">
                 <div className="w-full">
@@ -235,6 +305,9 @@ export default function ClosetPage() {
                   <p className="text-sm text-gray-500 capitalize">
                     {item.category}
                   </p>
+                  {item.brand && (
+                    <p className="text-xs text-gray-400">{item.brand}</p>
+                  )}
                   {item.price && (
                     <p className="text-sm font-semibold">${item.price}</p>
                   )}
@@ -258,6 +331,15 @@ export default function ClosetPage() {
                   </Button>
                   <Button
                     className="flex-1"
+                    color="warning"
+                    size="sm"
+                    variant="flat"
+                    onPress={() => handleRemoveFromWardrobe(item.id)}
+                  >
+                    Remove
+                  </Button>
+                  <Button
+                    className="flex-1"
                     color="danger"
                     size="sm"
                     variant="flat"
@@ -272,6 +354,7 @@ export default function ClosetPage() {
         </div>
       )}
 
+      {/* Add/Edit Modal */}
       <Modal isOpen={isOpen} size="2xl" onClose={onClose}>
         <ModalContent>
           <ModalHeader>{isEditing ? "Edit Item" : "Add New Item"}</ModalHeader>
@@ -284,14 +367,6 @@ export default function ClosetPage() {
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
-                }
-              />
-              <Input
-                label="Brand"
-                placeholder="e.g., Nike, Zara, H&M"
-                value={formData.brand}
-                onChange={(e) =>
-                  setFormData({ ...formData, brand: e.target.value })
                 }
               />
               <Select
@@ -308,6 +383,14 @@ export default function ClosetPage() {
                 ))}
               </Select>
               <Input
+                label="Brand"
+                placeholder="e.g., Nike, Zara"
+                value={formData.brand}
+                onChange={(e) =>
+                  setFormData({ ...formData, brand: e.target.value })
+                }
+              />
+              <Input
                 label="Price"
                 placeholder="29.99"
                 type="number"
@@ -319,11 +402,10 @@ export default function ClosetPage() {
               <Select
                 label="Colors"
                 placeholder="Select colors"
-                selectedKeys={new Set(formData.colors || [])}
                 selectionMode="multiple"
+                selectedKeys={new Set(formData.colors || [])}
                 onSelectionChange={(keys) => {
                   const selectedArray = Array.from(keys) as string[];
-
                   setFormData({ ...formData, colors: selectedArray });
                 }}
               >
@@ -331,7 +413,6 @@ export default function ClosetPage() {
                   <SelectItem key={color}>{color}</SelectItem>
                 ))}
               </Select>
-
               <Select
                 label="Season"
                 placeholder="Select season"
@@ -371,11 +452,10 @@ export default function ClosetPage() {
               <Select
                 label="Places to Wear"
                 placeholder="Select places"
-                selectedKeys={new Set(formData.placesToWear || [])}
                 selectionMode="multiple"
+                selectedKeys={new Set(formData.placesToWear || [])}
                 onSelectionChange={(keys) => {
                   const selectedArray = Array.from(keys) as string[];
-
                   setFormData({ ...formData, placesToWear: selectedArray });
                 }}
               >

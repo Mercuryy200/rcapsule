@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
+
+import { auth } from "@/auth";
 
 const prisma = new PrismaClient();
 
@@ -21,9 +22,10 @@ export async function GET() {
     return NextResponse.json({ profilePublic: user?.profilePublic || false });
   } catch (error) {
     console.error("Error fetching visibility:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch visibility" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -48,9 +50,10 @@ export async function PUT(req: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error updating visibility:", error);
+
     return NextResponse.json(
       { error: "Failed to update visibility" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

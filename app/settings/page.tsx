@@ -46,8 +46,10 @@ export default function SettingsPage() {
   const fetchVisibility = async () => {
     try {
       const response = await fetch("/api/settings/visibility");
+
       if (response.ok) {
         const data = await response.json();
+
         setIsPublic(data.profilePublic);
       }
     } catch (error) {
@@ -92,11 +94,13 @@ export default function SettingsPage() {
   const handleChangePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setMessage("New passwords don't match");
+
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
       setMessage("Password must be at least 6 characters");
+
       return;
     }
 
@@ -122,6 +126,7 @@ export default function SettingsPage() {
         });
       } else {
         const data = await response.json();
+
         setMessage(data.error || "Failed to change password");
       }
     } catch (error) {
@@ -181,9 +186,9 @@ export default function SettingsPage() {
         <CardBody className="gap-4">
           <div className="flex items-center gap-4 mb-4">
             <Avatar
-              src={profileData.image || undefined}
               className="w-20 h-20"
               name={profileData.name}
+              src={profileData.image || undefined}
             />
             <div className="flex-1">
               <p className="text-sm text-gray-500">Profile Picture</p>
@@ -210,8 +215,8 @@ export default function SettingsPage() {
 
           <Button
             color="primary"
-            onPress={handleUpdateProfile}
             isLoading={loading}
+            onPress={handleUpdateProfile}
           >
             Update Profile
           </Button>
@@ -262,8 +267,8 @@ export default function SettingsPage() {
 
           <Button
             color="primary"
-            onPress={handleChangePassword}
             isLoading={loading}
+            onPress={handleChangePassword}
           >
             Change Password
           </Button>
