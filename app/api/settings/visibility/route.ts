@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
+import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
-
-const prisma = new PrismaClient();
 
 // GET current visibility setting
 export async function GET() {
@@ -14,10 +11,17 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { profilePublic: true },
-    });
+    const supabase = getSupabaseServer();
+
+    const { data: user, error } = await supabase
+      .from("User")
+      .select("profilePublic")
+      .eq("id", session.user.id)
+      .single();
+
+    if (error) {
+      throw error;
+    }
 
     return NextResponse.json({ profilePublic: user?.profilePublic || false });
   } catch (error) {
@@ -25,7 +29,7 @@ export async function GET() {
 
     return NextResponse.json(
       { error: "Failed to fetch visibility" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -39,13 +43,18 @@ export async function PUT(req: Request) {
     }
 
     const data = await req.json();
+    const supabase = getSupabaseServer();
 
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
+    const { error } = await supabase
+      .from("User")
+      .update({
         profilePublic: data.profilePublic || false,
-      },
-    });
+      })
+      .eq("id", session.user.id);
+
+    if (error) {
+      throw error;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -53,7 +62,7 @@ export async function PUT(req: Request) {
 
     return NextResponse.json(
       { error: "Failed to update visibility" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
+import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
-
-const prisma = new PrismaClient();
 
 export async function GET() {
   try {
@@ -13,27 +10,32 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const wardrobes = await prisma.wardrobe.findMany({
-      where: {
-        userId: session.user.id,
-      },
-      include: {
-        _count: {
-          select: { clothes: true },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const supabase = getSupabaseServer();
 
-    const wardrobesWithCount = wardrobes.map((wardrobe) => ({
+    // Get wardrobes with clothes count
+    const { data: wardrobes, error } = await supabase
+      .from("Wardrobe")
+      .select(
+        `
+        *,
+        clothes (count)
+      `
+      )
+      .eq("userId", session.user.id)
+      .order("createdAt", { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    // Transform the response to match your expected format
+    const wardrobesWithCount = (wardrobes || []).map((wardrobe) => ({
       id: wardrobe.id,
       title: wardrobe.title,
       description: wardrobe.description,
       isPublic: wardrobe.isPublic,
       coverImage: wardrobe.coverImage,
-      clothesCount: wardrobe._count.clothes,
+      clothesCount: wardrobe.clothes?.[0]?.count || 0,
       createdAt: wardrobe.createdAt,
       updatedAt: wardrobe.updatedAt,
     }));
@@ -44,7 +46,7 @@ export async function GET() {
 
     return NextResponse.json(
       { error: "Failed to fetch wardrobes" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -63,15 +65,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
 
-    const wardrobe = await prisma.wardrobe.create({
-      data: {
+    const supabase = getSupabaseServer();
+
+    const { data: wardrobe, error } = await supabase
+      .from("Wardrobe")
+      .insert({
         userId: session.user.id,
         title: data.title,
         description: data.description || null,
         isPublic: data.isPublic || false,
         coverImage: data.coverImage || null,
-      },
-    });
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
 
     return NextResponse.json(wardrobe, { status: 201 });
   } catch (error) {
@@ -79,7 +89,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { error: "Failed to create wardrobe" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

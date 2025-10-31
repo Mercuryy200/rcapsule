@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
-
+import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
-
-const prisma = new PrismaClient();
 
 export async function PUT(req: Request) {
   try {
@@ -19,36 +15,34 @@ export async function PUT(req: Request) {
     if (!data.currentPassword || !data.newPassword) {
       return NextResponse.json(
         { error: "Current and new password are required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+    const supabase = getSupabaseServer();
+
+    // Use Supabase Auth to update password
+    // First, verify the current password by trying to sign in
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: session.user.email!,
+      password: data.currentPassword,
     });
 
-    if (!user || !user.password) {
-      return NextResponse.json(
-        { error: "User not found or no password set" },
-        { status: 404 },
-      );
-    }
-
-    const isValid = await bcrypt.compare(data.currentPassword, user.password);
-
-    if (!isValid) {
+    if (verifyError) {
       return NextResponse.json(
         { error: "Current password is incorrect" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    const hashedPassword = await bcrypt.hash(data.newPassword, 10);
-
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { password: hashedPassword },
+    // Update to new password
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: data.newPassword,
     });
+
+    if (updateError) {
+      throw updateError;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -56,7 +50,7 @@ export async function PUT(req: Request) {
 
     return NextResponse.json(
       { error: "Failed to change password" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

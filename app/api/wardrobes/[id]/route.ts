@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
+import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
-
-const prisma = new PrismaClient();
 
 export async function GET(
   req: Request,
@@ -17,25 +14,35 @@ export async function GET(
     }
 
     const { id } = await params;
+    const supabase = getSupabaseServer();
 
-    const wardrobe = await prisma.wardrobe.findUnique({
-      where: {
-        id,
-        userId: session.user.id,
-      },
-      include: {
-        clothes: {
-          orderBy: {
-            createdAt: "desc",
-          },
-        },
-      },
-    });
+    // Get wardrobe with clothes using a join
+    const { data: wardrobe, error } = await supabase
+      .from("wardrobe")
+      .select(
+        `
+        *,
+        clothes (
+          *
+        )
+      `
+      )
+      .eq("id", id)
+      .eq("userId", session.user.id)
+      .single();
 
-    if (!wardrobe) {
+    if (error || !wardrobe) {
       return NextResponse.json(
         { error: "Wardrobe not found" },
         { status: 404 }
+      );
+    }
+
+    // Sort clothes by createdAt desc (Supabase doesn't support orderBy in nested selects)
+    if (wardrobe.clothes) {
+      wardrobe.clothes.sort(
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     }
 
@@ -63,21 +70,26 @@ export async function PUT(
 
     const { id } = await params;
     const data = await req.json();
+    const supabase = getSupabaseServer();
 
-    const existing = await prisma.wardrobe.findUnique({
-      where: { id },
-    });
+    // First, get the existing wardrobe
+    const { data: existing, error: fetchError } = await supabase
+      .from("wardrobe")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-    if (!existing || existing.userId !== session.user.id) {
+    if (fetchError || !existing || existing.userId !== session.user.id) {
       return NextResponse.json(
         { error: "Wardrobe not found" },
         { status: 404 }
       );
     }
 
-    const wardrobe = await prisma.wardrobe.update({
-      where: { id },
-      data: {
+    // Update with fallbacks to existing values
+    const { data: wardrobe, error: updateError } = await supabase
+      .from("wardrobe")
+      .update({
         title: data.title || existing.title,
         description:
           data.description !== undefined
@@ -87,8 +99,14 @@ export async function PUT(
           data.isPublic !== undefined ? data.isPublic : existing.isPublic,
         coverImage:
           data.coverImage !== undefined ? data.coverImage : existing.coverImage,
-      },
-    });
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw updateError;
+    }
 
     return NextResponse.json(wardrobe);
   } catch (error) {
@@ -112,22 +130,32 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params; // Await params
+    const { id } = await params;
+    const supabase = getSupabaseServer();
 
-    const existing = await prisma.wardrobe.findUnique({
-      where: { id },
-    });
+    // Check if wardrobe exists and belongs to user
+    const { data: existing, error: fetchError } = await supabase
+      .from("wardrobe")
+      .select("id, userId")
+      .eq("id", id)
+      .single();
 
-    if (!existing || existing.userId !== session.user.id) {
+    if (fetchError || !existing || existing.userId !== session.user.id) {
       return NextResponse.json(
         { error: "Wardrobe not found" },
         { status: 404 }
       );
     }
 
-    await prisma.wardrobe.delete({
-      where: { id },
-    });
+    // Delete the wardrobe
+    const { error: deleteError } = await supabase
+      .from("wardrobe")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      throw deleteError;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

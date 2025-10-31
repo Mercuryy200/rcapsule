@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
+import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
-
-const prisma = new PrismaClient();
 
 export async function GET(req: Request) {
   try {
@@ -15,24 +12,33 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const wardrobeId = searchParams.get("wardrobeId");
+    const supabase = getSupabaseServer();
 
-    const clothes = await prisma.clothes.findMany({
-      where: {
-        userId: session.user.id,
-        ...(wardrobeId && { wardrobeId }),
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    // Build query
+    let query = supabase
+      .from("Clothes")
+      .select("*")
+      .eq("userId", session.user.id)
+      .order("createdAt", { ascending: false });
 
-    return NextResponse.json(clothes);
+    // Conditionally add wardrobeId filter
+    if (wardrobeId) {
+      query = query.eq("wardrobeId", wardrobeId);
+    }
+
+    const { data: clothes, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    return NextResponse.json(clothes || []);
   } catch (error) {
     console.error("Error fetching clothes:", error);
 
     return NextResponse.json(
       { error: "Failed to fetch clothes" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -50,29 +56,36 @@ export async function POST(req: Request) {
     if (!data.name || !data.category) {
       return NextResponse.json(
         { error: "Name and category are required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    // If wardrobeId provided, verify ownership
-    if (data.wardrobeId) {
-      const wardrobe = await prisma.wardrobe.findUnique({
-        where: { id: data.wardrobeId },
-      });
+    const supabase = getSupabaseServer();
 
-      if (!wardrobe || wardrobe.userId !== session.user.id) {
+    // Verify wardrobe ownership if wardrobeId is provided
+    if (data.wardrobeId) {
+      const { data: wardrobe, error } = await supabase
+        .from("Wardrobe")
+        .select("id, userId")
+        .eq("id", data.wardrobeId)
+        .single();
+
+      if (error || !wardrobe || wardrobe.userId !== session.user.id) {
         return NextResponse.json(
           { error: "Invalid wardrobe" },
-          { status: 400 },
+          { status: 400 }
         );
       }
     }
 
-    const clothing = await prisma.clothes.create({
-      data: {
+    // Create clothing item
+    const { data: clothing, error: createError } = await supabase
+      .from("Clothes")
+      .insert({
         userId: session.user.id,
         wardrobeId: data.wardrobeId || null,
         name: data.name,
+        brand: data.brand,
         category: data.category,
         price: data.price ? parseFloat(data.price) : null,
         colors: data.colors || [],
@@ -81,8 +94,13 @@ export async function POST(req: Request) {
         link: data.link || null,
         imageUrl: data.imageUrl || null,
         placesToWear: data.placesToWear || [],
-      },
-    });
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      throw createError;
+    }
 
     return NextResponse.json(clothing, { status: 201 });
   } catch (error) {
@@ -90,7 +108,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { error: "Failed to create clothing" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

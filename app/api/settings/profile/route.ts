@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
+import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
-
-const prisma = new PrismaClient();
 
 export async function PUT(req: Request) {
   try {
@@ -14,14 +11,21 @@ export async function PUT(req: Request) {
     }
 
     const data = await req.json();
+    const supabase = getSupabaseServer();
 
-    const user = await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
+    const { data: user, error } = await supabase
+      .from("User")
+      .update({
         name: data.name || null,
         image: data.image || null,
-      },
-    });
+      })
+      .eq("id", session.user.id)
+      .select("name, image")
+      .single();
+
+    if (error) {
+      throw error;
+    }
 
     return NextResponse.json({
       name: user.name,
@@ -32,7 +36,7 @@ export async function PUT(req: Request) {
 
     return NextResponse.json(
       { error: "Failed to update profile" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
