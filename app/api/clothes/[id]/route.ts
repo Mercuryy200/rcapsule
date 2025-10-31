@@ -17,7 +17,7 @@ export async function GET(
     const supabase = getSupabaseServer();
 
     const { data: clothing, error } = await supabase
-      .from("clothes")
+      .from("Clothes")
       .select("*")
       .eq("id", id)
       .eq("userId", session.user.id)

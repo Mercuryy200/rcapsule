@@ -6,11 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint --fix",
-    "postinstall": "prisma generate"
+    "lint": "eslint --fix"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^2.11.0",
     "@heroicons/react": "^2.2.0",
     "@heroui/accordion": "2.2.24",
     "@heroui/alert": "2.2.27",
