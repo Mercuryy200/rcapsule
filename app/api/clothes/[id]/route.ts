@@ -57,7 +57,7 @@ export async function PUT(
     const supabase = getSupabaseServer();
 
     const { data: updatedClothing, error } = await supabase
-      .from("clothes")
+      .from("Clothes")
       .update({
         name: data.name,
         category: data.category,
@@ -107,7 +107,7 @@ export async function DELETE(
     const supabase = getSupabaseServer();
 
     const { data: deletedClothing, error } = await supabase
-      .from("clothes")
+      .from("Clothes")
       .delete()
       .eq("id", id)
       .eq("userId", session.user.id)

@@ -4,7 +4,7 @@ import { Form, Input, Button, Link } from "@heroui/react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
-import { SignInButtonGithub } from "./button";
+import { SignInButtonGithub, SignInButtonGoogle } from "./button";
 
 function LoginFormContent() {
   const searchParams = useSearchParams();
@@ -69,9 +69,7 @@ function LoginFormContent() {
           placeholder="Enter your password"
           type="password"
         />
-
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-
         <div className="flex w-full gap-2">
           <Button
             className="w-1/2"
@@ -85,7 +83,6 @@ function LoginFormContent() {
             Reset
           </Button>
         </div>
-
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t" />
@@ -96,9 +93,8 @@ function LoginFormContent() {
             </span>
           </div>
         </div>
-
         <SignInButtonGithub />
-
+        <SignInButtonGoogle />
         <div className="text-center text-sm mt-4">
           Don&apos;t have an account?{" "}
           <Link className="text-primary hover:underline" href="/signup">

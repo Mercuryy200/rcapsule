@@ -18,11 +18,11 @@ export async function GET(
 
     // Get wardrobe with clothes using a join
     const { data: wardrobe, error } = await supabase
-      .from("wardrobe")
+      .from("Wardrobe")
       .select(
         `
         *,
-        clothes (
+        Clothes (
           *
         )
       `
@@ -39,8 +39,8 @@ export async function GET(
     }
 
     // Sort clothes by createdAt desc (Supabase doesn't support orderBy in nested selects)
-    if (wardrobe.clothes) {
-      wardrobe.clothes.sort(
+    if (wardrobe.Clothes) {
+      wardrobe.Clothes.sort(
         (a: any, b: any) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );

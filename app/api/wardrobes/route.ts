@@ -18,7 +18,7 @@ export async function GET() {
       .select(
         `
         *,
-        clothes (count)
+        Clothes (count)
       `
       )
       .eq("userId", session.user.id)
@@ -35,7 +35,7 @@ export async function GET() {
       description: wardrobe.description,
       isPublic: wardrobe.isPublic,
       coverImage: wardrobe.coverImage,
-      clothesCount: wardrobe.clothes?.[0]?.count || 0,
+      clothesCount: wardrobe.Clothes?.[0]?.count || 0,
       createdAt: wardrobe.createdAt,
       updatedAt: wardrobe.updatedAt,
     }));

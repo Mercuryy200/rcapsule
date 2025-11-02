@@ -1,22 +1,28 @@
 "use client";
 import { Button, Link } from "@heroui/react";
-
-import { GithubIcon } from "../icons";
-
-import { login, logout } from "@/lib/actions/auth";
+import { FaGithub, FaGoogle } from "react-icons/fa";
+import { signIn } from "next-auth/react";
+import { logout } from "@/lib/actions/auth";
 
 export const SignInButtonGoogle = () => {
   return (
-    <Button className="w-full" onPress={() => login()}>
+    <Button
+      className="w-full"
+      onPress={() => signIn("google", { callbackUrl: "/dashboard" })}
+    >
       Sign in with Google
+      <FaGoogle className="ml-2" />
     </Button>
   );
 };
 export const SignInButtonGithub = () => {
   return (
-    <Button className="w-full" onPress={() => login()}>
+    <Button
+      className="w-full"
+      onPress={() => signIn("github", { callbackUrl: "/dashboard" })}
+    >
       Sign in with GitHub
-      <GithubIcon className="ml-2" />
+      <FaGithub className="ml-2" />
     </Button>
   );
 };

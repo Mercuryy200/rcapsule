@@ -41,7 +41,7 @@ interface Wardrobe {
   title: string;
   description?: string;
   isPublic: boolean;
-  clothes: ClothingItem[];
+  Clothes: ClothingItem[];
 }
 
 const categories = [
@@ -173,7 +173,7 @@ export default function WardrobePage() {
       link: formData.link || null,
       imageUrl: formData.imageUrl || null,
       placesToWear: formData.placesToWear,
-      wardrobeId: wardrobeId, // Link to this wardrobe
+      wardrobeId: wardrobeId,
     };
 
     try {
@@ -272,7 +272,7 @@ export default function WardrobePage() {
       </div>
 
       {/* Clothes Grid */}
-      {wardrobe.clothes.length === 0 ? (
+      {wardrobe.Clothes.length === 0 ? (
         <Card className="p-12">
           <div className="text-center">
             <p className="text-lg text-gray-500 mb-4">
@@ -285,7 +285,7 @@ export default function WardrobePage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {wardrobe.clothes.map((item) => (
+          {wardrobe.Clothes.map((item) => (
             <Card key={item.id} className="w-full">
               <CardBody className="p-0 overflow-hidden">
                 <div className="w-full h-64 relative">

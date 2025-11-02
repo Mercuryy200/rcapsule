@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { title } from "@/components/primitives";
-import { SignInButtonGithub } from "@/components/login/button";
+import {
+  SignInButtonGithub,
+  SignInButtonGoogle,
+} from "@/components/login/button";
 
 export default function SignUpPage() {
   const [error, setError] = useState<string>("");
@@ -73,7 +76,6 @@ export default function SignUpPage() {
             placeholder="Enter your name"
             type="text"
           />
-
           <Input
             isRequired
             errorMessage="Please enter a valid email"
@@ -83,7 +85,6 @@ export default function SignUpPage() {
             placeholder="Enter your email"
             type="email"
           />
-
           <Input
             isRequired
             errorMessage="Please enter a password"
@@ -94,7 +95,6 @@ export default function SignUpPage() {
             placeholder="Enter your password"
             type="password"
           />
-
           <Input
             isRequired
             errorMessage="Please confirm your password"
@@ -104,9 +104,7 @@ export default function SignUpPage() {
             placeholder="Confirm your password"
             type="password"
           />
-
           {error && <p className="text-red-500 text-sm">{error}</p>}
-
           <div className="flex w-full gap-2">
             <Button
               className="w-1/2"
@@ -121,6 +119,7 @@ export default function SignUpPage() {
             </Button>
           </div>
           <SignInButtonGithub />
+          <SignInButtonGoogle />
           <div className="text-center text-sm mt-4">
             Already have an account?{" "}
             <Link className="text-primary hover:underline" href="/login">
