@@ -46,23 +46,35 @@ export default function ProfilePage() {
     title: "",
     description: "",
     isPublic: false,
+    coverImage: "",
   });
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     } else if (status === "authenticated") {
       fetchProfile();
+      fetchUserData();
     }
   }, [status, router]);
-
+  //fetch updated information on the user
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch("/api/user/me");
+      const data = await response.json();
+      setUser(data);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+    }
+  };
+  //fetches the current wardrobes
   const fetchProfile = async () => {
     try {
       const [wardrobesRes, clothesRes] = await Promise.all([
         fetch("/api/wardrobes"),
         fetch("/api/clothes"),
       ]);
-
       if (wardrobesRes.ok && clothesRes.ok) {
         const wardrobesData = await wardrobesRes.json();
         const clothesData = await clothesRes.json();
@@ -87,7 +99,12 @@ export default function ProfilePage() {
       if (response.ok) {
         fetchProfile();
         onClose();
-        setNewWardrobe({ title: "", description: "", isPublic: false });
+        setNewWardrobe({
+          title: "",
+          description: "",
+          isPublic: false,
+          coverImage: "",
+        });
       }
     } catch (error) {
       console.error("Error creating wardrobe:", error);

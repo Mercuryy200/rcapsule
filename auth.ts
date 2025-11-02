@@ -12,19 +12,14 @@ const supabase = createClient(
 export const { auth, handlers, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   providers: [
-    // GitHub OAuth
-    GitHub({
-      clientId: process.env.AUTH_GITHUB_ID!,
-      clientSecret: process.env.AUTH_GITHUB_SECRET!,
-    }),
-
-    // Google OAuth
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
     }),
-
-    // Email/Password with Supabase Auth
+    GitHub({
+      clientId: process.env.AUTH_GITHUB_ID!,
+      clientSecret: process.env.AUTH_GITHUB_SECRET!,
+    }),
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
@@ -60,10 +55,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account }) {
-      // For OAuth providers, create/update user in your User table
       if (account?.provider === "github" || account?.provider === "google") {
         try {
-          // Check if user exists
           const { data: existingUser } = await supabase
             .from("User")
             .select("id")
@@ -71,7 +64,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             .single();
 
           if (!existingUser) {
-            // Create new user
             await supabase.from("User").insert({
               id: user.id,
               email: user.email!,
@@ -83,7 +75,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             });
           }
 
-          // Create/update account link
           await supabase.from("Account").upsert({
             userId: user.id,
             type: account.type,
@@ -107,12 +98,37 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       return true;
     },
     async jwt({ token, user, trigger, session }) {
+      // Initial sign in
       if (user) {
         token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        token.picture = user.image;
       }
 
+      // Update session trigger (when you call update())
       if (trigger === "update" && session) {
-        token = { ...token, ...session.user };
+        token.name = session.user.name;
+        token.picture = session.user.image;
+        return token;
+      }
+
+      // Fetch fresh user data on every token refresh
+      if (token.id) {
+        try {
+          const { data: userData } = await supabase
+            .from("User")
+            .select("name, image")
+            .eq("id", token.id as string)
+            .single();
+
+          if (userData) {
+            token.name = userData.name;
+            token.picture = userData.image;
+          }
+        } catch (error) {
+          console.error("Error fetching user data in JWT callback:", error);
+        }
       }
 
       return token;
@@ -121,7 +137,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.name = token.name as string;
-        session.user.image = token.image as string;
+        session.user.image = token.picture as string;
       }
       return session;
     },
@@ -129,4 +145,5 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/login",
   },
+  trustHost: true,
 });

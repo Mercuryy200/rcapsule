@@ -10,11 +10,12 @@ import {
 } from "@heroui/react";
 
 import { logout } from "@/lib/actions/auth";
+import { useUser } from "@/contexts/UserContext";
 
 export function ProfileDropdown() {
-  const { data: session } = useSession();
+  const { user } = useUser();
 
-  if (!session?.user) {
+  if (!user) {
     return null;
   }
 
@@ -26,15 +27,20 @@ export function ProfileDropdown() {
           as="button"
           className="transition-transform"
           color="primary"
-          name={session.user.name || "User"}
+          name={user.name || "User"}
           size="sm"
-          src={session.user.image || "/images/Default_pfp.png"}
+          src={user.image || "/images/Default_pfp.png"}
         />
       </DropdownTrigger>
       <DropdownMenu aria-label="Profile Actions" variant="flat">
-        <DropdownItem key="profile" className="h-14 gap-2">
+        <DropdownItem
+          key="profile"
+          className="h-14 gap-2"
+          as={Link}
+          href="/profile"
+        >
           <p className="font-semibold">Signed in as</p>
-          <p className="font-semibold">{session.user.email}</p>
+          <p className="font-semibold">{user.email}</p>
         </DropdownItem>
         <DropdownItem key="settings" as={Link} href="/settings">
           My Settings

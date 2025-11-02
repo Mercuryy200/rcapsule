@@ -8,7 +8,7 @@ export const SignInButtonGoogle = () => {
   return (
     <Button
       className="w-full"
-      onPress={() => signIn("google", { callbackUrl: "/dashboard" })}
+      onPress={() => signIn("google", { callbackUrl: "/closet" })}
     >
       Sign in with Google
       <FaGoogle className="ml-2" />
@@ -19,7 +19,7 @@ export const SignInButtonGithub = () => {
   return (
     <Button
       className="w-full"
-      onPress={() => signIn("github", { callbackUrl: "/dashboard" })}
+      onPress={() => signIn("github", { callbackUrl: "/closet" })}
     >
       Sign in with GitHub
       <FaGithub className="ml-2" />
