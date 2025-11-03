@@ -11,9 +11,11 @@ import {
   Switch,
   Avatar,
 } from "@heroui/react";
+import { useUser } from "@/contexts/UserContext";
 
 export default function SettingsPage() {
   const { data: session, status, update } = useSession();
+  const { user, refreshUser } = useUser();
   const router = useRouter();
 
   const [profileData, setProfileData] = useState({
@@ -36,8 +38,8 @@ export default function SettingsPage() {
       router.push("/login");
     } else if (status === "authenticated" && session?.user) {
       setProfileData({
-        name: session.user.name || "",
-        image: session.user.image || "",
+        name: user.name || "",
+        image: user.image || "",
       });
       fetchVisibility();
     }
@@ -69,16 +71,7 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
-        const updatedData = await response.json();
-
-        await update({
-          ...session,
-          user: {
-            ...session?.user,
-            name: updatedData.name,
-            image: updatedData.image,
-          },
-        });
+        refreshUser();
 
         setMessage("Profile updated successfully!");
       } else {

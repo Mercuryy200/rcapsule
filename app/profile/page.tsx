@@ -2,9 +2,11 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useUser } from "@/contexts/UserContext";
 import {
   Avatar,
   Button,
+  Image,
   Card,
   CardBody,
   CardHeader,
@@ -48,7 +50,7 @@ export default function ProfilePage() {
     isPublic: false,
     coverImage: "",
   });
-  const [user, setUser] = useState<any>(null);
+  const { user, refreshUser } = useUser();
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -58,12 +60,10 @@ export default function ProfilePage() {
       fetchUserData();
     }
   }, [status, router]);
-  //fetch updated information on the user
+
   const fetchUserData = async () => {
     try {
-      const response = await fetch("/api/user/me");
-      const data = await response.json();
-      setUser(data);
+      refreshUser();
     } catch (error) {
       console.error("Error fetching user:", error);
     }
@@ -139,13 +139,13 @@ export default function ProfilePage() {
       {/* Profile Header */}
       <div className="flex items-start gap-6 mb-8">
         <Avatar
-          src={session?.user?.image || undefined}
+          src={user?.image || undefined}
           className="w-24 h-24"
-          name={session?.user?.name || "User"}
+          name={user?.name || "User"}
         />
         <div className="flex-1">
-          <h1 className="text-3xl font-bold mb-2">{session?.user?.name}</h1>
-          <p className="text-gray-500 mb-4">{session?.user?.email}</p>
+          <h1 className="text-3xl font-bold mb-2">{user?.name}</h1>
+          <p className="text-gray-500 mb-4">{user?.email}</p>
           <div className="flex gap-4">
             <div>
               <p className="text-2xl font-bold">{totalClothes}</p>
@@ -228,6 +228,11 @@ export default function ProfilePage() {
                 </div>
               </CardHeader>
               <CardBody>
+                <Image
+                  src={wardrobe.coverImage}
+                  className=" h-48 w-96 object-cover"
+                />
+
                 {wardrobe.description && (
                   <p className="text-sm text-gray-600 mb-2">
                     {wardrobe.description}
