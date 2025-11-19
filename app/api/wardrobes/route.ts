@@ -12,7 +12,6 @@ export async function GET() {
 
     const supabase = getSupabaseServer();
 
-    // Get wardrobes with clothes count
     const { data: wardrobes, error } = await supabase
       .from("Wardrobe")
       .select(
@@ -28,7 +27,6 @@ export async function GET() {
       throw error;
     }
 
-    // Transform the response to match your expected format
     const wardrobesWithCount = (wardrobes || []).map((wardrobe) => ({
       id: wardrobe.id,
       title: wardrobe.title,

@@ -1,6 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -162,6 +162,7 @@ export default function ItemPage() {
       alert("Error saving changes");
     } finally {
       setSaving(false);
+      router.push("/closet");
     }
   };
 

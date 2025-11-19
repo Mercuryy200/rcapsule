@@ -251,7 +251,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Create Wardrobe Modal */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalContent>
           <ModalHeader>Create New Wardrobe</ModalHeader>
@@ -274,6 +273,17 @@ export default function ProfilePage() {
                   setNewWardrobe({
                     ...newWardrobe,
                     description: e.target.value,
+                  })
+                }
+              />
+              <Input
+                label="Image Link"
+                placeholder="Optional Cover Image"
+                value={newWardrobe.coverImage}
+                onChange={(e) =>
+                  setNewWardrobe({
+                    ...newWardrobe,
+                    coverImage: e.target.value,
                   })
                 }
               />
