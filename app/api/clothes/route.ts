@@ -14,14 +14,12 @@ export async function GET(req: Request) {
     const wardrobeId = searchParams.get("wardrobeId");
     const supabase = getSupabaseServer();
 
-    // Build query
     let query = supabase
       .from("Clothes")
       .select("*")
       .eq("userId", session.user.id)
       .order("createdAt", { ascending: false });
 
-    // Conditionally add wardrobeId filter
     if (wardrobeId) {
       query = query.eq("wardrobeId", wardrobeId);
     }
@@ -62,7 +60,6 @@ export async function POST(req: Request) {
 
     const supabase = getSupabaseServer();
 
-    // Verify wardrobe ownership if wardrobeId is provided
     if (data.wardrobeId) {
       const { data: wardrobe, error } = await supabase
         .from("Wardrobe")
@@ -85,7 +82,7 @@ export async function POST(req: Request) {
         userId: session.user.id,
         wardrobeId: data.wardrobeId || null,
         name: data.name,
-        brand: data.brand,
+        brand: data.brand || null,
         category: data.category,
         price: data.price ? parseFloat(data.price) : null,
         colors: data.colors || [],

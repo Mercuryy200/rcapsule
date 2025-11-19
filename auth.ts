@@ -1,3 +1,4 @@
+// auth.ts
 import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
@@ -15,10 +16,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID!,
       clientSecret: process.env.AUTH_GITHUB_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       credentials: {
@@ -40,6 +43,22 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             return null;
           }
 
+          // Check if user exists in User table
+          const { data: existingUser } = await supabase
+            .from("User")
+            .select("id, email, name, image")
+            .eq("email", data.user.email!)
+            .single();
+
+          if (existingUser) {
+            return {
+              id: existingUser.id,
+              email: existingUser.email,
+              name: existingUser.name,
+              image: existingUser.image,
+            };
+          }
+
           return {
             id: data.user.id,
             email: data.user.email!,
@@ -54,18 +73,41 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       if (account?.provider === "github" || account?.provider === "google") {
         try {
+          // Check if user with this email already exists
           const { data: existingUser } = await supabase
             .from("User")
-            .select("id")
+            .select("id, name, image")
             .eq("email", user.email!)
             .single();
 
-          if (!existingUser) {
+          let userId: any;
+
+          if (existingUser) {
+            // User exists - link this account to existing user
+            userId = existingUser.id;
+            console.log(
+              `Linking ${account.provider} account to existing user ${userId}`
+            );
+
+            // Update user info if OAuth has better data
+            if (!existingUser.name && user.name) {
+              await supabase
+                .from("User")
+                .update({
+                  name: user.name,
+                  image: user.image,
+                  updatedAt: new Date().toISOString(),
+                })
+                .eq("id", userId);
+            }
+          } else {
+            // New user - create account
+            userId = user.id;
             await supabase.from("User").insert({
-              id: user.id,
+              id: userId,
               email: user.email!,
               name: user.name,
               image: user.image,
@@ -75,21 +117,37 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             });
           }
 
-          await supabase.from("Account").upsert({
-            userId: user.id,
-            type: account.type,
-            provider: account.provider,
-            providerAccountId: account.providerAccountId,
-            refresh_token: account.refresh_token,
-            access_token: account.access_token,
-            expires_at: account.expires_at,
-            token_type: account.token_type,
-            scope: account.scope,
-            id_token: account.id_token,
-            session_state: account.session_state,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          });
+          // Link OAuth account
+          const { error: accountError } = await supabase.from("Account").upsert(
+            {
+              userId: userId,
+              type: account.type,
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+              refresh_token: account.refresh_token,
+              access_token: account.access_token,
+              expires_at: account.expires_at,
+              token_type: account.token_type,
+              scope: account.scope,
+              id_token: account.id_token,
+              session_state: account.session_state,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+            {
+              onConflict: "provider,providerAccountId",
+            }
+          );
+
+          if (accountError) {
+            console.error("Error linking account:", accountError);
+            return false;
+          }
+
+          // Update user object with correct ID for session
+          user.id = userId;
+
+          return true;
         } catch (error) {
           console.error("Error in signIn callback:", error);
           return false;
@@ -97,8 +155,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       }
       return true;
     },
-    async jwt({ token, user, trigger, session }) {
-      // Initial sign in
+    async jwt({ token, user, trigger, session, account }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -106,14 +163,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         token.picture = user.image;
       }
 
-      // Update session trigger (when you call update())
       if (trigger === "update" && session) {
         token.name = session.user.name;
         token.picture = session.user.image;
         return token;
       }
 
-      // Fetch fresh user data on every token refresh
+      // Fetch fresh user data
       if (token.id) {
         try {
           const { data: userData } = await supabase

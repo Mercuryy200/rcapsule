@@ -61,7 +61,7 @@ export async function PUT(
       .update({
         name: data.name,
         category: data.category,
-        brand: data.brand,
+        brand: data.brand || null,
         price: data.price ? parseFloat(data.price) : null,
         colors: data.colors || [],
         season: data.season || null,
@@ -73,7 +73,6 @@ export async function PUT(
       .eq("id", id)
       .eq("userId", session.user.id)
       .select();
-
     if (error || !updatedClothing || updatedClothing.length === 0) {
       return NextResponse.json(
         { error: "Clothing not found or unauthorized" },

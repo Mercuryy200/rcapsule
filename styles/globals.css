@@ -1,3 +1,11 @@
 @import "tailwindcss";
 
 @config "../tailwind.config.js";
+
+@theme {
+  --color-beige-sand: #e1dbc9;
+  --color-dark-pine: #2d4530;
+  --color-stale-blue-grey: #6b7884;
+  --color-earth-brown: #5e4b3b;
+  --color-charcoal-grey: #3c3c3c;
+}
