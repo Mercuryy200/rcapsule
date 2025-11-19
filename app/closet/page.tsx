@@ -84,15 +84,15 @@ export default function ClosetPage() {
               isPressable
               onPress={() => handleItemClick(item.id)}
             >
-              <CardBody className="p-0 relative h-80">
+              <CardBody className="p-0 relative h-80 overflow-hidden flex items-center justify-center">
                 <Image
                   alt={item.name}
-                  className="object-cover w-full h-full"
+                  className="object-center overflow-hidden  w-full "
                   src={item.imageUrl || "/images/placeholder.png"}
                 />
               </CardBody>
               <CardFooter className="flex flex-col items-start gap-2">
-                <div className="w-full">
+                <div className="w-full text-start">
                   <h3 className="font-bold text-lg">{item.name}</h3>
                   <p className="text-sm text-gray-500 capitalize">
                     {item.category}
