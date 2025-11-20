@@ -1,5 +1,5 @@
 "use server";
-import { NavbarLoggedIn, NavbarLoggedOut } from "./Navbar";
+import { NavbarLoggedIn, NavbarLoggedOut } from "@/components/layout/Navbar";
 import { auth } from "@/auth";
 
 export default async function Header() {

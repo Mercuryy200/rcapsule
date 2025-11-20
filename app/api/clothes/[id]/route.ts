@@ -69,10 +69,12 @@ export async function PUT(
         link: data.link || null,
         imageUrl: data.imageUrl || null,
         placesToWear: data.placesToWear || [],
+        wardrobeId: data.wardrobeId !== undefined ? data.wardrobeId : undefined,
       })
       .eq("id", id)
       .eq("userId", session.user.id)
       .select();
+      
     if (error || !updatedClothing || updatedClothing.length === 0) {
       return NextResponse.json(
         { error: "Clothing not found or unauthorized" },
@@ -80,7 +82,7 @@ export async function PUT(
       );
     }
 
-    return NextResponse.json({ message: "Updated successfully" });
+    return NextResponse.json(updatedClothing[0]);
   } catch (error) {
     console.error("Error updating clothing:", error);
 

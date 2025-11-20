@@ -87,7 +87,7 @@ export default function ClosetPage() {
               <CardBody className="p-0 relative h-80 overflow-hidden flex items-center justify-center">
                 <Image
                   alt={item.name}
-                  className="object-center overflow-hidden  w-full "
+                  className="object-center w-full "
                   src={item.imageUrl || "/images/placeholder.png"}
                 />
               </CardBody>

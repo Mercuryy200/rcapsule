@@ -21,8 +21,6 @@ import {
   Spinner,
   Textarea,
   Checkbox,
-  Tabs,
-  Tab,
 } from "@heroui/react";
 import {
   ArrowLeftIcon,
@@ -50,6 +48,7 @@ interface Wardrobe {
   title: string;
   description?: string;
   isPublic: boolean;
+  coverImage?: string;
   Clothes: ClothingItem[];
 }
 
@@ -126,6 +125,7 @@ export default function WardrobePage() {
     title: "",
     description: "",
     isPublic: false,
+    coverImage: "",
   });
 
   useEffect(() => {
@@ -148,6 +148,7 @@ export default function WardrobePage() {
           title: data.title,
           description: data.description || "",
           isPublic: data.isPublic,
+          coverImage: data.coverImage || "",
         });
       } else if (response.status === 404) {
         router.push("/profile");
@@ -266,10 +267,26 @@ export default function WardrobePage() {
     if (!confirm("Remove this item from the wardrobe?")) return;
 
     try {
+      // Find the item to get its full data
+      const item = wardrobe?.Clothes.find((c) => c.id === id);
+      if (!item) return;
+
       const response = await fetch(`/api/clothes/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wardrobeId: null }),
+        body: JSON.stringify({
+          name: item.name,
+          category: item.category,
+          brand: item.brand || null,
+          price: item.price || null,
+          colors: item.colors || [],
+          season: item.season || null,
+          size: item.size || null,
+          link: item.link || null,
+          imageUrl: item.imageUrl || null,
+          placesToWear: item.placesToWear || [],
+          wardrobeId: null,
+        }),
       });
 
       if (response.ok) {
@@ -306,7 +323,7 @@ export default function WardrobePage() {
   const handleDeleteWardrobe = async () => {
     if (
       !confirm(
-        "Are you sure you want to delete this wardrobe? This will not delete the items inside."
+        "Are you sure you want to delete this wardrobe? Items will remain in your closet."
       )
     )
       return;
@@ -332,13 +349,30 @@ export default function WardrobePage() {
 
   const handleAddExistingItems = async () => {
     try {
-      const promises = Array.from(selectedExistingItems).map((itemId) =>
-        fetch(`/api/clothes/${itemId}`, {
+      const promises = Array.from(selectedExistingItems).map(async (itemId) => {
+        // Find the full item data
+        const item = availableClothes.find((c) => c.id === itemId);
+        if (!item) return;
+
+        // Send complete item data with updated wardrobeId
+        return fetch(`/api/clothes/${itemId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ wardrobeId: wardrobeId }),
-        })
-      );
+          body: JSON.stringify({
+            name: item.name,
+            category: item.category,
+            brand: item.brand || null,
+            price: item.price || null,
+            colors: item.colors || [],
+            season: item.season || null,
+            size: item.size || null,
+            link: item.link || null,
+            imageUrl: item.imageUrl || null,
+            placesToWear: item.placesToWear || [],
+            wardrobeId: wardrobeId,
+          }),
+        });
+      });
 
       await Promise.all(promises);
       fetchWardrobe();
@@ -682,6 +716,17 @@ export default function WardrobePage() {
                   setWardrobeFormData({
                     ...wardrobeFormData,
                     description: e.target.value,
+                  })
+                }
+              />
+              <Input
+                label="Cover Image URL"
+                placeholder="https://..."
+                value={wardrobeFormData.coverImage}
+                onChange={(e) =>
+                  setWardrobeFormData({
+                    ...wardrobeFormData,
+                    coverImage: e.target.value,
                   })
                 }
               />
