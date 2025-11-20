@@ -2,5 +2,9 @@
 import Hero from "@/components/layout/Hero";
 
 export default async function Home() {
-  return <Hero />;
+  return (
+    <div>
+      <Hero />
+    </div>
+  );
 }
