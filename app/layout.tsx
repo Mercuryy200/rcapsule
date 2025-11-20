@@ -5,7 +5,7 @@ import clsx from "clsx";
 import { Providers } from "./providers";
 
 import Footer from "@/components/layout/Footer";
-import Header from "@/components/layout/Header";
+import Header from "@/components/Header";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 
