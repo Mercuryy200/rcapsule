@@ -15,8 +15,6 @@ import {
   ModalBody,
   ModalFooter,
   Input,
-  Select,
-  SelectItem,
   useDisclosure,
   Spinner,
   Textarea,
@@ -28,7 +26,7 @@ import {
   PencilIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-
+import Link from "next/link";
 interface ClothingItem {
   id: string;
   name: string;
@@ -52,39 +50,6 @@ interface Wardrobe {
   Clothes: ClothingItem[];
 }
 
-const categories = [
-  "shirt",
-  "pants",
-  "dress",
-  "shoes",
-  "jacket",
-  "accessories",
-  "tank top",
-  "denim",
-];
-const seasons = ["spring", "summer", "fall", "winter", "all-season"];
-const occasions = [
-  "casual",
-  "work",
-  "formal",
-  "sports",
-  "party",
-  "school",
-  "home",
-];
-const colors = [
-  "red",
-  "blue",
-  "green",
-  "black",
-  "white",
-  "gray",
-  "brown",
-  "pink",
-  "yellow",
-  "purple",
-];
-
 export default function WardrobePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -95,32 +60,14 @@ export default function WardrobePage() {
   const [loading, setLoading] = useState(true);
   const [availableClothes, setAvailableClothes] = useState<ClothingItem[]>([]);
 
-  // Modals
   const itemModal = useDisclosure();
   const wardrobeModal = useDisclosure();
   const addExistingModal = useDisclosure();
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
   const [selectedExistingItems, setSelectedExistingItems] = useState<
     Set<string>
   >(new Set());
 
-  // Form data for items
-  const [itemFormData, setItemFormData] = useState({
-    name: "",
-    category: "",
-    brand: "",
-    price: "",
-    colors: [] as string[],
-    season: "",
-    size: "",
-    link: "",
-    imageUrl: "",
-    placesToWear: [] as string[],
-  });
-
-  // Form data for wardrobe
   const [wardrobeFormData, setWardrobeFormData] = useState({
     title: "",
     description: "",
@@ -172,79 +119,6 @@ export default function WardrobePage() {
     }
   };
 
-  // Item handlers
-  const handleOpenAddNew = () => {
-    setIsEditing(false);
-    setItemFormData({
-      name: "",
-      category: "",
-      brand: "",
-      price: "",
-      colors: [] as string[],
-      season: "",
-      size: "",
-      link: "",
-      imageUrl: "",
-      placesToWear: [] as string[],
-    });
-    itemModal.onOpen();
-  };
-
-  const handleOpenEdit = (item: ClothingItem) => {
-    setIsEditing(true);
-    setSelectedItem(item);
-    setItemFormData({
-      name: item.name,
-      category: item.category,
-      brand: item.brand || "",
-      price: item.price?.toString() || "",
-      colors: item.colors || [],
-      season: item.season || "",
-      size: item.size || "",
-      link: item.link || "",
-      imageUrl: item.imageUrl || "",
-      placesToWear: item.placesToWear || [],
-    });
-    itemModal.onOpen();
-  };
-
-  const handleSubmitItem = async () => {
-    const data = {
-      name: itemFormData.name,
-      category: itemFormData.category,
-      brand: itemFormData.brand || null,
-      price: itemFormData.price ? parseFloat(itemFormData.price) : null,
-      colors: itemFormData.colors,
-      season: itemFormData.season || null,
-      size: itemFormData.size || null,
-      link: itemFormData.link || null,
-      imageUrl: itemFormData.imageUrl || null,
-      placesToWear: itemFormData.placesToWear,
-      wardrobeId: wardrobeId,
-    };
-
-    try {
-      const url = isEditing
-        ? `/api/clothes/${selectedItem?.id}`
-        : "/api/clothes";
-      const method = isEditing ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        fetchWardrobe();
-        fetchAvailableClothes();
-        itemModal.onClose();
-      }
-    } catch (error) {
-      console.error("Error saving item:", error);
-    }
-  };
-
   const handleDeleteItem = async (id: string) => {
     if (!confirm("Are you sure you want to delete this item permanently?"))
       return;
@@ -267,7 +141,6 @@ export default function WardrobePage() {
     if (!confirm("Remove this item from the wardrobe?")) return;
 
     try {
-      // Find the item to get its full data
       const item = wardrobe?.Clothes.find((c) => c.id === id);
       if (!item) return;
 
@@ -341,7 +214,6 @@ export default function WardrobePage() {
     }
   };
 
-  // Add existing items handlers
   const handleOpenAddExisting = () => {
     setSelectedExistingItems(new Set());
     addExistingModal.onOpen();
@@ -354,7 +226,6 @@ export default function WardrobePage() {
         const item = availableClothes.find((c) => c.id === itemId);
         if (!item) return;
 
-        // Send complete item data with updated wardrobeId
         return fetch(`/api/clothes/${itemId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -393,7 +264,6 @@ export default function WardrobePage() {
     setSelectedExistingItems(newSelection);
   };
 
-  // Filter out items already in this wardrobe
   const itemsNotInWardrobe = availableClothes.filter(
     (item) =>
       !wardrobe?.Clothes.some((wardrobeItem) => wardrobeItem.id === item.id)
@@ -452,9 +322,10 @@ export default function WardrobePage() {
       {/* Action Buttons */}
       <div className="flex gap-3 mb-6">
         <Button
+          as={Link}
           color="primary"
           startContent={<PlusIcon className="w-5 h-5" />}
-          onPress={handleOpenAddNew}
+          href="/closet/new"
         >
           Add New Item
         </Button>
@@ -475,7 +346,7 @@ export default function WardrobePage() {
               No items in this wardrobe yet
             </p>
             <div className="flex gap-3 justify-center">
-              <Button color="primary" onPress={handleOpenAddNew}>
+              <Button color="primary" as={Link} href="/closet/new">
                 Add New Item
               </Button>
               <Button
@@ -491,7 +362,12 @@ export default function WardrobePage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {wardrobe.Clothes.map((item) => (
-            <Card key={item.id} className="w-full">
+            <Card
+              key={item.id}
+              className="w-full"
+              as={Link}
+              href={"/closet/" + item.id}
+            >
               <CardBody className="p-0 overflow-hidden">
                 <div className="w-full h-64 relative">
                   <Image
@@ -527,15 +403,6 @@ export default function WardrobePage() {
                 <div className="flex gap-2 w-full mt-2">
                   <Button
                     className="flex-1"
-                    color="primary"
-                    size="sm"
-                    variant="flat"
-                    onPress={() => handleOpenEdit(item)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    className="flex-1"
                     color="warning"
                     size="sm"
                     variant="flat"
@@ -558,133 +425,6 @@ export default function WardrobePage() {
           ))}
         </div>
       )}
-
-      {/* Add/Edit Item Modal */}
-      <Modal isOpen={itemModal.isOpen} size="2xl" onClose={itemModal.onClose}>
-        <ModalContent>
-          <ModalHeader>{isEditing ? "Edit Item" : "Add New Item"}</ModalHeader>
-          <ModalBody>
-            <div className="flex flex-col gap-4">
-              <Input
-                isRequired
-                label="Name"
-                placeholder="e.g., Blue Denim Jacket"
-                value={itemFormData.name}
-                onChange={(e) =>
-                  setItemFormData({ ...itemFormData, name: e.target.value })
-                }
-              />
-              <Select
-                isRequired
-                label="Category"
-                placeholder="Select category"
-                selectedKeys={
-                  itemFormData.category ? [itemFormData.category] : []
-                }
-                onChange={(e) =>
-                  setItemFormData({ ...itemFormData, category: e.target.value })
-                }
-              >
-                {categories.map((cat) => (
-                  <SelectItem key={cat}>{cat}</SelectItem>
-                ))}
-              </Select>
-              <Input
-                label="Brand"
-                placeholder="e.g., Nike, Zara"
-                value={itemFormData.brand}
-                onChange={(e) =>
-                  setItemFormData({ ...itemFormData, brand: e.target.value })
-                }
-              />
-              <Input
-                label="Price"
-                placeholder="29.99"
-                type="number"
-                value={itemFormData.price}
-                onChange={(e) =>
-                  setItemFormData({ ...itemFormData, price: e.target.value })
-                }
-              />
-              <Select
-                label="Colors"
-                placeholder="Select colors"
-                selectionMode="multiple"
-                selectedKeys={new Set(itemFormData.colors || [])}
-                onSelectionChange={(keys) => {
-                  const selectedArray = Array.from(keys) as string[];
-                  setItemFormData({ ...itemFormData, colors: selectedArray });
-                }}
-              >
-                {colors.map((color) => (
-                  <SelectItem key={color}>{color}</SelectItem>
-                ))}
-              </Select>
-              <Select
-                label="Season"
-                placeholder="Select season"
-                selectedKeys={itemFormData.season ? [itemFormData.season] : []}
-                onChange={(e) =>
-                  setItemFormData({ ...itemFormData, season: e.target.value })
-                }
-              >
-                {seasons.map((season) => (
-                  <SelectItem key={season}>{season}</SelectItem>
-                ))}
-              </Select>
-              <Input
-                label="Size"
-                placeholder="e.g., M, L, 32"
-                value={itemFormData.size}
-                onChange={(e) =>
-                  setItemFormData({ ...itemFormData, size: e.target.value })
-                }
-              />
-              <Input
-                label="Link"
-                placeholder="https://..."
-                value={itemFormData.link}
-                onChange={(e) =>
-                  setItemFormData({ ...itemFormData, link: e.target.value })
-                }
-              />
-              <Input
-                label="Image URL"
-                placeholder="https://..."
-                value={itemFormData.imageUrl}
-                onChange={(e) =>
-                  setItemFormData({ ...itemFormData, imageUrl: e.target.value })
-                }
-              />
-              <Select
-                label="Places to Wear"
-                placeholder="Select places"
-                selectionMode="multiple"
-                selectedKeys={new Set(itemFormData.placesToWear || [])}
-                onSelectionChange={(keys) => {
-                  const selectedArray = Array.from(keys) as string[];
-                  setItemFormData({
-                    ...itemFormData,
-                    placesToWear: selectedArray,
-                  });
-                }}
-              >
-                {occasions.map((occasion) => (
-                  <SelectItem key={occasion}>{occasion}</SelectItem>
-                ))}
-              </Select>
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="flat" onPress={itemModal.onClose}>
-              Cancel
-            </Button>
-            <Button color="primary" onPress={handleSubmitItem}>
-              {isEditing ? "Update" : "Add"}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
 
       {/* Edit Wardrobe Modal */}
       <Modal

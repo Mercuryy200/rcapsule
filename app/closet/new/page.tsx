@@ -10,40 +10,7 @@ import {
   Select,
   SelectItem,
 } from "@heroui/react";
-
-const categories = [
-  "shirt",
-  "pants",
-  "dress",
-  "shoes",
-  "jacket",
-  "accessories",
-  "tank top",
-  "denim",
-  "underwear",
-];
-const seasons = ["spring", "summer", "fall", "winter", "all-season"];
-const occasions = [
-  "casual",
-  "work",
-  "formal",
-  "sports",
-  "party",
-  "school",
-  "home",
-];
-const colors = [
-  "red",
-  "blue",
-  "green",
-  "black",
-  "white",
-  "gray",
-  "brown",
-  "pink",
-  "yellow",
-  "purple",
-];
+import { colors, occasions, seasons, categories } from "@/lib/data";
 
 export default function NewItemPage() {
   const { data: session, status } = useSession();

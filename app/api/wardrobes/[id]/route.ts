@@ -16,7 +16,6 @@ export async function GET(
     const { id } = await params;
     const supabase = getSupabaseServer();
 
-    // Get wardrobe with clothes using a join
     const { data: wardrobe, error } = await supabase
       .from("Wardrobe")
       .select(
@@ -38,7 +37,6 @@ export async function GET(
       );
     }
 
-    // Sort clothes by createdAt desc (Supabase doesn't support orderBy in nested selects)
     if (wardrobe.Clothes) {
       wardrobe.Clothes.sort(
         (a: any, b: any) =>
@@ -74,7 +72,7 @@ export async function PUT(
 
     // First, get the existing wardrobe
     const { data: existing, error: fetchError } = await supabase
-      .from("wardrobe")
+      .from("Wardrobe")
       .select("*")
       .eq("id", id)
       .single();
@@ -88,7 +86,7 @@ export async function PUT(
 
     // Update with fallbacks to existing values
     const { data: wardrobe, error: updateError } = await supabase
-      .from("wardrobe")
+      .from("Wardrobe")
       .update({
         title: data.title || existing.title,
         description:
@@ -135,7 +133,7 @@ export async function DELETE(
 
     // Check if wardrobe exists and belongs to user
     const { data: existing, error: fetchError } = await supabase
-      .from("wardrobe")
+      .from("Wardrobe")
       .select("id, userId")
       .eq("id", id)
       .single();
@@ -149,7 +147,7 @@ export async function DELETE(
 
     // Delete the wardrobe
     const { error: deleteError } = await supabase
-      .from("wardrobe")
+      .from("Wardrobe")
       .delete()
       .eq("id", id);
 
