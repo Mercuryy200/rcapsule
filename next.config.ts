@@ -5,7 +5,14 @@ const nextConfig: NextConfig = {
     GITHUB_SECRET: process.env.GITHUB_SECRET,
   },
   images: {
-    domains: ["avatars.githubusercontent.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+        port: "",
+        pathname: "/**", 
+      },
+    ],
   },
 };
 

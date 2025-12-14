@@ -130,7 +130,7 @@ export default function ItemPage() {
       alert("Error saving changes");
     } finally {
       setSaving(false);
-      router.push("/closet");
+      router.push("/closet/");
     }
   };
 
@@ -180,65 +180,35 @@ export default function ItemPage() {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Button variant="flat" onPress={() => router.push("/closet")}>
-            ← Back to Closet
-          </Button>
-          <h1 className="text-3xl font-bold">
-            {isEditing ? "Edit Item" : item.name}
-          </h1>
-        </div>
-        {!isEditing && (
-          <div className="flex gap-2">
-            <Button color="primary" onPress={() => setIsEditing(true)}>
-              Edit
-            </Button>
-            <Button color="danger" variant="flat" onPress={handleDelete}>
-              Delete
-            </Button>
-          </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div>
+      <div className="grid grid-cols-1 lg:grid-cols-2">
         <div>
-          <Card>
-            <CardBody className="p-0">
-              <Image
-                alt={item.name}
-                className="object-cover w-full h-96"
-                src={item.imageUrl || "/images/placeholder.png"}
-              />
-            </CardBody>
-          </Card>
+          <Image
+            alt={item.name}
+            className="w-full rounded-none"
+            src={item.imageUrl || "/images/placeholder.png"}
+          />
         </div>
 
         <div>
           {!isEditing ? (
-            <Card>
+            <Card className="p-15 bg-none- border-0 shadow-none">
               <CardBody className="gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Name</p>
-                  <p className="text-lg font-semibold">{item.name}</p>
-                </div>
-                {item.brand && (
-                  <div>
-                    <p className="text-sm text-gray-500">Brand</p>
-                    <p className="text-lg">{item.brand}</p>
-                  </div>
-                )}
-                <div>
-                  <p className="text-sm text-gray-500">Category</p>
-                  <p className="text-lg capitalize">{item.category}</p>
-                </div>
-                {item.price && (
-                  <div>
-                    <p className="text-sm text-gray-500">Price</p>
+                <div className="m-0">
+                  {item.brand && (
+                    <p className="text-md font-light">{item.brand}</p>
+                  )}
+                  <div className="flex justify-between">
+                    <p className="text-lg font-semibold">{item.name}</p>
                     <p className="text-lg font-semibold">${item.price}</p>
                   </div>
-                )}
+                  <div>
+                    <p className="text-sm font-light">
+                      Category: {item.category}
+                    </p>
+                  </div>
+                </div>
+                {item.price && <div></div>}
                 {item.colors && item.colors.length > 0 && (
                   <div>
                     <p className="text-sm text-gray-500 mb-2">Colors</p>
@@ -288,6 +258,14 @@ export default function ItemPage() {
                     </a>
                   </div>
                 )}
+                <div className="flex gap-2">
+                  <Button color="primary" onPress={() => setIsEditing(true)}>
+                    Edit
+                  </Button>
+                  <Button color="danger" variant="flat" onPress={handleDelete}>
+                    Delete
+                  </Button>
+                </div>
               </CardBody>
             </Card>
           ) : (
