@@ -1,5 +1,5 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import {
@@ -27,6 +27,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
+
 interface ClothingItem {
   id: string;
   name: string;
@@ -60,14 +61,12 @@ export default function WardrobePage() {
   const [loading, setLoading] = useState(true);
   const [availableClothes, setAvailableClothes] = useState<ClothingItem[]>([]);
 
-  const itemModal = useDisclosure();
   const wardrobeModal = useDisclosure();
   const addExistingModal = useDisclosure();
 
   const [selectedExistingItems, setSelectedExistingItems] = useState<
     Set<string>
   >(new Set());
-
   const [wardrobeFormData, setWardrobeFormData] = useState({
     title: "",
     description: "",
@@ -148,16 +147,7 @@ export default function WardrobePage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: item.name,
-          category: item.category,
-          brand: item.brand || null,
-          price: item.price || null,
-          colors: item.colors || [],
-          season: item.season || null,
-          size: item.size || null,
-          link: item.link || null,
-          imageUrl: item.imageUrl || null,
-          placesToWear: item.placesToWear || [],
+          ...item,
           wardrobeId: null,
         }),
       });
@@ -169,11 +159,6 @@ export default function WardrobePage() {
     } catch (error) {
       console.error("Error removing item:", error);
     }
-  };
-
-  // Wardrobe handlers
-  const handleOpenEditWardrobe = () => {
-    wardrobeModal.onOpen();
   };
 
   const handleUpdateWardrobe = async () => {
@@ -222,7 +207,6 @@ export default function WardrobePage() {
   const handleAddExistingItems = async () => {
     try {
       const promises = Array.from(selectedExistingItems).map(async (itemId) => {
-        // Find the full item data
         const item = availableClothes.find((c) => c.id === itemId);
         if (!item) return;
 
@@ -230,16 +214,7 @@ export default function WardrobePage() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            name: item.name,
-            category: item.category,
-            brand: item.brand || null,
-            price: item.price || null,
-            colors: item.colors || [],
-            season: item.season || null,
-            size: item.size || null,
-            link: item.link || null,
-            imageUrl: item.imageUrl || null,
-            placesToWear: item.placesToWear || [],
+            ...item,
             wardrobeId: wardrobeId,
           }),
         });
@@ -304,7 +279,7 @@ export default function WardrobePage() {
           <Button
             variant="flat"
             startContent={<PencilIcon className="w-5 h-5" />}
-            onPress={handleOpenEditWardrobe}
+            onPress={wardrobeModal.onOpen}
           >
             Edit Wardrobe
           </Button>
@@ -366,16 +341,14 @@ export default function WardrobePage() {
               key={item.id}
               className="w-full"
               as={Link}
-              href={"/closet/" + item.id}
+              href={`/closet/${item.id}`}
             >
               <CardBody className="p-0 overflow-hidden">
                 <div className="w-full h-64 relative">
                   <Image
                     alt={item.name}
                     className="w-full h-full object-cover"
-                    classNames={{
-                      img: "w-full h-full object-cover",
-                    }}
+                    classNames={{ img: "w-full h-full object-cover" }}
                     src={item.imageUrl || "/images/placeholder.png"}
                   />
                 </div>
@@ -495,8 +468,8 @@ export default function WardrobePage() {
       <Modal
         isOpen={addExistingModal.isOpen}
         size="3xl"
-        onClose={addExistingModal.onClose}
         scrollBehavior="inside"
+        onClose={addExistingModal.onClose}
       >
         <ModalContent>
           <ModalHeader>Add Existing Items to Wardrobe</ModalHeader>
@@ -535,9 +508,9 @@ export default function WardrobePage() {
                               viewBox="0 0 20 20"
                             >
                               <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                                 clipRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                fillRule="evenodd"
                               />
                             </svg>
                           </div>

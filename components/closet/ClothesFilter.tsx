@@ -12,7 +12,9 @@ import {
   Chip,
   CardFooter,
 } from "@heroui/react";
+
 import { FunnelIcon, XMarkIcon } from "@heroicons/react/24/outline";
+
 import { colors, occasions, seasons, categories } from "@/lib/data";
 
 export interface FilterOptions {
@@ -84,18 +86,18 @@ export default function ClothesFilter({
           <FunnelIcon className="w-5 h-5" />
           <h3 className="text-lg font-semibold">Filters</h3>
           {hasActiveFilters && (
-            <Chip size="sm" color="primary" variant="flat">
+            <Chip color="primary" size="sm" variant="flat">
               Active
             </Chip>
           )}
         </div>
         {hasActiveFilters && (
           <Button
+            color="danger"
+            onPress={handleClearFilters}
+            startContent={<XMarkIcon className="w-4 h-4" />}
             size="sm"
             variant="light"
-            color="danger"
-            startContent={<XMarkIcon className="w-4 h-4" />}
-            onPress={handleClearFilters}
           >
             Clear
           </Button>
@@ -150,12 +152,12 @@ export default function ClothesFilter({
           </h4>
           <Slider
             step={10}
-            minValue={0}
             maxValue={500}
+            minValue={0}
             value={priceRange}
-            onChange={(value) => setPriceRange(value as [number, number])}
             className="max-w-md"
             formatOptions={{ style: "currency", currency: "USD" }}
+            onChange={(value) => setPriceRange(value as [number, number])}
           />
         </div>
         <Divider />
@@ -216,7 +218,7 @@ export default function ClothesFilter({
       </CardBody>
       <CardFooter>
         {/* Apply Button */}
-        <Button color="primary" onPress={handleApplyFilters} className="w-full">
+        <Button color="primary" className="w-full" onPress={handleApplyFilters}>
           Apply Filters
         </Button>
       </CardFooter>

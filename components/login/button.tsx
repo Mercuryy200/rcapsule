@@ -1,7 +1,10 @@
 "use client";
 import { Button, Link } from "@heroui/react";
+
 import { FaGithub, FaGoogle } from "react-icons/fa";
+
 import { signIn } from "next-auth/react";
+
 import { logout } from "@/lib/actions/auth";
 
 export const SignInButtonGoogle = () => {

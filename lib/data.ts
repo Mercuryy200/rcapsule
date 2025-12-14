@@ -1,4 +1,3 @@
-
 export const  categories = [
   "shirt",
   "pants",
@@ -10,7 +9,10 @@ export const  categories = [
   "denim",
   "underwear",
   "skirt",
-  "heels"
+  "heels",
+  "hoodie",
+  "cardigan",
+  "blouse"
 ];
 export const colors = [
   "red",
@@ -24,7 +26,7 @@ export const colors = [
   "yellow",
   "purple",
   "beige",
-  "burgundy"
+  "burgundy",
 ];
 
 export const seasons = ["spring", "summer", "fall", "winter", "all-season"];
@@ -38,5 +40,5 @@ export const occasions = [
   "school",
   "home",
   "beach",
-  "outerwear"
+  "outerwear",
 ];
