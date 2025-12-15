@@ -118,12 +118,12 @@ export const NavbarLoggedOut = () => {
         </NavbarItem>
         <NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>
         <NavbarItem>
-          <Button as={NextLink} color="primary" href="/login" variant="flat">
+          <Button as={NextLink} color="primary" href="/login" variant="solid">
             Login
           </Button>
         </NavbarItem>
         <NavbarItem>
-          <Button as={NextLink} color="primary" href="/signup" variant="flat">
+          <Button as={NextLink} color="primary" href="/signup" variant="solid">
             Sign Up
           </Button>
         </NavbarItem>

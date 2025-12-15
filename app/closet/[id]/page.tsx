@@ -214,7 +214,7 @@ export default function ItemPage() {
                     <p className="text-sm text-gray-500 mb-2">Colors</p>
                     <div className="flex flex-wrap gap-2">
                       {item.colors.map((color) => (
-                        <Chip key={color} variant="flat">
+                        <Chip key={color} variant="solid">
                           {color}
                         </Chip>
                       ))}
@@ -238,7 +238,7 @@ export default function ItemPage() {
                     <p className="text-sm text-gray-500 mb-2">Places to Wear</p>
                     <div className="flex flex-wrap gap-2">
                       {item.placesToWear.map((place) => (
-                        <Chip key={place} color="primary" variant="flat">
+                        <Chip key={place} variant="solid">
                           {place}
                         </Chip>
                       ))}
@@ -262,7 +262,7 @@ export default function ItemPage() {
                   <Button color="primary" onPress={() => setIsEditing(true)}>
                     Edit
                   </Button>
-                  <Button color="danger" variant="flat" onPress={handleDelete}>
+                  <Button variant="solid" onPress={handleDelete}>
                     Delete
                   </Button>
                 </div>
@@ -378,7 +378,7 @@ export default function ItemPage() {
                 </Select>
 
                 <div className="flex gap-2 justify-end mt-4">
-                  <Button variant="flat" onPress={handleCancel}>
+                  <Button variant="solid" onPress={handleCancel}>
                     Cancel
                   </Button>
                   <Button

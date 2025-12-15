@@ -79,7 +79,7 @@ function LoginFormContent() {
           >
             Sign In
           </Button>
-          <Button className="w-1/2" type="reset" variant="flat">
+          <Button className="w-1/2" type="reset" variant="solid">
             Reset
           </Button>
         </div>

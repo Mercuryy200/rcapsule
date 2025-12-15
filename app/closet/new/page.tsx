@@ -83,7 +83,7 @@ export default function NewItemPage() {
   return (
     <div className="w-full max-w-3xl mx-auto p-6">
       <div className="flex items-center gap-4 mb-8">
-        <Button variant="flat" onPress={() => router.push("/closet")}>
+        <Button variant="solid" onPress={() => router.push("/closet")}>
           ← Back
         </Button>
         <h1 className="text-3xl font-bold">Add New Item</h1>
@@ -192,7 +192,7 @@ export default function NewItemPage() {
           </Select>
 
           <div className="flex gap-2 justify-end mt-4">
-            <Button variant="flat" onPress={() => router.push("/closet")}>
+            <Button variant="solid" onPress={() => router.push("/closet")}>
               Cancel
             </Button>
             <Button color="primary" isLoading={saving} onPress={handleSubmit}>

@@ -14,7 +14,7 @@ export default function Hero() {
           whileInView={{ opacity: 1, x: 0 }}
         >
           <span className={title()}>Organize your&nbsp;</span>
-          <span className={title({ color: "blue" })}>Closet&nbsp;</span>
+          <span className={title({ color: "beige" })}>Closet&nbsp;</span>
           <br />
           <span className={title()}>and find an outfit for the day</span>
         </motion.h1>

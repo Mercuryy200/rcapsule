@@ -185,7 +185,7 @@ export default function ClosetPage() {
         </div>
         <div className="flex gap-2">
           <Button
-            variant={showFilters ? "solid" : "flat"}
+            variant={showFilters ? "solid" : "solid"}
             color={showFilters ? "primary" : "default"}
             startContent={<FunnelIcon className="w-5 h-5" />}
             onPress={() => setShowFilters(!showFilters)}
@@ -233,7 +233,7 @@ export default function ClosetPage() {
                   isPressable
                   onPress={() => handleItemClick(item.id)}
                 >
-                  <CardBody className="p-0 relative object-cover object-center bg-foreground h-90 w-full overflow-hidden">
+                  <CardBody className="p-0 relative object-cover justify-center bg-white   h-90 w-full overflow-hidden">
                     <Image
                       alt={item.name}
                       src={item.imageUrl || "/images/placeholder.png"}
@@ -242,20 +242,20 @@ export default function ClosetPage() {
                   <CardFooter className="flex flex-col items-start gap-2">
                     <div className="w-full text-left">
                       <p className="font-light text-md truncate">{item.name}</p>
-                      <p className="text-sm text-gray-500 capitalize">
-                        {item.category}
-                      </p>
+                      <p className="text-sm text-gray-500 capitalize"></p>
                       {item.brand && (
-                        <p className="text-sm text-gray-600">{item.brand}</p>
+                        <p className="text-sm text-gray-600">
+                          {item.brand} - {item.category}
+                        </p>
                       )}
                       {item.price && (
-                        <p className="text-sm font-semibold">${item.price}</p>
+                        <p className="text-sm font-light">${item.price}</p>
                       )}
                     </div>
                     {item.colors && item.colors.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {item.colors.map((color) => (
-                          <Chip key={color} size="sm" variant="flat">
+                          <Chip key={color} size="sm" variant="solid">
                             {color}
                           </Chip>
                         ))}

@@ -158,7 +158,7 @@ export default function ProfilePage() {
           </div>
           <Button
             color="primary"
-            variant="flat"
+            variant="solid"
             className="mt-4"
             onPress={() => router.push("/settings")}
           >
@@ -240,7 +240,7 @@ export default function ProfilePage() {
                 )}
                 <Chip
                   size="sm"
-                  variant="flat"
+                  variant="solid"
                   color={wardrobe.isPublic ? "success" : "warning"}
                 >
                   {wardrobe.isPublic ? "Public" : "Private"}
@@ -298,7 +298,7 @@ export default function ProfilePage() {
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button variant="flat" onPress={onClose}>
+            <Button variant="solid" onPress={onClose}>
               Cancel
             </Button>
             <Button

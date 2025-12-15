@@ -86,7 +86,7 @@ export default function ClothesFilter({
           <FunnelIcon className="w-5 h-5" />
           <h3 className="text-lg font-semibold">Filters</h3>
           {hasActiveFilters && (
-            <Chip color="primary" size="sm" variant="flat">
+            <Chip color="primary" size="sm" variant="solid">
               Active
             </Chip>
           )}

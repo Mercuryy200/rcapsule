@@ -31,7 +31,7 @@ export function ProfileDropdown() {
           src={user.image || "/images/Default_pfp.png"}
         />
       </DropdownTrigger>
-      <DropdownMenu aria-label="Profile Actions" variant="flat">
+      <DropdownMenu aria-label="Profile Actions" variant="solid">
         <DropdownItem key="profile" as={Link} href="/profile">
           My Profile
         </DropdownItem>

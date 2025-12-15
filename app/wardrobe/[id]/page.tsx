@@ -277,7 +277,7 @@ export default function WardrobePage() {
         </div>
         <div className="flex gap-2">
           <Button
-            variant="flat"
+            variant="solid"
             startContent={<PencilIcon className="w-5 h-5" />}
             onPress={wardrobeModal.onOpen}
           >
@@ -285,7 +285,7 @@ export default function WardrobePage() {
           </Button>
           <Button
             color="danger"
-            variant="flat"
+            variant="solid"
             startContent={<TrashIcon className="w-5 h-5" />}
             onPress={handleDeleteWardrobe}
           >
@@ -304,11 +304,7 @@ export default function WardrobePage() {
         >
           Add New Item
         </Button>
-        <Button
-          color="secondary"
-          variant="flat"
-          onPress={handleOpenAddExisting}
-        >
+        <Button variant="solid" onPress={handleOpenAddExisting}>
           Add Existing Items
         </Button>
       </div>
@@ -324,11 +320,7 @@ export default function WardrobePage() {
               <Button color="primary" as={Link} href="/closet/new">
                 Add New Item
               </Button>
-              <Button
-                color="secondary"
-                variant="flat"
-                onPress={handleOpenAddExisting}
-              >
+              <Button variant="solid" onPress={handleOpenAddExisting}>
                 Add Existing Items
               </Button>
             </div>
@@ -368,7 +360,7 @@ export default function WardrobePage() {
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {item.colors.map((color) => (
-                    <Chip key={color} size="sm" variant="flat">
+                    <Chip key={color} size="sm" variant="solid">
                       {color}
                     </Chip>
                   ))}
@@ -378,7 +370,7 @@ export default function WardrobePage() {
                     className="flex-1"
                     color="warning"
                     size="sm"
-                    variant="flat"
+                    variant="solid"
                     onPress={() => handleRemoveFromWardrobe(item.id)}
                   >
                     Remove
@@ -387,7 +379,7 @@ export default function WardrobePage() {
                     className="flex-1"
                     color="danger"
                     size="sm"
-                    variant="flat"
+                    variant="solid"
                     onPress={() => handleDeleteItem(item.id)}
                   >
                     Delete
@@ -454,7 +446,7 @@ export default function WardrobePage() {
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button variant="flat" onPress={wardrobeModal.onClose}>
+            <Button variant="solid" onPress={wardrobeModal.onClose}>
               Cancel
             </Button>
             <Button color="primary" onPress={handleUpdateWardrobe}>
@@ -529,7 +521,7 @@ export default function WardrobePage() {
             )}
           </ModalBody>
           <ModalFooter>
-            <Button variant="flat" onPress={addExistingModal.onClose}>
+            <Button variant="solid" onPress={addExistingModal.onClose}>
               Cancel
             </Button>
             <Button
