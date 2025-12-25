@@ -18,7 +18,21 @@ export async function GET(
 
     const { data: clothing, error } = await supabase
       .from("Clothes")
-      .select("*")
+      .select(`
+        *,
+        wardrobes:WardrobeClothes(
+          wardrobeId,
+          addedAt,
+          notes,
+          wardrobe:Wardrobe(
+            id,
+            title,
+            description,
+            isPublic,
+            coverImage
+          )
+        )
+      `)
       .eq("id", id)
       .eq("userId", session.user.id)
       .single();
@@ -63,18 +77,18 @@ export async function PUT(
         category: data.category,
         brand: data.brand || null,
         price: data.price ? parseFloat(data.price) : null,
+        purchaseDate: data.purchaseDate || null, // NEW FIELD
         colors: data.colors || [],
         season: data.season || null,
         size: data.size || null,
         link: data.link || null,
         imageUrl: data.imageUrl || null,
         placesToWear: data.placesToWear || [],
-        wardrobeId: data.wardrobeId !== undefined ? data.wardrobeId : undefined,
       })
       .eq("id", id)
       .eq("userId", session.user.id)
       .select();
-      
+
     if (error || !updatedClothing || updatedClothing.length === 0) {
       return NextResponse.json(
         { error: "Clothing not found or unauthorized" },
@@ -82,7 +96,36 @@ export async function PUT(
       );
     }
 
-    return NextResponse.json(updatedClothing[0]);
+    if (data.wardrobeIds !== undefined) {
+      await supabase
+        .from("WardrobeClothes")
+        .delete()
+        .eq("clothesId", id);
+
+      if (data.wardrobeIds && data.wardrobeIds.length > 0) {
+        const wardrobeEntries = data.wardrobeIds.map((wardrobeId: string) => ({
+          wardrobeId,
+          clothesId: id,
+        }));
+
+        await supabase.from("WardrobeClothes").insert(wardrobeEntries);
+      }
+    }
+
+    const { data: clothingWithWardrobes } = await supabase
+      .from("Clothes")
+      .select(`
+        *,
+        wardrobes:WardrobeClothes(
+          wardrobeId,
+          addedAt,
+          wardrobe:Wardrobe(id, title)
+        )
+      `)
+      .eq("id", id)
+      .single();
+
+    return NextResponse.json(clothingWithWardrobes || updatedClothing[0]);
   } catch (error) {
     console.error("Error updating clothing:", error);
 
