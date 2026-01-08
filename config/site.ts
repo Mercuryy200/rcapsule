@@ -18,8 +18,8 @@ export const siteConfig = {
     },
     {
       label: "Outfits",
-      href: "/outfit",
-    }
+      href: "/outfits",
+    },
   ],
   navMenuItems: [
     {

@@ -1,3 +1,4 @@
+// app/closet/new/page.tsx
 "use client";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -9,13 +10,17 @@ import {
   Input,
   Select,
   SelectItem,
+  Tabs,
+  Tab,
 } from "@heroui/react";
 import { colors, occasions, seasons, categories } from "@/lib/data";
+import { ImageUpload } from "@/components/closet/ImageUpload";
 
 export default function NewItemPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [imageMethod, setImageMethod] = useState<"upload" | "url">("upload");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -168,14 +173,42 @@ export default function NewItemPage() {
             value={formData.link}
             onChange={(e) => setFormData({ ...formData, link: e.target.value })}
           />
-          <Input
-            label="Image URL"
-            placeholder="https://..."
-            value={formData.imageUrl}
-            onChange={(e) =>
-              setFormData({ ...formData, imageUrl: e.target.value })
-            }
-          />
+
+          {/* Image Upload Section with Tabs */}
+          <div className="space-y-2">
+            <Tabs
+              selectedKey={imageMethod}
+              onSelectionChange={(key) =>
+                setImageMethod(key as "upload" | "url")
+              }
+              aria-label="Image input method"
+              color="primary"
+              size="sm"
+            >
+              <Tab key="upload" title="Upload Image" />
+              <Tab key="url" title="Image URL" />
+            </Tabs>
+
+            {imageMethod === "upload" ? (
+              <ImageUpload
+                value={formData.imageUrl}
+                onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+                folder="clothes"
+                label="Clothing Image"
+              />
+            ) : (
+              <Input
+                label="Image URL"
+                placeholder="https://..."
+                value={formData.imageUrl}
+                onChange={(e) =>
+                  setFormData({ ...formData, imageUrl: e.target.value })
+                }
+                description="Paste a direct link to an image"
+              />
+            )}
+          </div>
+
           <Select
             label="Places to Wear"
             placeholder="Select places"

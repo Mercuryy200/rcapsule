@@ -26,14 +26,16 @@ import {
   PlusIcon,
 } from "@heroicons/react/24/outline";
 
+// Update interface to match the API response exactly
 interface Wardrobe {
   id: string;
   title: string;
   description?: string;
   isPublic: boolean;
-  coverImage?: string;
+  coverImage?: string | null;
   clothesCount: number;
   createdAt: string;
+  updatedAt: string;
 }
 
 export default function ProfilePage() {
@@ -68,13 +70,15 @@ export default function ProfilePage() {
       console.error("Error fetching user:", error);
     }
   };
-  //fetches the current wardrobes
+
   const fetchProfile = async () => {
     try {
+      // CHANGED: /api/clothes -> /api/closet matches your file structure
       const [wardrobesRes, clothesRes] = await Promise.all([
         fetch("/api/wardrobes"),
         fetch("/api/clothes"),
       ]);
+
       if (wardrobesRes.ok && clothesRes.ok) {
         const wardrobesData = await wardrobesRes.json();
         const clothesData = await clothesRes.json();
@@ -228,29 +232,40 @@ export default function ProfilePage() {
                 </div>
               </CardHeader>
               <CardBody>
-                <Image
-                  src={wardrobe.coverImage}
-                  className=" h-48 w-96 object-cover"
-                />
+                {/* Image Fallback Logic */}
+                {wardrobe.coverImage ? (
+                  <Image
+                    src={wardrobe.coverImage}
+                    className="h-48 w-full object-cover rounded-lg"
+                    alt={wardrobe.title}
+                  />
+                ) : (
+                  <div className="h-48 w-full bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                    <span className="text-sm">No Cover Image</span>
+                  </div>
+                )}
 
                 {wardrobe.description && (
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-sm text-gray-600 mt-3 line-clamp-2">
                     {wardrobe.description}
                   </p>
                 )}
-                <Chip
-                  size="sm"
-                  variant="solid"
-                  color={wardrobe.isPublic ? "success" : "warning"}
-                >
-                  {wardrobe.isPublic ? "Public" : "Private"}
-                </Chip>
+                <div className="mt-3">
+                  <Chip
+                    size="sm"
+                    variant="solid"
+                    color={wardrobe.isPublic ? "success" : "warning"}
+                  >
+                    {wardrobe.isPublic ? "Public" : "Private"}
+                  </Chip>
+                </div>
               </CardBody>
             </Card>
           ))}
         </div>
       )}
 
+      {/* Modal remains the same */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalContent>
           <ModalHeader>Create New Wardrobe</ModalHeader>
@@ -278,7 +293,7 @@ export default function ProfilePage() {
               />
               <Input
                 label="Image Link"
-                placeholder="Optional Cover Image"
+                placeholder="Optional Cover Image URL"
                 value={newWardrobe.coverImage}
                 onChange={(e) =>
                   setNewWardrobe({

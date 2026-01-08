@@ -6,7 +6,7 @@ export async function PUT(req: Request) {
   try {
     const session = await auth();
 
-    if (!session?.user?.id) {
+    if (!session?.user?.id || !session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -21,10 +21,8 @@ export async function PUT(req: Request) {
 
     const supabase = getSupabaseServer();
 
-    // Use Supabase Auth to update password
-    // First, verify the current password by trying to sign in
     const { error: verifyError } = await supabase.auth.signInWithPassword({
-      email: session.user.email!,
+      email: session.user.email,
       password: data.currentPassword,
     });
 
@@ -35,7 +33,6 @@ export async function PUT(req: Request) {
       );
     }
 
-    // Update to new password
     const { error: updateError } = await supabase.auth.updateUser({
       password: data.newPassword,
     });
@@ -44,10 +41,14 @@ export async function PUT(req: Request) {
       throw updateError;
     }
 
+    await supabase
+      .from("User")
+      .update({ updatedAt: new Date().toISOString() })
+      .eq("id", session.user.id);
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error changing password:", error);
-
     return NextResponse.json(
       { error: "Failed to change password" },
       { status: 500 }

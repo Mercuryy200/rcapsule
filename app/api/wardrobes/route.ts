@@ -17,7 +17,7 @@ export async function GET() {
       .select(
         `
         *,
-        Clothes (count)
+        WardrobeClothes(count)
       `
       )
       .eq("userId", session.user.id)
@@ -27,13 +27,15 @@ export async function GET() {
       throw error;
     }
 
-    const wardrobesWithCount = (wardrobes || []).map((wardrobe) => ({
+    // Format the response
+    const wardrobesWithCount = (wardrobes || []).map((wardrobe: any) => ({
       id: wardrobe.id,
       title: wardrobe.title,
       description: wardrobe.description,
       isPublic: wardrobe.isPublic,
       coverImage: wardrobe.coverImage,
-      clothesCount: wardrobe.Clothes?.[0]?.count || 0,
+      // Supabase returns count as an array of objects like [{ count: 5 }]
+      clothesCount: wardrobe.WardrobeClothes?.[0]?.count || 0,
       createdAt: wardrobe.createdAt,
       updatedAt: wardrobe.updatedAt,
     }));
@@ -41,7 +43,6 @@ export async function GET() {
     return NextResponse.json(wardrobesWithCount);
   } catch (error) {
     console.error("Error fetching wardrobes:", error);
-
     return NextResponse.json(
       { error: "Failed to fetch wardrobes" },
       { status: 500 }
@@ -84,7 +85,6 @@ export async function POST(req: Request) {
     return NextResponse.json(wardrobe, { status: 201 });
   } catch (error) {
     console.error("Error creating wardrobe:", error);
-
     return NextResponse.json(
       { error: "Failed to create wardrobe" },
       { status: 500 }

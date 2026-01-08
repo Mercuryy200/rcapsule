@@ -12,28 +12,29 @@ export async function PUT(req: Request) {
 
     const data = await req.json();
     const supabase = getSupabaseServer();
+    const updateData: any = {
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.image !== undefined) updateData.image = data.image;
+    if (data.profilePublic !== undefined)
+      updateData.profilePublic = data.profilePublic;
 
     const { data: user, error } = await supabase
       .from("User")
-      .update({
-        name: data.name || null,
-        image: data.image || null,
-      })
+      .update(updateData)
       .eq("id", session.user.id)
-      .select("name, image")
+      .select("name, image, profilePublic")
       .single();
 
     if (error) {
       throw error;
     }
 
-    return NextResponse.json({
-      name: user.name,
-      image: user.image,
-    });
+    return NextResponse.json(user);
   } catch (error) {
     console.error("Error updating profile:", error);
-
     return NextResponse.json(
       { error: "Failed to update profile" },
       { status: 500 }

@@ -4,9 +4,9 @@ import { NextResponse } from "next/server";
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const protectedRoutes = ["/profile", "/closet", "/settings"];
+  const protectedRoutes = ["/profile", "/closet", "/settings", "/outfits"];
   const isProtected = protectedRoutes.some((route) =>
-    pathname.startsWith(route),
+    pathname.startsWith(route)
   );
 
   if (isProtected) {
@@ -27,5 +27,10 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/profile/:path*", "/closet/:path*", "/settings/:path*"],
+  matcher: [
+    "/profile/:path*",
+    "/closet/:path*",
+    "/settings/:path*",
+    "/outfits/:path*",
+  ],
 };

@@ -40,6 +40,8 @@ interface ClothingItem {
   link?: string;
   imageUrl?: string;
   placesToWear: string[];
+  addedToWardrobeAt?: string;
+  wardrobeNotes?: string;
 }
 
 interface Wardrobe {
@@ -48,7 +50,7 @@ interface Wardrobe {
   description?: string;
   isPublic: boolean;
   coverImage?: string;
-  Clothes: ClothingItem[];
+  clothes: ClothingItem[]; // Changed from Clothes to clothes
 }
 
 export default function WardrobePage() {
@@ -89,7 +91,12 @@ export default function WardrobePage() {
 
       if (response.ok) {
         const data = await response.json();
-        setWardrobe(data);
+        // Ensure clothes is always an array
+        const safeData = {
+          ...data,
+          clothes: Array.isArray(data.clothes) ? data.clothes : [],
+        };
+        setWardrobe(safeData);
         setWardrobeFormData({
           title: data.title,
           description: data.description || "",
@@ -111,7 +118,7 @@ export default function WardrobePage() {
       const response = await fetch("/api/clothes");
       if (response.ok) {
         const data = await response.json();
-        setAvailableClothes(data);
+        setAvailableClothes(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error("Error fetching clothes:", error);
@@ -136,21 +143,16 @@ export default function WardrobePage() {
     }
   };
 
-  const handleRemoveFromWardrobe = async (id: string) => {
+  const handleRemoveFromWardrobe = async (clothesId: string) => {
     if (!confirm("Remove this item from the wardrobe?")) return;
 
     try {
-      const item = wardrobe?.Clothes.find((c) => c.id === id);
-      if (!item) return;
-
-      const response = await fetch(`/api/clothes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...item,
-          wardrobeId: null,
-        }),
-      });
+      const response = await fetch(
+        `/api/wardrobes/${wardrobeId}/clothes/${clothesId}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (response.ok) {
         fetchWardrobe();
@@ -181,7 +183,7 @@ export default function WardrobePage() {
   const handleDeleteWardrobe = async () => {
     if (
       !confirm(
-        "Are you sure you want to delete this wardrobe? Items will remain in your closet."
+        "Are you sure you want to delete this wardrobe? Items will remain in your clothes list."
       )
     )
       return;
@@ -206,24 +208,19 @@ export default function WardrobePage() {
 
   const handleAddExistingItems = async () => {
     try {
-      const promises = Array.from(selectedExistingItems).map(async (itemId) => {
-        const item = availableClothes.find((c) => c.id === itemId);
-        if (!item) return;
-
-        return fetch(`/api/clothes/${itemId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...item,
-            wardrobeId: wardrobeId,
-          }),
-        });
+      const response = await fetch(`/api/wardrobes/${wardrobeId}/clothes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clothesIds: Array.from(selectedExistingItems),
+        }),
       });
 
-      await Promise.all(promises);
-      fetchWardrobe();
-      fetchAvailableClothes();
-      addExistingModal.onClose();
+      if (response.ok) {
+        fetchWardrobe();
+        fetchAvailableClothes();
+        addExistingModal.onClose();
+      }
     } catch (error) {
       console.error("Error adding items:", error);
     }
@@ -239,11 +236,6 @@ export default function WardrobePage() {
     setSelectedExistingItems(newSelection);
   };
 
-  const itemsNotInWardrobe = availableClothes.filter(
-    (item) =>
-      !wardrobe?.Clothes.some((wardrobeItem) => wardrobeItem.id === item.id)
-  );
-
   if (status === "loading" || loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -255,6 +247,14 @@ export default function WardrobePage() {
   if (!wardrobe) {
     return <div className="text-center p-8">Wardrobe not found</div>;
   }
+
+  // Safe access to wardrobe.clothes - moved after null checks
+  const wardrobeClothes = wardrobe.clothes || [];
+
+  const itemsNotInWardrobe = availableClothes.filter(
+    (item) =>
+      !wardrobeClothes.some((wardrobeItem) => wardrobeItem.id === item.id)
+  );
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6">
@@ -300,7 +300,7 @@ export default function WardrobePage() {
           as={Link}
           color="primary"
           startContent={<PlusIcon className="w-5 h-5" />}
-          href="/closet/new"
+          href="/clothes/new"
         >
           Add New Item
         </Button>
@@ -310,14 +310,14 @@ export default function WardrobePage() {
       </div>
 
       {/* Clothes Grid */}
-      {wardrobe.Clothes.length === 0 ? (
+      {wardrobeClothes.length === 0 ? (
         <Card className="p-12">
           <div className="text-center">
             <p className="text-lg text-gray-500 mb-4">
               No items in this wardrobe yet
             </p>
             <div className="flex gap-3 justify-center">
-              <Button color="primary" as={Link} href="/closet/new">
+              <Button color="primary" as={Link} href="/clothes/new">
                 Add New Item
               </Button>
               <Button variant="solid" onPress={handleOpenAddExisting}>
@@ -328,12 +328,12 @@ export default function WardrobePage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {wardrobe.Clothes.map((item) => (
+          {wardrobeClothes.map((item) => (
             <Card
               key={item.id}
               className="w-full"
-              as={Link}
-              href={`/closet/${item.id}`}
+              isPressable
+              onPress={() => router.push(`/clothes/${item.id}`)}
             >
               <CardBody className="p-0 overflow-hidden">
                 <div className="w-full h-64 relative">
@@ -359,7 +359,7 @@ export default function WardrobePage() {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {item.colors.map((color) => (
+                  {item.colors?.map((color) => (
                     <Chip key={color} size="sm" variant="solid">
                       {color}
                     </Chip>

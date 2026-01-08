@@ -10,61 +10,56 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Type narrowing: at this point we know session.user exists
     const userId = session.user.id;
-
     const { searchParams } = new URL(req.url);
     const wardrobeId = searchParams.get("wardrobeId");
     const supabase = getSupabaseServer();
 
     if (wardrobeId) {
-      // Get clothes for a specific wardrobe using the junction table
       const { data: wardrobeClothes, error } = await supabase
         .from("WardrobeClothes")
-        .select(`
+        .select(
+          `
           addedAt,
           notes,
           clothes:Clothes(*)
-        `)
+        `
+        )
         .eq("wardrobeId", wardrobeId)
         .order("addedAt", { ascending: false });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      // Extract clothes from the nested structure
-      const clothes = wardrobeClothes?.map((wc: any) => ({
-        ...wc.clothes,
-        addedToWardrobeAt: wc.addedAt,
-        wardrobeNotes: wc.notes,
-      })) || [];
+      const clothes =
+        wardrobeClothes?.map((wc: any) => ({
+          ...wc.clothes,
+          addedToWardrobeAt: wc.addedAt,
+          wardrobeNotes: wc.notes,
+        })) || [];
 
       return NextResponse.json(clothes);
     } else {
-      // Get all clothes for the user with their wardrobes
       const { data: clothes, error } = await supabase
         .from("Clothes")
-        .select(`
+        .select(
+          `
           *,
           wardrobes:WardrobeClothes(
             wardrobeId,
             addedAt,
             wardrobe:Wardrobe(id, title)
           )
-        `)
+        `
+        )
         .eq("userId", userId)
         .order("createdAt", { ascending: false });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       return NextResponse.json(clothes || []);
     }
   } catch (error) {
     console.error("Error fetching clothes:", error);
-
     return NextResponse.json(
       { error: "Failed to fetch clothes" },
       { status: 500 }
@@ -80,9 +75,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Type narrowing: at this point we know session.user exists
     const userId = session.user.id;
-
     const data = await req.json();
 
     if (!data.name || !data.category) {
@@ -94,8 +87,7 @@ export async function POST(req: Request) {
 
     const supabase = getSupabaseServer();
 
-    // Validate wardrobes if provided
-    if (data.wardrobeIds && data.wardrobeIds.length > 0) {
+    if (data.wardrobeIds?.length > 0) {
       const { data: wardrobes, error } = await supabase
         .from("Wardrobe")
         .select("id, userId")
@@ -108,7 +100,6 @@ export async function POST(req: Request) {
         );
       }
 
-      // Check all wardrobes belong to the user
       const invalidWardrobes = wardrobes.filter(
         (w: any) => w.userId !== userId
       );
@@ -121,32 +112,30 @@ export async function POST(req: Request) {
       }
     }
 
-    // Create clothing item (without wardrobeId)
+    const clothingPayload = {
+      userId: userId,
+      name: data.name,
+      brand: data.brand || null,
+      category: data.category,
+      price: data.price ? parseFloat(data.price) : null,
+      purchaseDate: data.purchaseDate ? data.purchaseDate : null,
+      colors: Array.isArray(data.colors) ? data.colors : [],
+      season: data.season || null,
+      size: data.size || null,
+      link: data.link || null,
+      imageUrl: data.imageUrl || null,
+      placesToWear: Array.isArray(data.placesToWear) ? data.placesToWear : [],
+    };
+
     const { data: clothing, error: createError } = await supabase
       .from("Clothes")
-      .insert({
-        userId: userId,
-        name: data.name,
-        brand: data.brand || null,
-        category: data.category,
-        price: data.price ? parseFloat(data.price) : null,
-        purchaseDate: data.purchaseDate || null,
-        colors: data.colors || [],
-        season: data.season || null,
-        size: data.size || null,
-        link: data.link || null,
-        imageUrl: data.imageUrl || null,
-        placesToWear: data.placesToWear || [],
-      })
+      .insert(clothingPayload)
       .select()
       .single();
 
-    if (createError) {
-      throw createError;
-    }
+    if (createError) throw createError;
 
-    // Add to wardrobes if specified
-    if (data.wardrobeIds && data.wardrobeIds.length > 0) {
+    if (data.wardrobeIds?.length > 0) {
       const wardrobeEntries = data.wardrobeIds.map((wardrobeId: string) => ({
         wardrobeId,
         clothesId: clothing.id,
@@ -158,28 +147,29 @@ export async function POST(req: Request) {
 
       if (junctionError) {
         console.error("Error adding to wardrobes:", junctionError);
-        // Note: clothing is already created, so we don't fail the request
       }
     }
 
-    // Return clothing with wardrobe info
     const { data: clothingWithWardrobes } = await supabase
       .from("Clothes")
-      .select(`
+      .select(
+        `
         *,
         wardrobes:WardrobeClothes(
           wardrobeId,
           addedAt,
           wardrobe:Wardrobe(id, title)
         )
-      `)
+      `
+      )
       .eq("id", clothing.id)
       .single();
 
-    return NextResponse.json(clothingWithWardrobes || clothing, { status: 201 });
+    return NextResponse.json(clothingWithWardrobes || clothing, {
+      status: 201,
+    });
   } catch (error) {
     console.error("Error creating clothing:", error);
-
     return NextResponse.json(
       { error: "Failed to create clothing" },
       { status: 500 }

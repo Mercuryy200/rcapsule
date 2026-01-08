@@ -8,7 +8,6 @@ export async function GET(
 ) {
   try {
     const session = await auth();
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -18,7 +17,8 @@ export async function GET(
 
     const { data: clothing, error } = await supabase
       .from("Clothes")
-      .select(`
+      .select(
+        `
         *,
         wardrobes:WardrobeClothes(
           wardrobeId,
@@ -32,7 +32,8 @@ export async function GET(
             coverImage
           )
         )
-      `)
+      `
+      )
       .eq("id", id)
       .eq("userId", session.user.id)
       .single();
@@ -47,7 +48,6 @@ export async function GET(
     return NextResponse.json(clothing);
   } catch (error) {
     console.error("Error fetching clothing:", error);
-
     return NextResponse.json(
       { error: "Failed to fetch clothing" },
       { status: 500 }
@@ -61,7 +61,6 @@ export async function PUT(
 ) {
   try {
     const session = await auth();
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -69,22 +68,30 @@ export async function PUT(
     const { id } = await params;
     const data = await req.json();
     const supabase = getSupabaseServer();
+    const updatePayload: any = {
+      updatedAt: new Date().toISOString(),
+    };
 
+    if (data.name !== undefined) updatePayload.name = data.name;
+    if (data.category !== undefined) updatePayload.category = data.category;
+    if (data.brand !== undefined) updatePayload.brand = data.brand || null;
+    if (data.price !== undefined)
+      updatePayload.price = data.price ? parseFloat(data.price) : null;
+    if (data.purchaseDate !== undefined)
+      updatePayload.purchaseDate = data.purchaseDate || null;
+    if (data.colors !== undefined) updatePayload.colors = data.colors || [];
+    if (data.placesToWear !== undefined)
+      updatePayload.placesToWear = data.placesToWear || [];
+    if (data.season !== undefined) updatePayload.season = data.season || null;
+    if (data.size !== undefined) updatePayload.size = data.size || null;
+    if (data.link !== undefined) updatePayload.link = data.link || null;
+    if (data.imageUrl !== undefined)
+      updatePayload.imageUrl = data.imageUrl || null;
+
+    // 2. Update Clothes Table
     const { data: updatedClothing, error } = await supabase
       .from("Clothes")
-      .update({
-        name: data.name,
-        category: data.category,
-        brand: data.brand || null,
-        price: data.price ? parseFloat(data.price) : null,
-        purchaseDate: data.purchaseDate || null, // NEW FIELD
-        colors: data.colors || [],
-        season: data.season || null,
-        size: data.size || null,
-        link: data.link || null,
-        imageUrl: data.imageUrl || null,
-        placesToWear: data.placesToWear || [],
-      })
+      .update(updatePayload)
       .eq("id", id)
       .eq("userId", session.user.id)
       .select();
@@ -97,11 +104,7 @@ export async function PUT(
     }
 
     if (data.wardrobeIds !== undefined) {
-      await supabase
-        .from("WardrobeClothes")
-        .delete()
-        .eq("clothesId", id);
-
+      await supabase.from("WardrobeClothes").delete().eq("clothesId", id);
       if (data.wardrobeIds && data.wardrobeIds.length > 0) {
         const wardrobeEntries = data.wardrobeIds.map((wardrobeId: string) => ({
           wardrobeId,
@@ -114,21 +117,22 @@ export async function PUT(
 
     const { data: clothingWithWardrobes } = await supabase
       .from("Clothes")
-      .select(`
+      .select(
+        `
         *,
         wardrobes:WardrobeClothes(
           wardrobeId,
           addedAt,
           wardrobe:Wardrobe(id, title)
         )
-      `)
+      `
+      )
       .eq("id", id)
       .single();
 
     return NextResponse.json(clothingWithWardrobes || updatedClothing[0]);
   } catch (error) {
     console.error("Error updating clothing:", error);
-
     return NextResponse.json(
       { error: "Failed to update clothing" },
       { status: 500 }
@@ -142,13 +146,14 @@ export async function DELETE(
 ) {
   try {
     const session = await auth();
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
     const supabase = getSupabaseServer();
+    await supabase.from("WardrobeClothes").delete().eq("clothesId", id);
+    await supabase.from("OutfitClothes").delete().eq("clothesId", id);
 
     const { data: deletedClothing, error } = await supabase
       .from("Clothes")
@@ -167,7 +172,6 @@ export async function DELETE(
     return NextResponse.json({ message: "Deleted successfully" });
   } catch (error) {
     console.error("Error deleting clothing:", error);
-
     return NextResponse.json(
       { error: "Failed to delete clothing" },
       { status: 500 }

@@ -16,13 +16,15 @@ export async function GET(
     const { id } = await params;
     const supabase = getSupabaseServer();
 
-    const { data: wardrobe, error } = await supabase
+    const { data: wardrobeRaw, error } = await supabase
       .from("Wardrobe")
       .select(
         `
         *,
-        Clothes (
-          *
+        WardrobeClothes (
+          addedAt,
+          notes,
+          clothes:Clothes (*)
         )
       `
       )
@@ -30,24 +32,39 @@ export async function GET(
       .eq("userId", session.user.id)
       .single();
 
-    if (error || !wardrobe) {
+    if (error || !wardrobeRaw) {
       return NextResponse.json(
         { error: "Wardrobe not found" },
         { status: 404 }
       );
     }
 
-    if (wardrobe.Clothes) {
-      wardrobe.Clothes.sort(
+    const clothes = (wardrobeRaw.WardrobeClothes || [])
+      .map((wc: any) => {
+        if (!wc.clothes) return null;
+        return {
+          ...wc.clothes,
+          addedToWardrobeAt: wc.addedAt,
+          wardrobeNotes: wc.notes,
+        };
+      })
+      .filter(Boolean)
+      .sort(
         (a: any, b: any) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          new Date(b.addedToWardrobeAt).getTime() -
+          new Date(a.addedToWardrobeAt).getTime()
       );
-    }
+
+    const wardrobe = {
+      ...wardrobeRaw,
+      clothes: clothes,
+    };
+
+    delete wardrobe.WardrobeClothes;
 
     return NextResponse.json(wardrobe);
   } catch (error) {
     console.error("Error fetching wardrobe:", error);
-
     return NextResponse.json(
       { error: "Failed to fetch wardrobe" },
       { status: 500 }
@@ -69,47 +86,35 @@ export async function PUT(
     const { id } = await params;
     const data = await req.json();
     const supabase = getSupabaseServer();
+    const updatePayload: any = {
+      updatedAt: new Date().toISOString(),
+    };
 
-    // First, get the existing wardrobe
-    const { data: existing, error: fetchError } = await supabase
+    if (data.title !== undefined) updatePayload.title = data.title;
+    if (data.description !== undefined)
+      updatePayload.description = data.description;
+    if (data.isPublic !== undefined) updatePayload.isPublic = data.isPublic;
+    if (data.coverImage !== undefined)
+      updatePayload.coverImage = data.coverImage;
+
+    const { data: wardrobe, error } = await supabase
       .from("Wardrobe")
-      .select("*")
+      .update(updatePayload)
       .eq("id", id)
-      .single();
-
-    if (fetchError || !existing || existing.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: "Wardrobe not found" },
-        { status: 404 }
-      );
-    }
-
-    // Update with fallbacks to existing values
-    const { data: wardrobe, error: updateError } = await supabase
-      .from("Wardrobe")
-      .update({
-        title: data.title || existing.title,
-        description:
-          data.description !== undefined
-            ? data.description
-            : existing.description,
-        isPublic:
-          data.isPublic !== undefined ? data.isPublic : existing.isPublic,
-        coverImage:
-          data.coverImage !== undefined ? data.coverImage : existing.coverImage,
-      })
-      .eq("id", id)
+      .eq("userId", session.user.id)
       .select()
       .single();
 
-    if (updateError) {
-      throw updateError;
+    if (error || !wardrobe) {
+      return NextResponse.json(
+        { error: "Wardrobe not found or update failed" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(wardrobe);
   } catch (error) {
     console.error("Error updating wardrobe:", error);
-
     return NextResponse.json(
       { error: "Failed to update wardrobe" },
       { status: 500 }
@@ -131,7 +136,6 @@ export async function DELETE(
     const { id } = await params;
     const supabase = getSupabaseServer();
 
-    // Check if wardrobe exists and belongs to user
     const { data: existing, error: fetchError } = await supabase
       .from("Wardrobe")
       .select("id, userId")
@@ -144,8 +148,9 @@ export async function DELETE(
         { status: 404 }
       );
     }
+    await supabase.from("WardrobeClothes").delete().eq("wardrobeId", id);
+    await supabase.from("WardrobeOutfit").delete().eq("wardrobeId", id);
 
-    // Delete the wardrobe
     const { error: deleteError } = await supabase
       .from("Wardrobe")
       .delete()
@@ -158,7 +163,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting wardrobe:", error);
-
     return NextResponse.json(
       { error: "Failed to delete wardrobe" },
       { status: 500 }
