@@ -1,13 +1,12 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import clsx from "clsx";
-
 import { Providers } from "./providers";
-
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: {
@@ -44,7 +43,9 @@ export default function RootLayout({
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
           <div className="relative flex flex-col h-screen">
             <Header />
-            <main className="w-full pt-16 flex-grow">{children}</main>
+            <main className="w-full pt-16 flex-grow">
+              {children} <Analytics />
+            </main>
             <Footer />
           </div>
         </Providers>
