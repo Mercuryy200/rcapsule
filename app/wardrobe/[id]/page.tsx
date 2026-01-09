@@ -367,6 +367,7 @@ export default function WardrobePage() {
                 </div>
                 <div className="flex gap-2 w-full mt-2">
                   <Button
+                    as="div"
                     className="flex-1"
                     color="warning"
                     size="sm"
@@ -376,6 +377,7 @@ export default function WardrobePage() {
                     Remove
                   </Button>
                   <Button
+                    as="div"
                     className="flex-1"
                     color="danger"
                     size="sm"

@@ -1,37 +1,70 @@
 "use client";
 import { motion } from "framer-motion";
+import { Button } from "@heroui/react";
+import { LogIn, UserPlus, Sparkles } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function Hero() {
   return (
-    <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
-      <div className="inline-block max-w-xl text-center justify-center">
-        <motion.h1
-          className="text-5xl"
-          initial={{ opacity: 0, x: -100 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          whileInView={{ opacity: 1, x: 0 }}
-        >
-          <span className="">Organize your&nbsp;</span>
-          <span className="">Closet&nbsp;</span>
-          <br />
-          <span className="">and find an outfit for the day</span>
-        </motion.h1>
+    <section className="flex flex-col items-center justify-center min-h-[80vh] gap-8 py-20 px-6 text-center">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="max-w-3xl"
+      >
+        <div className="flex justify-center mb-6">
+          <span className="px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium flex items-center gap-2 border border-primary/20">
+            <Sparkles size={16} /> Now with AI Outfit Suggestions
+          </span>
+        </div>
 
-        <motion.h2
-          className="text-xl mt-4"
-          initial={{ opacity: 0, x: -100 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          viewport={{ once: true }}
-          whileInView={{ opacity: 1, x: 0 }}
-        >
-          <div className="">
-            Simplify your wardrobe management with our intuitive closet
-            organizer. Effortlessly track, plan, and style your outfits for any
-            occasion.
-          </div>
-        </motion.h2>
-      </div>
+        <h1 className="text-6xl md:text-7xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground-500">
+          Your Closet, <br />
+          <span className="text-primary">Perfectly Organized.</span>
+        </h1>
+
+        <p className="text-xl text-default-500 mb-10 max-w-2xl mx-auto leading-relaxed">
+          Stop wondering what to wear. Join thousands of users who have
+          digitized their wardrobes to save time and look their best every day.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Button
+            as={Link}
+            href="/signup"
+            color="primary"
+            size="lg"
+            className="font-bold px-8 h-14 text-lg shadow-lg shadow-primary/20"
+            endContent={<UserPlus size={20} />}
+          >
+            Get Started for Free
+          </Button>
+          <Button
+            as={Link}
+            href="/login"
+            variant="bordered"
+            size="lg"
+            className="font-bold px-8 h-14 text-lg"
+            startContent={<LogIn size={20} />}
+          >
+            Sign In
+          </Button>
+        </div>
+      </motion.div>
+
+      {/* Visual Placeholder: This is where you'd show a "Sneak Peek" of the app */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.4, duration: 1 }}
+        className="relative w-full max-w-5xl mt-10 rounded-2xl border border-default-200 bg-content1 shadow-2xl overflow-hidden"
+      >
+        <div className="aspect-video bg-[url('/images/previewCloset.png')] bg-cover bg-center">
+          <div className="absolute inset-0 bg-gradient-to-t from-content1 via-transparent to-transparent" />
+        </div>
+      </motion.div>
     </section>
   );
 }
