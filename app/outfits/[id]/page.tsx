@@ -1,4 +1,3 @@
-// app/outfits/[id]/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -140,7 +139,7 @@ export default function OutfitDetailPage() {
 
               {outfit.description && (
                 <div>
-                  <h3 className="text-sm font-semibold text-default-600 mb-1">
+                  <h3 className="text-sm  text-default-600 mb-1">
                     Description
                   </h3>
                   <p className="text-default-700">{outfit.description}</p>

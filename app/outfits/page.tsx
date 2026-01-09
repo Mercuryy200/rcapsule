@@ -95,9 +95,7 @@ export default function OutfitsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-light tracking-wide mb-2">
-            Your Outfits
-          </h1>
+          <h1 className="text-4xl tracking-wide mb-2">Your Outfits</h1>
           <p className="text-gray-500 text-sm">
             {outfits.length} {outfits.length === 1 ? "outfit" : "outfits"} in
             your collection
@@ -134,7 +132,6 @@ export default function OutfitsPage() {
         </Button>
       </div>
 
-      {/* Outfits Grid */}
       {filteredOutfits.length === 0 ? (
         <Card className="p-16 bg-gradient-to-br from-gray-50 to-gray-100">
           <div className="text-center">

@@ -43,7 +43,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             return null;
           }
 
-          // Check if user exists in User table
           const { data: existingUser } = await supabase
             .from("User")
             .select("id, email, name, image")
@@ -76,7 +75,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     async signIn({ user, account, profile }) {
       if (account?.provider === "github" || account?.provider === "google") {
         try {
-          // Check if user with this email already exists
           const { data: existingUser } = await supabase
             .from("User")
             .select("id, name, image")
@@ -86,13 +84,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           let userId: any;
 
           if (existingUser) {
-            // User exists - link this account to existing user
             userId = existingUser.id;
             console.log(
               `Linking ${account.provider} account to existing user ${userId}`
             );
 
-            // Update user info if OAuth has better data
             if (!existingUser.name && user.name) {
               await supabase
                 .from("User")
@@ -104,7 +100,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                 .eq("id", userId);
             }
           } else {
-            // New user - create account
             userId = user.id;
             await supabase.from("User").insert({
               id: userId,
@@ -117,7 +112,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             });
           }
 
-          // Link OAuth account
           const { error: accountError } = await supabase.from("Account").upsert(
             {
               userId: userId,
@@ -144,7 +138,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             return false;
           }
 
-          // Update user object with correct ID for session
           user.id = userId;
 
           return true;
@@ -169,7 +162,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         return token;
       }
 
-      // Fetch fresh user data
       if (token.id) {
         try {
           const { data: userData } = await supabase

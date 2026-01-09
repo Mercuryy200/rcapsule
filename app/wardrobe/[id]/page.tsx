@@ -130,7 +130,7 @@ export default function WardrobePage() {
       return;
 
     try {
-      const response = await fetch(`/api/clothes/${id}`, {
+      const response = await fetch(`/api/closet/${id}`, {
         method: "DELETE",
       });
 
@@ -300,7 +300,7 @@ export default function WardrobePage() {
           as={Link}
           color="primary"
           startContent={<PlusIcon className="w-5 h-5" />}
-          href="/clothes/new"
+          href="/closet/new"
         >
           Add New Item
         </Button>
@@ -317,7 +317,7 @@ export default function WardrobePage() {
               No items in this wardrobe yet
             </p>
             <div className="flex gap-3 justify-center">
-              <Button color="primary" as={Link} href="/clothes/new">
+              <Button color="primary" as={Link} href="/closet/new">
                 Add New Item
               </Button>
               <Button variant="solid" onPress={handleOpenAddExisting}>
@@ -333,7 +333,7 @@ export default function WardrobePage() {
               key={item.id}
               className="w-full"
               isPressable
-              onPress={() => router.push(`/clothes/${item.id}`)}
+              onPress={() => router.push(`/closet/${item.id}`)}
             >
               <CardBody className="p-0 overflow-hidden">
                 <div className="w-full h-64 relative">

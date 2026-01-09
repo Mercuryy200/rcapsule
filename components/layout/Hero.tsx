@@ -1,7 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
 
-import { title, subtitle } from "@/components/primitives";
 export default function Hero() {
   return (
     <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
@@ -13,10 +12,10 @@ export default function Hero() {
           viewport={{ once: true }}
           whileInView={{ opacity: 1, x: 0 }}
         >
-          <span className={title()}>Organize your&nbsp;</span>
-          <span className={title({ color: "beige" })}>Closet&nbsp;</span>
+          <span className="">Organize your&nbsp;</span>
+          <span className="">Closet&nbsp;</span>
           <br />
-          <span className={title()}>and find an outfit for the day</span>
+          <span className="">and find an outfit for the day</span>
         </motion.h1>
 
         <motion.h2
@@ -26,7 +25,7 @@ export default function Hero() {
           viewport={{ once: true }}
           whileInView={{ opacity: 1, x: 0 }}
         >
-          <div className={subtitle({ class: "mt-4" })}>
+          <div className="">
             Simplify your wardrobe management with our intuitive closet
             organizer. Effortlessly track, plan, and style your outfits for any
             occasion.

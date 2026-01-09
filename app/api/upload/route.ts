@@ -51,9 +51,8 @@ export async function POST(req: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Upload to Supabase Storage
     const { data, error } = await supabase.storage
-      .from("wardrobe-images") // Make sure this bucket exists in Supabase
+      .from("wardrobe-images")
       .upload(fileName, buffer, {
         contentType: file.type,
         upsert: false,
@@ -67,7 +66,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Get public URL
     const { data: urlData } = supabase.storage
       .from("wardrobe-images")
       .getPublicUrl(fileName);
@@ -85,7 +83,6 @@ export async function POST(req: Request) {
   }
 }
 
-// Optional: Delete endpoint
 export async function DELETE(req: Request) {
   try {
     const session = await auth();
@@ -100,7 +97,6 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "No path provided" }, { status: 400 });
     }
 
-    // Verify the path belongs to the user
     if (!path.startsWith(session.user.id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
