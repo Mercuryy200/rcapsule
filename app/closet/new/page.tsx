@@ -1,23 +1,15 @@
-// app/closet/new/page.tsx
 "use client";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  Button,
-  Card,
-  CardBody,
-  Input,
-  Select,
-  SelectItem,
-  Tabs,
-  Tab,
-} from "@heroui/react";
+import { Button, Input, Select, SelectItem, Tabs, Tab } from "@heroui/react";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+
 import { colors, occasions, seasons, categories } from "@/lib/data";
 import { ImageUpload } from "@/components/closet/ImageUpload";
 
 export default function NewItemPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [imageMethod, setImageMethod] = useState<"upload" | "url">("upload");
@@ -36,28 +28,23 @@ export default function NewItemPage() {
   });
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    }
+    if (status === "unauthenticated") router.push("/login");
   }, [status, router]);
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.category) {
-      alert("Please fill in required fields (Name and Category)");
+      alert("Please fill in Name and Category.");
       return;
     }
 
     const data = {
-      name: formData.name,
-      category: formData.category,
+      ...formData,
       price: formData.price ? parseFloat(formData.price) : null,
-      colors: formData.colors,
       brand: formData.brand.trim() || null,
       season: formData.season || null,
       size: formData.size || null,
       link: formData.link || null,
       imageUrl: formData.imageUrl || null,
-      placesToWear: formData.placesToWear,
     };
 
     try {
@@ -68,172 +55,296 @@ export default function NewItemPage() {
         body: JSON.stringify(data),
       });
 
-      if (response.ok) {
-        router.push("/closet");
-      } else {
-        alert("Error saving item");
-      }
+      if (response.ok) router.push("/closet");
+      else alert("Error saving item");
     } catch (error) {
-      console.error("Error saving item:", error);
+      console.error("Error:", error);
       alert("Error saving item");
     } finally {
       setSaving(false);
     }
   };
 
-  if (status === "loading") {
-    return <div className="text-center p-8">Loading...</div>;
-  }
+  if (status === "loading") return null;
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-6">
-      <div className="flex items-center gap-4 mb-8">
-        <Button variant="solid" onPress={() => router.push("/closet")}>
-          ← Back
+    <div className="w-full max-w-7xl mx-auto px-6 py-8">
+      <div className="flex items-center gap-4 mb-12">
+        <Button
+          isIconOnly
+          variant="light"
+          radius="full"
+          onPress={() => router.back()}
+        >
+          <ArrowLeftIcon className="w-5 h-5" />
         </Button>
-        <h1 className="text-3xl font-bold">Add New Item</h1>
+        <div>
+          <h1 className="text-3xl font-black uppercase tracking-tighter italic">
+            New Acquisition
+          </h1>
+          <p className="text-xs uppercase tracking-widest text-default-500">
+            Add a piece to your collection
+          </p>
+        </div>
       </div>
 
-      <Card>
-        <CardBody className="gap-4">
-          <Input
-            isRequired
-            label="Name"
-            placeholder="e.g., Blue Denim Jacket"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          />
-          <Input
-            label="Brand"
-            placeholder="e.g., Aritzia, Zara, H&M"
-            type="text"
-            value={formData.brand}
-            onChange={(e) =>
-              setFormData({ ...formData, brand: e.target.value })
-            }
-          />
-          <Select
-            isRequired
-            label="Category"
-            placeholder="Select category"
-            selectedKeys={formData.category ? [formData.category] : []}
-            onChange={(e) =>
-              setFormData({ ...formData, category: e.target.value })
-            }
-          >
-            {categories.map((cat) => (
-              <SelectItem key={cat}>{cat}</SelectItem>
-            ))}
-          </Select>
-          <Input
-            label="Price"
-            placeholder="29.99"
-            type="number"
-            value={formData.price}
-            onChange={(e) =>
-              setFormData({ ...formData, price: e.target.value })
-            }
-          />
-          <Select
-            label="Colors"
-            placeholder="Select colors"
-            selectedKeys={new Set(formData.colors || [])}
-            selectionMode="multiple"
-            onSelectionChange={(keys) => {
-              const selectedArray = Array.from(keys) as string[];
-              setFormData({ ...formData, colors: selectedArray });
-            }}
-          >
-            {colors.map((color) => (
-              <SelectItem key={color}>{color}</SelectItem>
-            ))}
-          </Select>
-
-          <Select
-            label="Season"
-            placeholder="Select season"
-            selectedKeys={formData.season ? [formData.season] : []}
-            onChange={(e) =>
-              setFormData({ ...formData, season: e.target.value })
-            }
-          >
-            {seasons.map((season) => (
-              <SelectItem key={season}>{season}</SelectItem>
-            ))}
-          </Select>
-          <Input
-            label="Size"
-            placeholder="e.g., M, L, 32"
-            value={formData.size}
-            onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-          />
-          <Input
-            label="Link"
-            placeholder="https://..."
-            value={formData.link}
-            onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-          />
-
-          {/* Image Upload Section with Tabs */}
-          <div className="space-y-2">
-            <Tabs
-              selectedKey={imageMethod}
-              onSelectionChange={(key) =>
-                setImageMethod(key as "upload" | "url")
-              }
-              aria-label="Image input method"
-              color="primary"
-              size="sm"
-            >
-              <Tab key="upload" title="Upload Image" />
-              <Tab key="url" title="Image URL" />
-            </Tabs>
-
-            {imageMethod === "upload" ? (
-              <ImageUpload
-                value={formData.imageUrl}
-                onChange={(url) => setFormData({ ...formData, imageUrl: url })}
-                folder="clothes"
-                label="Clothing Image"
-              />
-            ) : (
-              <Input
-                label="Image URL"
-                placeholder="https://..."
-                value={formData.imageUrl}
-                onChange={(e) =>
-                  setFormData({ ...formData, imageUrl: e.target.value })
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="lg:col-span-5 flex flex-col w-full gap-6">
+          <div className="relative w-full">
+            <div className="flex justify-center mb-4">
+              <Tabs
+                selectedKey={imageMethod}
+                onSelectionChange={(key) =>
+                  setImageMethod(key as "upload" | "url")
                 }
-                description="Paste a direct link to an image"
-              />
-            )}
+                radius="sm"
+                size="sm"
+                classNames={{
+                  base: "w-auto",
+                  tabList: "bg-default-100 p-1 gap-2",
+                  cursor: "bg-foreground",
+                  tab: "px-6 h-9",
+                  tabContent:
+                    "group-data-[selected=true]:text-background text-default-600 font-medium",
+                }}
+              >
+                <Tab key="upload" title="Upload File" />
+                <Tab key="url" title="External URL" />
+              </Tabs>
+            </div>
+            <div className="aspect-[3/4] bg-content2 border-2 border-dashed border-default-300 rounded-lg overflow-hidden">
+              {imageMethod === "upload" ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <ImageUpload
+                    value={formData.imageUrl}
+                    onChange={(url) =>
+                      setFormData({ ...formData, imageUrl: url })
+                    }
+                    folder="clothes"
+                    label="Drop image here"
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-8">
+                  {formData.imageUrl ? (
+                    <div className="relative w-full h-full group">
+                      <img
+                        src={formData.imageUrl}
+                        alt="Preview"
+                        className="w-full h-full object-contain"
+                      />
+                      <Button
+                        size="sm"
+                        color="danger"
+                        variant="flat"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onPress={() =>
+                          setFormData({ ...formData, imageUrl: "" })
+                        }
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="w-full max-w-md space-y-4">
+                      <Input
+                        label="Image URL"
+                        placeholder="https://example.com/image.jpg"
+                        variant="bordered"
+                        radius="sm"
+                        value={formData.imageUrl}
+                        onChange={(e) =>
+                          setFormData({ ...formData, imageUrl: e.target.value })
+                        }
+                        classNames={{
+                          input: "text-sm",
+                          inputWrapper: "border-default-300",
+                        }}
+                      />
+                      <p className="text-xs text-default-400 text-center">
+                        Paste a direct link to an image
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
-          <Select
-            label="Places to Wear"
-            placeholder="Select places"
-            selectedKeys={new Set(formData.placesToWear || [])}
-            selectionMode="multiple"
-            onSelectionChange={(keys) => {
-              const selectedArray = Array.from(keys) as string[];
-              setFormData({ ...formData, placesToWear: selectedArray });
-            }}
-          >
-            {occasions.map((occasion) => (
-              <SelectItem key={occasion}>{occasion}</SelectItem>
-            ))}
-          </Select>
+          <p className="text-[10px] text-default-400 text-center uppercase tracking-wider">
+            Supported: JPG, PNG, WEBP • Max 10MB
+          </p>
+        </div>
 
-          <div className="flex gap-2 justify-end mt-4">
-            <Button variant="solid" onPress={() => router.push("/closet")}>
+        <div className="lg:col-span-7 flex flex-col gap-8">
+          <section className="space-y-6">
+            <h3 className="text-xs font-bold uppercase tracking-widest border-b border-divider pb-2">
+              Item Details
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Input
+                isRequired
+                label="Name"
+                placeholder="Ex: Vintage Leather Jacket"
+                labelPlacement="outside"
+                variant="bordered"
+                radius="sm"
+                classNames={{ inputWrapper: "h-12 border-default-300" }}
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+              />
+              <Input
+                label="Brand"
+                placeholder="Ex: Acne Studios"
+                labelPlacement="outside"
+                variant="bordered"
+                radius="sm"
+                classNames={{ inputWrapper: "h-12 border-default-300" }}
+                value={formData.brand}
+                onChange={(e) =>
+                  setFormData({ ...formData, brand: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Select
+                isRequired
+                label="Category"
+                labelPlacement="outside"
+                variant="bordered"
+                radius="sm"
+                placeholder="Select..."
+                classNames={{ trigger: "h-12 border-default-300" }}
+                selectedKeys={formData.category ? [formData.category] : []}
+                onChange={(e) =>
+                  setFormData({ ...formData, category: e.target.value })
+                }
+              >
+                {categories.map((cat) => (
+                  <SelectItem key={cat}>{cat}</SelectItem>
+                ))}
+              </Select>
+              <Input
+                label="Price"
+                placeholder="0.00"
+                type="number"
+                labelPlacement="outside"
+                variant="bordered"
+                radius="sm"
+                classNames={{ inputWrapper: "h-12 border-default-300" }}
+                startContent={
+                  <span className="text-default-400 text-sm">$</span>
+                }
+                value={formData.price}
+                onChange={(e) =>
+                  setFormData({ ...formData, price: e.target.value })
+                }
+              />
+            </div>
+          </section>
+
+          <section className="space-y-6">
+            <h3 className="text-xs font-bold uppercase tracking-widest border-b border-divider pb-2">
+              Attributes
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Select
+                label="Colors"
+                labelPlacement="outside"
+                variant="bordered"
+                radius="sm"
+                placeholder="Select..."
+                selectionMode="multiple"
+                classNames={{ trigger: "border-default-300" }}
+                selectedKeys={new Set(formData.colors || [])}
+                onSelectionChange={(keys) => {
+                  setFormData({
+                    ...formData,
+                    colors: Array.from(keys) as string[],
+                  });
+                }}
+              >
+                {colors.map((color) => (
+                  <SelectItem
+                    key={color}
+                    startContent={
+                      <div
+                        className="w-3 h-3 rounded-full border border-default-300"
+                        style={{ background: color }}
+                      />
+                    }
+                  >
+                    {color}
+                  </SelectItem>
+                ))}
+              </Select>
+              <Select
+                label="Season"
+                labelPlacement="outside"
+                variant="bordered"
+                radius="sm"
+                placeholder="Select..."
+                classNames={{ trigger: "border-default-300" }}
+                selectedKeys={formData.season ? [formData.season] : []}
+                onChange={(e) =>
+                  setFormData({ ...formData, season: e.target.value })
+                }
+              >
+                {seasons.map((season) => (
+                  <SelectItem key={season}>{season}</SelectItem>
+                ))}
+              </Select>
+              <Select
+                label="Occasions"
+                labelPlacement="outside"
+                variant="bordered"
+                radius="sm"
+                placeholder="Where will you wear this?"
+                selectionMode="multiple"
+                classNames={{ trigger: "border-default-300" }}
+                selectedKeys={new Set(formData.placesToWear || [])}
+                onSelectionChange={(keys) => {
+                  setFormData({
+                    ...formData,
+                    placesToWear: Array.from(keys) as string[],
+                  });
+                }}
+              >
+                {occasions.map((occ) => (
+                  <SelectItem key={occ}>{occ}</SelectItem>
+                ))}
+              </Select>
+            </div>
+          </section>
+
+          <div className="pt-8 flex flex-col sm:flex-row gap-4 mt-auto">
+            <Button
+              fullWidth
+              variant="bordered"
+              radius="sm"
+              className="h-12 uppercase tracking-widest font-medium border-default-400 hover:bg-default-100"
+              onPress={() => router.back()}
+            >
               Cancel
             </Button>
-            <Button color="primary" isLoading={saving} onPress={handleSubmit}>
-              Add Item
+            <Button
+              fullWidth
+              color="primary"
+              radius="sm"
+              isLoading={saving}
+              className="h-12 uppercase tracking-widest font-bold shadow-lg shadow-primary/20"
+              onPress={handleSubmit}
+            >
+              Add to Closet
             </Button>
           </div>
-        </CardBody>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
