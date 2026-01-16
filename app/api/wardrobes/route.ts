@@ -27,14 +27,12 @@ export async function GET() {
       throw error;
     }
 
-    // Format the response
     const wardrobesWithCount = (wardrobes || []).map((wardrobe: any) => ({
       id: wardrobe.id,
       title: wardrobe.title,
       description: wardrobe.description,
       isPublic: wardrobe.isPublic,
       coverImage: wardrobe.coverImage,
-      // Supabase returns count as an array of objects like [{ count: 5 }]
       clothesCount: wardrobe.WardrobeClothes?.[0]?.count || 0,
       createdAt: wardrobe.createdAt,
       updatedAt: wardrobe.updatedAt,

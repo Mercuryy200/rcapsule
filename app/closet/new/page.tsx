@@ -25,6 +25,7 @@ export default function NewItemPage() {
     brand: "",
     imageUrl: "",
     placesToWear: [] as string[],
+    purchaseDate: "",
   });
 
   useEffect(() => {
@@ -45,6 +46,7 @@ export default function NewItemPage() {
       size: formData.size || null,
       link: formData.link || null,
       imageUrl: formData.imageUrl || null,
+      purchaseDate: formData.purchaseDate || null,
     };
 
     try {
@@ -242,6 +244,32 @@ export default function NewItemPage() {
                 value={formData.price}
                 onChange={(e) =>
                   setFormData({ ...formData, price: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Input
+                type="date"
+                label="Purchase Date"
+                labelPlacement="outside"
+                variant="bordered"
+                radius="none"
+                classNames={{ inputWrapper: "h-12 border-default-300" }}
+                value={formData.purchaseDate}
+                onChange={(e) =>
+                  setFormData({ ...formData, purchaseDate: e.target.value })
+                }
+              />
+              <Input
+                label="Size"
+                placeholder="Ex: M, 32, 8"
+                labelPlacement="outside"
+                variant="bordered"
+                radius="none"
+                classNames={{ inputWrapper: "h-12 border-default-300" }}
+                value={formData.size}
+                onChange={(e) =>
+                  setFormData({ ...formData, size: e.target.value })
                 }
               />
             </div>

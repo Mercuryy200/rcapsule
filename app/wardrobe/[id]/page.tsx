@@ -4,9 +4,6 @@ import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import {
   Button,
-  Card,
-  CardBody,
-  CardFooter,
   Image,
   Chip,
   Modal,
@@ -18,15 +15,23 @@ import {
   useDisclosure,
   Spinner,
   Textarea,
-  Checkbox,
+  Switch,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  ScrollShadow,
 } from "@heroui/react";
 import {
   ArrowLeftIcon,
   PlusIcon,
-  PencilIcon,
+  PencilSquareIcon,
   TrashIcon,
+  GlobeAltIcon,
+  LockClosedIcon,
+  EllipsisHorizontalIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
-import Link from "next/link";
 
 interface ClothingItem {
   id: string;
@@ -50,15 +55,14 @@ interface Wardrobe {
   description?: string;
   isPublic: boolean;
   coverImage?: string;
-  clothes: ClothingItem[]; // Changed from Clothes to clothes
+  clothes: ClothingItem[];
 }
 
 export default function WardrobePage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const params = useParams();
   const wardrobeId = params.id as string;
-
   const [wardrobe, setWardrobe] = useState<Wardrobe | null>(null);
   const [loading, setLoading] = useState(true);
   const [availableClothes, setAvailableClothes] = useState<ClothingItem[]>([]);
@@ -77,9 +81,8 @@ export default function WardrobePage() {
   });
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    } else if (status === "authenticated") {
+    if (status === "unauthenticated") router.push("/login");
+    else if (status === "authenticated") {
       fetchWardrobe();
       fetchAvailableClothes();
     }
@@ -88,10 +91,8 @@ export default function WardrobePage() {
   const fetchWardrobe = async () => {
     try {
       const response = await fetch(`/api/wardrobes/${wardrobeId}`);
-
       if (response.ok) {
         const data = await response.json();
-        // Ensure clothes is always an array
         const safeData = {
           ...data,
           clothes: Array.isArray(data.clothes) ? data.clothes : [],
@@ -107,7 +108,7 @@ export default function WardrobePage() {
         router.push("/profile");
       }
     } catch (error) {
-      console.error("Error fetching wardrobe:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -121,45 +122,22 @@ export default function WardrobePage() {
         setAvailableClothes(Array.isArray(data) ? data : []);
       }
     } catch (error) {
-      console.error("Error fetching clothes:", error);
-    }
-  };
-
-  const handleDeleteItem = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this item permanently?"))
-      return;
-
-    try {
-      const response = await fetch(`/api/closet/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        fetchWardrobe();
-        fetchAvailableClothes();
-      }
-    } catch (error) {
-      console.error("Error deleting item:", error);
+      console.error(error);
     }
   };
 
   const handleRemoveFromWardrobe = async (clothesId: string) => {
-    if (!confirm("Remove this item from the wardrobe?")) return;
-
     try {
       const response = await fetch(
         `/api/wardrobes/${wardrobeId}/clothes/${clothesId}`,
-        {
-          method: "DELETE",
-        }
+        { method: "DELETE" }
       );
-
       if (response.ok) {
         fetchWardrobe();
         fetchAvailableClothes();
       }
     } catch (error) {
-      console.error("Error removing item:", error);
+      console.error(error);
     }
   };
 
@@ -176,34 +154,20 @@ export default function WardrobePage() {
         wardrobeModal.onClose();
       }
     } catch (error) {
-      console.error("Error updating wardrobe:", error);
+      console.error(error);
     }
   };
 
   const handleDeleteWardrobe = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this wardrobe? Items will remain in your clothes list."
-      )
-    )
-      return;
-
+    if (!confirm("Are you sure? This collection will be deleted.")) return;
     try {
       const response = await fetch(`/api/wardrobes/${wardrobeId}`, {
         method: "DELETE",
       });
-
-      if (response.ok) {
-        router.push("/profile");
-      }
+      if (response.ok) router.push("/profile");
     } catch (error) {
-      console.error("Error deleting wardrobe:", error);
+      console.error(error);
     }
-  };
-
-  const handleOpenAddExisting = () => {
-    setSelectedExistingItems(new Set());
-    addExistingModal.onOpen();
   };
 
   const handleAddExistingItems = async () => {
@@ -211,202 +175,258 @@ export default function WardrobePage() {
       const response = await fetch(`/api/wardrobes/${wardrobeId}/clothes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clothesIds: Array.from(selectedExistingItems),
-        }),
+        body: JSON.stringify({ clothesIds: Array.from(selectedExistingItems) }),
       });
-
       if (response.ok) {
         fetchWardrobe();
         fetchAvailableClothes();
         addExistingModal.onClose();
+        setSelectedExistingItems(new Set());
       }
     } catch (error) {
-      console.error("Error adding items:", error);
+      console.error(error);
     }
   };
 
   const toggleItemSelection = (itemId: string) => {
     const newSelection = new Set(selectedExistingItems);
-    if (newSelection.has(itemId)) {
-      newSelection.delete(itemId);
-    } else {
-      newSelection.add(itemId);
-    }
+    newSelection.has(itemId)
+      ? newSelection.delete(itemId)
+      : newSelection.add(itemId);
     setSelectedExistingItems(newSelection);
   };
 
-  if (status === "loading" || loading) {
+  if (loading || !wardrobe) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="h-screen flex items-center justify-center">
         <Spinner size="lg" />
       </div>
     );
   }
 
-  if (!wardrobe) {
-    return <div className="text-center p-8">Wardrobe not found</div>;
-  }
-
-  // Safe access to wardrobe.clothes - moved after null checks
-  const wardrobeClothes = wardrobe.clothes || [];
-
+  // Filter items not in wardrobe
   const itemsNotInWardrobe = availableClothes.filter(
     (item) =>
-      !wardrobeClothes.some((wardrobeItem) => wardrobeItem.id === item.id)
+      !wardrobe.clothes.some((wardrobeItem) => wardrobeItem.id === item.id)
   );
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Button
-            isIconOnly
-            variant="light"
-            onPress={() => router.push("/profile")}
-          >
-            <ArrowLeftIcon className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">{wardrobe.title}</h1>
-            {wardrobe.description && (
-              <p className="text-gray-500">{wardrobe.description}</p>
-            )}
+    <div className="w-full min-h-screen pb-20">
+      <div
+        className="relative w-full h-[60vh] min-h-[500px] bg-content2 overflow-hidden bg-cover bg-center"
+        style={{
+          backgroundImage: `url(${wardrobe.coverImage || "/images/placeholder_wardrobe.jpg"})`,
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/50 to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/50 to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
+
+        <div className="absolute inset-0 max-w-7xl mx-auto px-6 md:px-8 flex flex-col">
+          {/* Back Button */}
+          <div className="pt-8">
+            <Button
+              isIconOnly
+              variant="flat"
+              radius="full"
+              className="bg-black/30 backdrop-blur-xl text-white border border-white/10 hover:bg-black/50 transition-all"
+              onPress={() => router.push("/profile")}
+            >
+              <ArrowLeftIcon className="w-5 h-5" />
+            </Button>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 flex items-end pb-12 md:pb-16">
+            <div className="w-full flex flex-col md:flex-row md:justify-between md:items-end gap-8">
+              <div className="flex-1 space-y-6">
+                {/* Meta Info */}
+                <div className="flex items-center gap-3 flex-wrap">
+                  {wardrobe.isPublic ? (
+                    <div className="flex items-center gap-2 px-4 py-1.5 bg-white/10 backdrop-blur-xl text-white text-xs font-bold uppercase tracking-wider border border-white/20 rounded-full">
+                      <GlobeAltIcon className="w-3.5 h-3.5" />
+                      <span>Public</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 px-4 py-1.5 bg-black/40 backdrop-blur-xl text-white text-xs font-bold uppercase tracking-wider border border-white/20 rounded-full">
+                      <LockClosedIcon className="w-3.5 h-3.5" />
+                      <span>Private</span>
+                    </div>
+                  )}
+                  <div className="px-4 py-1.5 bg-white/5 backdrop-blur-xl text-white/80 text-xs font-semibold uppercase tracking-wider border border-white/10 rounded-full">
+                    {wardrobe.clothes.length}{" "}
+                    {wardrobe.clothes.length === 1 ? "Piece" : "Pieces"}
+                  </div>
+                </div>
+
+                {/* Title */}
+                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight text-white drop-shadow-2xl leading-none">
+                  {wardrobe.title}
+                </h1>
+
+                {/* Description */}
+                {wardrobe.description && (
+                  <p className="max-w-2xl text-white/90 text-base md:text-lg font-light leading-relaxed drop-shadow-lg">
+                    {wardrobe.description}
+                  </p>
+                )}
+              </div>
+
+              {/* Menu Actions */}
+              <Dropdown placement="bottom-end">
+                <DropdownTrigger>
+                  <Button
+                    isIconOnly
+                    variant="flat"
+                    radius="full"
+                    className="bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 transition-all"
+                  >
+                    <EllipsisHorizontalIcon className="w-6 h-6" />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu aria-label="Actions" variant="flat">
+                  <DropdownItem
+                    key="edit"
+                    startContent={<PencilSquareIcon className="w-4 h-4" />}
+                    onPress={wardrobeModal.onOpen}
+                  >
+                    Edit Details
+                  </DropdownItem>
+                  <DropdownItem
+                    key="add"
+                    startContent={<PlusIcon className="w-4 h-4" />}
+                    onPress={addExistingModal.onOpen}
+                  >
+                    Add Items
+                  </DropdownItem>
+                  <DropdownItem
+                    key="delete"
+                    className="text-danger"
+                    color="danger"
+                    startContent={<TrashIcon className="w-4 h-4" />}
+                    onPress={handleDeleteWardrobe}
+                  >
+                    Delete Collection
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            </div>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="solid"
-            startContent={<PencilIcon className="w-5 h-5" />}
-            onPress={wardrobeModal.onOpen}
-          >
-            Edit Wardrobe
-          </Button>
-          <Button
-            color="danger"
-            variant="solid"
-            startContent={<TrashIcon className="w-5 h-5" />}
-            onPress={handleDeleteWardrobe}
-          >
-            Delete
-          </Button>
-        </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-3 mb-6">
-        <Button
-          as={Link}
-          color="primary"
-          startContent={<PlusIcon className="w-5 h-5" />}
-          href="/closet/new"
-        >
-          Add New Item
-        </Button>
-        <Button variant="solid" onPress={handleOpenAddExisting}>
-          Add Existing Items
-        </Button>
-      </div>
-
-      {/* Clothes Grid */}
-      {wardrobeClothes.length === 0 ? (
-        <Card className="p-12">
-          <div className="text-center">
-            <p className="text-lg text-gray-500 mb-4">
-              No items in this wardrobe yet
+      {/* --- CONTENT GRID --- */}
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        {wardrobe.clothes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 border border-dashed border-default-300">
+            <p className="text-default-400 uppercase tracking-widest text-sm mb-4">
+              This collection is empty
             </p>
-            <div className="flex gap-3 justify-center">
-              <Button color="primary" as={Link} href="/closet/new">
-                Add New Item
+            <div className="flex gap-4">
+              <Button
+                variant="bordered"
+                radius="none"
+                onPress={() => router.push("/closet/new")}
+              >
+                New Item
               </Button>
-              <Button variant="solid" onPress={handleOpenAddExisting}>
-                Add Existing Items
+              <Button
+                color="primary"
+                radius="none"
+                onPress={addExistingModal.onOpen}
+              >
+                Add Existing
               </Button>
             </div>
           </div>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {wardrobeClothes.map((item) => (
-            <Card
-              key={item.id}
-              className="w-full"
-              isPressable
-              onPress={() => router.push(`/closet/${item.id}`)}
-            >
-              <CardBody className="p-0 overflow-hidden">
-                <div className="w-full h-64 relative">
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-12 gap-x-6">
+            {wardrobe.clothes.map((item) => (
+              <div key={item.id} className="group relative">
+                <div
+                  className="aspect-[3/4] bg-content2 relative overflow-hidden mb-4 cursor-pointer"
+                  onClick={() => router.push(`/closet/${item.id}`)}
+                >
                   <Image
-                    alt={item.name}
-                    className="w-full h-full object-cover"
-                    classNames={{ img: "w-full h-full object-cover" }}
                     src={item.imageUrl || "/images/placeholder.png"}
+                    alt={item.name}
+                    radius="none"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    classNames={{ wrapper: "w-full h-full" }}
                   />
-                </div>
-              </CardBody>
-              <CardFooter className="flex flex-col items-start gap-2">
-                <div className="w-full">
-                  <h3 className="font-bold text-lg">{item.name}</h3>
-                  <p className="text-sm text-gray-500 capitalize">
-                    {item.category}
-                  </p>
-                  {item.brand && (
-                    <p className="text-xs text-gray-400">{item.brand}</p>
-                  )}
-                  {item.price && (
-                    <p className="text-sm font-semibold">${item.price}</p>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {item.colors?.map((color) => (
-                    <Chip key={color} size="sm" variant="solid">
-                      {color}
-                    </Chip>
-                  ))}
-                </div>
-                <div className="flex gap-2 w-full mt-2">
-                  <Button
-                    as="div"
-                    className="flex-1"
-                    color="warning"
-                    size="sm"
-                    variant="solid"
-                    onPress={() => handleRemoveFromWardrobe(item.id)}
-                  >
-                    Remove
-                  </Button>
-                  <Button
-                    as="div"
-                    className="flex-1"
-                    color="danger"
-                    size="sm"
-                    variant="solid"
-                    onPress={() => handleDeleteItem(item.id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      )}
 
-      {/* Edit Wardrobe Modal */}
+                  {/* Hover Actions Overlay */}
+                  <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      color="danger"
+                      variant="solid"
+                      radius="none"
+                      className="min-w-8 w-8 h-8 bg-white/10 backdrop-blur text-danger hover:bg-danger hover:text-white border border-danger/20"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleRemoveFromWardrobe(item.id);
+                      }}
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Details */}
+                <div className="space-y-1">
+                  {item.brand && (
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-default-400">
+                      {item.brand}
+                    </p>
+                  )}
+                  <h3 className="text-sm font-medium uppercase tracking-tight truncate">
+                    {item.name}
+                  </h3>
+                  <div className="flex gap-2 items-center">
+                    {item.price && (
+                      <p className="text-xs text-default-500">${item.price}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* "Add More" Card at the end of grid */}
+            <div
+              className="aspect-[3/4] border border-dashed border-default-300 flex flex-col items-center justify-center cursor-pointer hover:bg-default-50 transition-colors group"
+              onClick={addExistingModal.onOpen}
+            >
+              <PlusIcon className="w-8 h-8 text-default-300 group-hover:text-default-500 transition-colors" />
+              <span className="text-xs font-bold uppercase tracking-widest text-default-400 mt-2">
+                Add Piece
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* --- EDIT WARDROBE MODAL --- */}
       <Modal
         isOpen={wardrobeModal.isOpen}
-        size="lg"
         onClose={wardrobeModal.onClose}
+        radius="none"
+        size="xl"
       >
         <ModalContent>
-          <ModalHeader>Edit Wardrobe</ModalHeader>
-          <ModalBody>
-            <div className="flex flex-col gap-4">
+          <ModalHeader className="uppercase tracking-widest font-bold">
+            Edit Details
+          </ModalHeader>
+          <ModalBody className="gap-6">
+            <div className="grid grid-cols-2 gap-4">
               <Input
-                isRequired
                 label="Title"
-                placeholder="e.g., Summer Collection"
+                variant="bordered"
+                radius="none"
                 value={wardrobeFormData.title}
                 onChange={(e) =>
                   setWardrobeFormData({
@@ -415,20 +435,10 @@ export default function WardrobePage() {
                   })
                 }
               />
-              <Textarea
-                label="Description"
-                placeholder="Describe this wardrobe..."
-                value={wardrobeFormData.description}
-                onChange={(e) =>
-                  setWardrobeFormData({
-                    ...wardrobeFormData,
-                    description: e.target.value,
-                  })
-                }
-              />
               <Input
-                label="Cover Image URL"
-                placeholder="https://..."
+                label="Cover Image"
+                variant="bordered"
+                radius="none"
                 value={wardrobeFormData.coverImage}
                 onChange={(e) =>
                   setWardrobeFormData({
@@ -437,101 +447,112 @@ export default function WardrobePage() {
                   })
                 }
               />
-              <Checkbox
+            </div>
+            <Textarea
+              label="Description"
+              variant="bordered"
+              radius="none"
+              value={wardrobeFormData.description}
+              onChange={(e) =>
+                setWardrobeFormData({
+                  ...wardrobeFormData,
+                  description: e.target.value,
+                })
+              }
+            />
+            <div className="flex justify-between items-center border p-4 border-default-200">
+              <span className="text-sm font-medium uppercase tracking-wide">
+                Public Collection
+              </span>
+              <Switch
                 isSelected={wardrobeFormData.isPublic}
-                onValueChange={(value) =>
-                  setWardrobeFormData({ ...wardrobeFormData, isPublic: value })
+                onValueChange={(v) =>
+                  setWardrobeFormData({ ...wardrobeFormData, isPublic: v })
                 }
-              >
-                Make this wardrobe public
-              </Checkbox>
+              />
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button variant="solid" onPress={wardrobeModal.onClose}>
+            <Button
+              variant="light"
+              radius="none"
+              onPress={wardrobeModal.onClose}
+            >
               Cancel
             </Button>
-            <Button color="primary" onPress={handleUpdateWardrobe}>
+            <Button
+              color="primary"
+              radius="none"
+              onPress={handleUpdateWardrobe}
+            >
               Save Changes
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
 
-      {/* Add Existing Items Modal */}
+      {/* --- ADD EXISTING ITEMS MODAL --- */}
       <Modal
         isOpen={addExistingModal.isOpen}
-        size="3xl"
-        scrollBehavior="inside"
         onClose={addExistingModal.onClose}
+        size="4xl"
+        radius="none"
+        scrollBehavior="inside"
       >
         <ModalContent>
-          <ModalHeader>Add Existing Items to Wardrobe</ModalHeader>
+          <ModalHeader className="uppercase tracking-widest font-bold">
+            Select Pieces
+          </ModalHeader>
           <ModalBody>
             {itemsNotInWardrobe.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">
-                  All your items are already in this wardrobe
-                </p>
+              <div className="py-12 text-center text-default-400">
+                All your items are already in this collection.
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {itemsNotInWardrobe.map((item) => (
-                  <Card
-                    key={item.id}
-                    isPressable
-                    className={`cursor-pointer ${
-                      selectedExistingItems.has(item.id)
-                        ? "ring-2 ring-primary"
-                        : ""
-                    }`}
-                    onPress={() => toggleItemSelection(item.id)}
-                  >
-                    <CardBody className="p-0">
-                      <div className="relative">
-                        <Image
-                          alt={item.name}
-                          className="w-full h-40 object-cover"
-                          src={item.imageUrl || "/images/placeholder.png"}
-                        />
-                        {selectedExistingItems.has(item.id) && (
-                          <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
-                            <svg
-                              className="w-4 h-4 text-white"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                clipRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                fillRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-                        )}
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {itemsNotInWardrobe.map((item) => {
+                  const isSelected = selectedExistingItems.has(item.id);
+                  return (
+                    <div
+                      key={item.id}
+                      className={`relative aspect-[3/4] cursor-pointer group transition-all ${isSelected ? "ring-2 ring-primary ring-offset-2" : ""}`}
+                      onClick={() => toggleItemSelection(item.id)}
+                    >
+                      <Image
+                        src={item.imageUrl || "/images/placeholder.png"}
+                        radius="none"
+                        className={`w-full h-full object-cover transition-opacity ${isSelected ? "opacity-80" : "opacity-100"}`}
+                        classNames={{ wrapper: "w-full h-full" }}
+                      />
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 bg-primary text-white p-1 rounded-full z-10">
+                          <CheckCircleIcon className="w-4 h-4" />
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 w-full bg-white/90 p-2 text-xs truncate font-medium">
+                        {item.name}
                       </div>
-                    </CardBody>
-                    <CardFooter className="flex-col items-start">
-                      <p className="font-semibold text-sm">{item.name}</p>
-                      <p className="text-xs text-gray-500 capitalize">
-                        {item.category}
-                      </p>
-                    </CardFooter>
-                  </Card>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </ModalBody>
           <ModalFooter>
-            <Button variant="solid" onPress={addExistingModal.onClose}>
+            <Button
+              variant="light"
+              radius="none"
+              onPress={addExistingModal.onClose}
+            >
               Cancel
             </Button>
             <Button
               color="primary"
+              radius="none"
               isDisabled={selectedExistingItems.size === 0}
               onPress={handleAddExistingItems}
             >
-              Add {selectedExistingItems.size} Item
+              Add {selectedExistingItems.size} Piece
               {selectedExistingItems.size !== 1 ? "s" : ""}
             </Button>
           </ModalFooter>

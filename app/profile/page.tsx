@@ -2,330 +2,155 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useUser } from "@/contexts/UserContext";
-import {
-  Avatar,
-  Button,
-  Image,
-  Card,
-  CardBody,
-  CardHeader,
-  Chip,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Input,
-  Switch,
-  useDisclosure,
-} from "@heroui/react";
-import {
-  LockClosedIcon,
-  GlobeAltIcon,
-  PlusIcon,
-} from "@heroicons/react/24/outline";
+import { Tabs, Tab, Spinner, Button } from "@heroui/react";
 
-// Update interface to match the API response exactly
-interface Wardrobe {
-  id: string;
-  title: string;
-  description?: string;
-  isPublic: boolean;
-  coverImage?: string | null;
-  clothesCount: number;
-  createdAt: string;
-  updatedAt: string;
+import type { Clothes, Wardrobe, Outfit } from "@/lib/database.type";
+import ProfileHeader from "@/components/profile/ProfileHeader";
+import WardrobeTab from "@/components/profile/WardrobeTab";
+import { useUser } from "@/contexts/UserContext";
+
+interface ExtendedWardrobe extends Wardrobe {
+  clothesCount?: number;
 }
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
+  const { user } = useUser();
   const router = useRouter();
-  const [wardrobes, setWardrobes] = useState<Wardrobe[]>([]);
-  const [totalClothes, setTotalClothes] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const [newWardrobe, setNewWardrobe] = useState({
-    title: "",
-    description: "",
-    isPublic: false,
-    coverImage: "",
-  });
-  const { user, refreshUser } = useUser();
+  const [loading, setLoading] = useState(true);
+  const [wardrobes, setWardrobes] = useState<ExtendedWardrobe[]>([]);
+  const [clothes, setClothes] = useState<Clothes[]>([]);
+  const [outfits, setOutfits] = useState<Outfit[]>([]);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    } else if (status === "authenticated") {
-      fetchProfile();
-      fetchUserData();
-    }
+    if (status === "unauthenticated") router.push("/login");
+    else if (status === "authenticated") fetchProfileData();
   }, [status, router]);
 
-  const fetchUserData = async () => {
+  const fetchProfileData = async () => {
     try {
-      refreshUser();
-    } catch (error) {
-      console.error("Error fetching user:", error);
-    }
-  };
-
-  const fetchProfile = async () => {
-    try {
-      // CHANGED: /api/clothes -> /api/closet matches your file structure
-      const [wardrobesRes, clothesRes] = await Promise.all([
+      const [wardrobesRes, clothesRes, outfitsRes] = await Promise.all([
         fetch("/api/wardrobes"),
         fetch("/api/clothes"),
+        fetch("/api/outfits"),
       ]);
 
       if (wardrobesRes.ok && clothesRes.ok) {
-        const wardrobesData = await wardrobesRes.json();
-        const clothesData = await clothesRes.json();
-        setWardrobes(wardrobesData);
-        setTotalClothes(clothesData.length);
+        const wData = await wardrobesRes.json();
+        const cData = await clothesRes.json();
+        const oData = outfitsRes.ok ? await outfitsRes.json() : [];
+
+        setWardrobes(wData);
+        setClothes(cData);
+        setOutfits(oData);
       }
     } catch (error) {
-      console.error("Error fetching profile:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateWardrobe = async () => {
-    try {
-      const response = await fetch("/api/wardrobes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newWardrobe),
-      });
-
-      if (response.ok) {
-        fetchProfile();
-        onClose();
-        setNewWardrobe({
-          title: "",
-          description: "",
-          isPublic: false,
-          coverImage: "",
-        });
-      }
-    } catch (error) {
-      console.error("Error creating wardrobe:", error);
-    }
+  const totalValue = clothes.reduce((sum, item) => sum + (item.price || 0), 0);
+  const stats = {
+    items: clothes.length,
+    wardrobes: wardrobes.length,
+    outfits: outfits.length,
+    totalValue: totalValue,
   };
 
-  const toggleWardrobeVisibility = async (
-    id: string,
-    currentStatus: boolean
-  ) => {
-    try {
-      const response = await fetch(`/api/wardrobes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isPublic: !currentStatus }),
-      });
-
-      if (response.ok) {
-        fetchProfile();
-      }
-    } catch (error) {
-      console.error("Error updating wardrobe:", error);
-    }
-  };
-
-  if (status === "loading" || loading) {
-    return <div className="text-center p-8">Loading...</div>;
-  }
+  if (loading)
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6">
-      {/* Profile Header */}
-      <div className="flex items-start gap-6 mb-8">
-        <Avatar
-          src={user?.image || undefined}
-          className="w-24 h-24"
-          name={user?.name || "User"}
-        />
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold mb-2">{user?.name}</h1>
-          <p className="text-gray-500 mb-4">{user?.email}</p>
-          <div className="flex gap-4">
-            <div>
-              <p className="text-2xl font-bold">{totalClothes}</p>
-              <p className="text-sm text-gray-500">Total Items</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{wardrobes.length}</p>
-              <p className="text-sm text-gray-500">Wardrobes</p>
+    <div className="w-full max-w-7xl mx-auto px-6 py-12">
+      <ProfileHeader
+        user={user || {}}
+        stats={stats}
+        onEdit={() => router.push("/settings")}
+      />
+
+      <Tabs
+        aria-label="Profile Options"
+        variant="underlined"
+        classNames={{
+          tabList:
+            "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+          cursor: "w-full bg-primary",
+          tab: "max-w-fit px-0 h-12",
+          tabContent:
+            "group-data-[selected=true]:text-primary text-default-500 uppercase tracking-widest font-bold text-xs",
+        }}
+      >
+        <Tab key="overview" title="Overview">
+          <div className="py-8">
+            {/* Empty State / Dashboard Content */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* 1. Recent Adds */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-default-400">
+                  Recently Acquired
+                </h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {clothes.slice(0, 3).map((item) => (
+                    <div
+                      key={item.id}
+                      className="aspect-[3/4] bg-content2 relative"
+                    >
+                      <img
+                        src={item.imageUrl || "/images/placeholder.png"}
+                        className="w-full h-full object-cover"
+                        alt={item.name}
+                      />
+                    </div>
+                  ))}
+                  {clothes.length === 0 && (
+                    <div className="text-default-400 text-sm">
+                      No items yet.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-default-400">
+                  Top Brands
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {Array.from(
+                    new Set(clothes.map((c) => c.brand).filter(Boolean))
+                  )
+                    .slice(0, 5)
+                    .map((brand) => (
+                      <span
+                        key={brand}
+                        className="px-4 py-2 border border-default-200 text-xs uppercase tracking-wider"
+                      >
+                        {brand}
+                      </span>
+                    ))}
+                  {clothes.length === 0 && (
+                    <div className="text-default-400 text-sm">
+                      Add items to see insights.
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-          <Button
-            color="primary"
-            variant="solid"
-            className="mt-4"
-            onPress={() => router.push("/settings")}
-          >
-            Edit Profile
-          </Button>
-        </div>
-      </div>
+        </Tab>
 
-      {/* Wardrobes Section */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">My Wardrobes</h2>
-        <Button
-          color="primary"
-          startContent={<PlusIcon className="w-5 h-5" />}
-          onPress={onOpen}
-        >
-          Create Wardrobe
-        </Button>
-      </div>
-
-      {wardrobes.length === 0 ? (
-        <Card className="p-12">
-          <div className="text-center">
-            <p className="text-lg text-gray-500 mb-4">No wardrobes yet</p>
-            <Button color="primary" onPress={onOpen}>
-              Create Your First Wardrobe
-            </Button>
+        <Tab key="wardrobes" title="Wardrobes">
+          <div className="py-8">
+            <WardrobeTab wardrobes={wardrobes} refreshData={fetchProfileData} />
           </div>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {wardrobes.map((wardrobe) => (
-            <Card
-              key={wardrobe.id}
-              isPressable
-              onPress={() => router.push(`/wardrobe/${wardrobe.id}`)}
-              className="hover:scale-105 transition-transform"
-            >
-              <CardHeader className="flex justify-between">
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg">{wardrobe.title}</h3>
-                  <p className="text-sm text-gray-500">
-                    {wardrobe.clothesCount} items
-                  </p>
-                </div>
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleWardrobeVisibility(wardrobe.id, wardrobe.isPublic);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.stopPropagation();
-                      toggleWardrobeVisibility(wardrobe.id, wardrobe.isPublic);
-                    }
-                  }}
-                >
-                  <Button as="div" isIconOnly size="sm" variant="light">
-                    {wardrobe.isPublic ? (
-                      <GlobeAltIcon className="w-5 h-5 text-success" />
-                    ) : (
-                      <LockClosedIcon className="w-5 h-5 text-warning" />
-                    )}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardBody>
-                {/* Image Fallback Logic */}
-                {wardrobe.coverImage ? (
-                  <Image
-                    src={wardrobe.coverImage}
-                    className="h-48 w-full object-cover rounded-lg"
-                    alt={wardrobe.title}
-                  />
-                ) : (
-                  <div className="h-48 w-full bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
-                    <span className="text-sm">No Cover Image</span>
-                  </div>
-                )}
-
-                {wardrobe.description && (
-                  <p className="text-sm text-gray-600 mt-3 line-clamp-2">
-                    {wardrobe.description}
-                  </p>
-                )}
-                <div className="mt-3">
-                  <Chip
-                    size="sm"
-                    variant="solid"
-                    color={wardrobe.isPublic ? "success" : "warning"}
-                  >
-                    {wardrobe.isPublic ? "Public" : "Private"}
-                  </Chip>
-                </div>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Modal remains the same */}
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalContent>
-          <ModalHeader>Create New Wardrobe</ModalHeader>
-          <ModalBody>
-            <div className="flex flex-col gap-4">
-              <Input
-                isRequired
-                label="Title"
-                placeholder="e.g., Summer Wardrobe, Bali Trip"
-                value={newWardrobe.title}
-                onChange={(e) =>
-                  setNewWardrobe({ ...newWardrobe, title: e.target.value })
-                }
-              />
-              <Input
-                label="Description"
-                placeholder="Optional description"
-                value={newWardrobe.description}
-                onChange={(e) =>
-                  setNewWardrobe({
-                    ...newWardrobe,
-                    description: e.target.value,
-                  })
-                }
-              />
-              <Input
-                label="Image Link"
-                placeholder="Optional Cover Image URL"
-                value={newWardrobe.coverImage}
-                onChange={(e) =>
-                  setNewWardrobe({
-                    ...newWardrobe,
-                    coverImage: e.target.value,
-                  })
-                }
-              />
-              <Switch
-                isSelected={newWardrobe.isPublic}
-                onValueChange={(value) =>
-                  setNewWardrobe({ ...newWardrobe, isPublic: value })
-                }
-              >
-                Make this wardrobe public
-              </Switch>
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="solid" onPress={onClose}>
-              Cancel
-            </Button>
-            <Button
-              color="primary"
-              onPress={handleCreateWardrobe}
-              isDisabled={!newWardrobe.title}
-            >
-              Create
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        </Tab>
+      </Tabs>
     </div>
   );
 }

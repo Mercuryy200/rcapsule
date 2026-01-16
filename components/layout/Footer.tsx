@@ -110,7 +110,7 @@ export default function Footer() {
               />
             </Link>
             <Link
-              href="https://instagram.com/Mercuryy200"
+              href="https://instagram.com/Mercuryy.200"
               isExternal
               color="foreground"
             >

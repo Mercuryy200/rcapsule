@@ -1,36 +1,31 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { useRouter, useParams, redirect } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Button,
-  Card,
-  CardBody,
   Input,
   Select,
   SelectItem,
   Image,
-  Chip,
+  Divider,
+  Tabs,
+  Tab,
 } from "@heroui/react";
+import {
+  ArrowLeftIcon,
+  TrashIcon,
+  PencilSquareIcon,
+  ArrowTopRightOnSquareIcon,
+  CalendarDaysIcon,
+} from "@heroicons/react/24/outline";
 
+import type { Clothes } from "@/lib/database.type";
 import { colors, occasions, seasons, categories } from "@/lib/data";
-
-interface ClothingItem {
-  id: string;
-  name: string;
-  category: string;
-  brand?: string;
-  price?: number;
-  colors: string[];
-  season?: string;
-  size?: string;
-  link?: string;
-  imageUrl?: string;
-  placesToWear: string[];
-}
+import { ImageUpload } from "@/components/closet/ImageUpload";
 
 export default function ItemPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const params = useParams();
   const itemId = params.id as string;
@@ -38,7 +33,10 @@ export default function ItemPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [item, setItem] = useState<ClothingItem | null>(null);
+
+  const [imageMethod, setImageMethod] = useState<"upload" | "url">("upload");
+
+  const [item, setItem] = useState<Clothes | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -51,23 +49,21 @@ export default function ItemPage() {
     brand: "",
     imageUrl: "",
     placesToWear: [] as string[],
+    purchaseDate: "",
   });
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    } else if (status === "authenticated") {
-      fetchItem();
-    }
+    if (status === "unauthenticated") router.push("/login");
+    else if (status === "authenticated") fetchItem();
   }, [status, router, itemId]);
 
   const fetchItem = async () => {
     try {
       const response = await fetch(`/api/clothes/${itemId}`);
-
       if (response.ok) {
-        const data = await response.json();
+        const data: Clothes = await response.json();
         setItem(data);
+
         setFormData({
           name: data.name,
           category: data.category,
@@ -79,9 +75,17 @@ export default function ItemPage() {
           brand: data.brand || "",
           imageUrl: data.imageUrl || "",
           placesToWear: data.placesToWear || [],
+          purchaseDate: data.purchaseDate
+            ? data.purchaseDate.split("T")[0]
+            : "",
         });
+
+        if (data.imageUrl && !data.imageUrl.startsWith("https")) {
+          setImageMethod("upload");
+        } else {
+          setImageMethod("url");
+        }
       } else {
-        alert("Item not found");
         router.push("/closet");
       }
     } catch (error) {
@@ -93,20 +97,19 @@ export default function ItemPage() {
 
   const handleSave = async () => {
     if (!formData.name || !formData.category) {
-      alert("Please fill in required fields (Name and Category)");
+      alert("Name and Category are required.");
       return;
     }
 
     const data = {
-      name: formData.name,
-      category: formData.category,
+      ...formData,
       price: formData.price ? parseFloat(formData.price) : null,
-      colors: formData.colors,
       brand: formData.brand.trim() || null,
       season: formData.season || null,
       size: formData.size || null,
       link: formData.link || null,
       imageUrl: formData.imageUrl || null,
+      purchaseDate: formData.purchaseDate || null,
       placesToWear: formData.placesToWear,
     };
 
@@ -119,7 +122,7 @@ export default function ItemPage() {
       });
 
       if (response.ok) {
-        const updatedData = await response.json();
+        const updatedData: Clothes = await response.json();
         setItem(updatedData);
         setIsEditing(false);
       } else {
@@ -127,270 +130,409 @@ export default function ItemPage() {
       }
     } catch (error) {
       console.error("Error saving item:", error);
-      alert("Error saving changes");
     } finally {
       setSaving(false);
-      router.push("/closet/");
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this item?")) return;
-
+    if (!confirm("Remove this piece from your collection?")) return;
     try {
       const response = await fetch(`/api/clothes/${itemId}`, {
         method: "DELETE",
       });
-
-      if (response.ok) {
-        router.push("/closet");
-      } else {
-        alert("Error deleting item");
-      }
+      if (response.ok) router.push("/closet");
     } catch (error) {
       console.error("Error deleting item:", error);
-      alert("Error deleting item");
     }
   };
 
-  const handleCancel = () => {
-    if (item) {
-      setFormData({
-        name: item.name,
-        category: item.category,
-        price: item.price?.toString() || "",
-        colors: item.colors || [],
-        season: item.season || "",
-        size: item.size || "",
-        link: item.link || "",
-        brand: item.brand || "",
-        imageUrl: item.imageUrl || "",
-        placesToWear: item.placesToWear || [],
-      });
-    }
-    setIsEditing(false);
-  };
-
-  if (status === "loading" || loading) {
-    return <div className="text-center p-8">Loading...</div>;
-  }
-
-  if (!item) {
-    return <div className="text-center p-8">Item not found</div>;
+  if (status === "loading" || loading || !item) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div className="grid grid-cols-1 lg:grid-cols-2">
-        <div>
+    <div className="w-full max-w-7xl mx-auto px-6 py-8">
+      <div className="mb-8">
+        <Button
+          variant="light"
+          startContent={<ArrowLeftIcon className="w-4 h-4" />}
+          className="uppercase tracking-widest text-xs font-bold pl-0"
+          onPress={() => router.push("/closet")}
+        >
+          Back to Collection
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-24">
+        <div className="relative w-full bg-content2">
           <Image
             alt={item.name}
-            className="w-full rounded-none"
             src={item.imageUrl || "/images/placeholder.png"}
+            radius="none"
+            className="w-full h-full object-cover"
+            classNames={{ wrapper: "w-full h-full" }}
           />
         </div>
 
-        <div>
+        <div className="flex flex-col justify-center">
           {!isEditing ? (
-            <Card className="p-15 bg-none- border-0 shadow-none">
-              <CardBody className="gap-4">
-                <div className="m-0">
-                  {item.brand && (
-                    <p className="text-md font-light">{item.brand}</p>
-                  )}
-                  <div className="flex justify-between">
-                    <p className="text-lg font-semibold">{item.name}</p>
-                    <p className="text-lg font-semibold">${item.price}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-light">
-                      Category: {item.category}
+            <div className="space-y-8">
+              <div>
+                {item.brand && (
+                  <h2 className="text-sm font-bold uppercase tracking-widest text-default-500 mb-2">
+                    {item.brand}
+                  </h2>
+                )}
+                <h1 className="text-5xl font-black uppercase tracking-tighter italic leading-none mb-4">
+                  {item.name}
+                </h1>
+
+                <div className="flex items-baseline gap-4">
+                  {item.price && (
+                    <p className="text-2xl font-light text-foreground">
+                      ${item.price.toFixed(2)}
                     </p>
+                  )}
+                  {item.purchaseDate && (
+                    <p className="text-xs text-default-400 uppercase tracking-widest flex items-center gap-1">
+                      <CalendarDaysIcon className="w-3 h-3" />
+                      Acquired:{" "}
+                      {new Date(item.purchaseDate).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <Divider />
+
+              <div className="grid grid-cols-2 gap-y-6 gap-x-4 text-sm">
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-default-400 mb-1">
+                    Category
+                  </span>
+                  <span className="capitalize">{item.category}</span>
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-default-400 mb-1">
+                    Size
+                  </span>
+                  <span>{item.size || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-default-400 mb-1">
+                    Season
+                  </span>
+                  <span className="capitalize">
+                    {item.season || "All Season"}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-default-400 mb-2">
+                    Colors
+                  </span>
+                  {item.colors && item.colors.length > 0 ? (
+                    <div className="flex gap-2">
+                      {item.colors.map((color) => (
+                        <div
+                          key={color}
+                          className="w-5 h-5 rounded-full border border-default-200 shadow-sm"
+                          style={{ backgroundColor: color }}
+                          title={color}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <span>—</span>
+                  )}
+                </div>
+              </div>
+
+              {item.placesToWear && item.placesToWear.length > 0 && (
+                <div className="pt-2">
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-default-400 mb-2">
+                    Best For
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {item.placesToWear.map((place) => (
+                      <span
+                        key={place}
+                        className="px-3 py-1 border border-default-200 text-xs uppercase tracking-wider"
+                      >
+                        {place}
+                      </span>
+                    ))}
                   </div>
                 </div>
-                {item.price && <div></div>}
-                {item.colors && item.colors.length > 0 && (
-                  <div>
-                    <p className="text-sm text-gray-500 mb-2">Colors</p>
-                    <div className="flex flex-wrap gap-2">
-                      {item.colors.map((color) => (
-                        <Chip key={color} variant="solid">
-                          {color}
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {item.season && (
-                  <div>
-                    <p className="text-sm text-gray-500">Season</p>
-                    <p className="text-lg capitalize">{item.season}</p>
-                  </div>
-                )}
-                {item.size && (
-                  <div>
-                    <p className="text-sm text-gray-500">Size</p>
-                    <p className="text-lg">{item.size}</p>
-                  </div>
-                )}
-                {item.placesToWear && item.placesToWear.length > 0 && (
-                  <div>
-                    <p className="text-sm text-gray-500 mb-2">Places to Wear</p>
-                    <div className="flex flex-wrap gap-2">
-                      {item.placesToWear.map((place) => (
-                        <Chip key={place} variant="solid">
-                          {place}
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-                )}
+              )}
+
+              <div className="pt-8 flex flex-col gap-4">
                 {item.link && (
-                  <div>
-                    <p className="text-sm text-gray-500">Link</p>
-                    <a
-                      href={item.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      View Product
-                    </a>
-                  </div>
-                )}
-                <div className="flex gap-2">
-                  <Button color="primary" onPress={() => setIsEditing(true)}>
-                    Edit
+                  <Button
+                    as="a"
+                    href={item.link}
+                    target="_blank"
+                    variant="solid"
+                    radius="none"
+                    className="w-full bg-foreground text-background font-bold uppercase tracking-widest"
+                    endContent={
+                      <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                    }
+                  >
+                    View Product Link
                   </Button>
-                  <Button variant="solid" onPress={handleDelete}>
+                )}
+
+                <div className="flex gap-4">
+                  <Button
+                    variant="bordered"
+                    radius="none"
+                    className="flex-1 font-medium uppercase tracking-wider border-default-300"
+                    startContent={<PencilSquareIcon className="w-4 h-4" />}
+                    onPress={() => setIsEditing(true)}
+                  >
+                    Edit Details
+                  </Button>
+                  <Button
+                    variant="light"
+                    radius="none"
+                    color="danger"
+                    className="font-medium uppercase tracking-wider"
+                    startContent={<TrashIcon className="w-4 h-4" />}
+                    onPress={handleDelete}
+                  >
                     Delete
                   </Button>
                 </div>
-              </CardBody>
-            </Card>
+              </div>
+            </div>
           ) : (
-            <Card>
-              <CardBody className="gap-4">
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="flex justify-between items-center border-b border-divider pb-4">
+                <h2 className="text-xl font-bold uppercase tracking-tighter">
+                  Edit Piece
+                </h2>
+                <Button
+                  size="sm"
+                  variant="light"
+                  color="danger"
+                  onPress={() => setIsEditing(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+
+              <div className="space-y-4">
                 <Input
-                  isRequired
                   label="Name"
-                  placeholder="e.g., Blue Denim Jacket"
+                  variant="bordered"
+                  radius="none"
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
                 />
-                <Input
-                  label="Brand"
-                  placeholder="e.g., Aritzia, Zara, H&M"
-                  type="text"
-                  value={formData.brand}
-                  onChange={(e) =>
-                    setFormData({ ...formData, brand: e.target.value })
-                  }
-                />
-                <Select
-                  isRequired
-                  label="Category"
-                  placeholder="Select category"
-                  selectedKeys={formData.category ? [formData.category] : []}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
-                  }
-                >
-                  {categories.map((cat) => (
-                    <SelectItem key={cat}>{cat}</SelectItem>
-                  ))}
-                </Select>
-                <Input
-                  label="Price"
-                  placeholder="29.99"
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price: e.target.value })
-                  }
-                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="Brand"
+                    variant="bordered"
+                    radius="none"
+                    value={formData.brand}
+                    onChange={(e) =>
+                      setFormData({ ...formData, brand: e.target.value })
+                    }
+                  />
+                  <Select
+                    label="Category"
+                    variant="bordered"
+                    radius="none"
+                    selectedKeys={formData.category ? [formData.category] : []}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
+                  >
+                    {categories.map((cat) => (
+                      <SelectItem key={cat}>{cat}</SelectItem>
+                    ))}
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="Price"
+                    type="number"
+                    variant="bordered"
+                    radius="none"
+                    startContent={<span className="text-default-400">$</span>}
+                    value={formData.price}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: e.target.value })
+                    }
+                  />
+                  <Input
+                    label="Size"
+                    variant="bordered"
+                    radius="none"
+                    value={formData.size}
+                    onChange={(e) =>
+                      setFormData({ ...formData, size: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    type="date"
+                    label="Purchase Date"
+                    placeholder="Select date"
+                    variant="bordered"
+                    radius="none"
+                    value={formData.purchaseDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, purchaseDate: e.target.value })
+                    }
+                  />
+                  <Input
+                    label="Product Link"
+                    placeholder="https://..."
+                    variant="bordered"
+                    radius="none"
+                    value={formData.link}
+                    onChange={(e) =>
+                      setFormData({ ...formData, link: e.target.value })
+                    }
+                  />
+                </div>
+
                 <Select
                   label="Colors"
-                  placeholder="Select colors"
-                  selectedKeys={new Set(formData.colors || [])}
+                  variant="bordered"
+                  radius="none"
                   selectionMode="multiple"
-                  onSelectionChange={(keys) => {
-                    const selectedArray = Array.from(keys) as string[];
-                    setFormData({ ...formData, colors: selectedArray });
-                  }}
+                  selectedKeys={new Set(formData.colors || [])}
+                  onSelectionChange={(keys) =>
+                    setFormData({
+                      ...formData,
+                      colors: Array.from(keys) as string[],
+                    })
+                  }
                 >
                   {colors.map((color) => (
-                    <SelectItem key={color}>{color}</SelectItem>
+                    <SelectItem
+                      key={color}
+                      startContent={
+                        <div
+                          className="w-3 h-3 rounded-full border"
+                          style={{ background: color }}
+                        />
+                      }
+                    >
+                      {color}
+                    </SelectItem>
                   ))}
                 </Select>
 
                 <Select
                   label="Season"
-                  placeholder="Select season"
+                  variant="bordered"
+                  radius="none"
                   selectedKeys={formData.season ? [formData.season] : []}
                   onChange={(e) =>
                     setFormData({ ...formData, season: e.target.value })
                   }
                 >
-                  {seasons.map((season) => (
-                    <SelectItem key={season}>{season}</SelectItem>
-                  ))}
-                </Select>
-                <Input
-                  label="Size"
-                  placeholder="e.g., M, L, 32"
-                  value={formData.size}
-                  onChange={(e) =>
-                    setFormData({ ...formData, size: e.target.value })
-                  }
-                />
-                <Input
-                  label="Link"
-                  placeholder="https://..."
-                  value={formData.link}
-                  onChange={(e) =>
-                    setFormData({ ...formData, link: e.target.value })
-                  }
-                />
-                <Input
-                  label="Image URL"
-                  placeholder="https://..."
-                  value={formData.imageUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, imageUrl: e.target.value })
-                  }
-                />
-                <Select
-                  label="Places to Wear"
-                  placeholder="Select places"
-                  selectedKeys={new Set(formData.placesToWear || [])}
-                  selectionMode="multiple"
-                  onSelectionChange={(keys) => {
-                    const selectedArray = Array.from(keys) as string[];
-                    setFormData({ ...formData, placesToWear: selectedArray });
-                  }}
-                >
-                  {occasions.map((occasion) => (
-                    <SelectItem key={occasion}>{occasion}</SelectItem>
+                  {seasons.map((s) => (
+                    <SelectItem key={s}>{s}</SelectItem>
                   ))}
                 </Select>
 
-                <div className="flex gap-2 justify-end mt-4">
-                  <Button variant="solid" onPress={handleCancel}>
-                    Cancel
-                  </Button>
-                  <Button
-                    color="primary"
-                    isLoading={saving}
-                    onPress={handleSave}
-                  >
-                    Save Changes
-                  </Button>
+                <Select
+                  label="Occasions"
+                  variant="bordered"
+                  radius="none"
+                  selectionMode="multiple"
+                  selectedKeys={new Set(formData.placesToWear || [])}
+                  onSelectionChange={(keys) =>
+                    setFormData({
+                      ...formData,
+                      placesToWear: Array.from(keys) as string[],
+                    })
+                  }
+                >
+                  {occasions.map((o) => (
+                    <SelectItem key={o}>{o}</SelectItem>
+                  ))}
+                </Select>
+
+                <div className="pt-4 border-t border-divider">
+                  <h3 className="text-xs font-bold uppercase tracking-widest mb-3">
+                    Update Image
+                  </h3>
+
+                  <div className="flex flex-col gap-4">
+                    <Tabs
+                      selectedKey={imageMethod}
+                      onSelectionChange={(key) =>
+                        setImageMethod(key as "upload" | "url")
+                      }
+                      radius="sm"
+                      size="sm"
+                      classNames={{
+                        base: "w-auto",
+                        tabList: "bg-default-100 p-1 gap-2",
+                        cursor: "bg-foreground",
+                        tab: "px-6 h-9",
+                        tabContent:
+                          "group-data-[selected=true]:text-background text-default-600 font-medium",
+                      }}
+                    >
+                      <Tab key="upload" title="Upload" />
+                      <Tab key="url" title="URL" />
+                    </Tabs>
+
+                    {imageMethod === "upload" ? (
+                      <div className="h-48 border-2 border-dashed border-default-200">
+                        <ImageUpload
+                          value={formData.imageUrl}
+                          onChange={(url) =>
+                            setFormData({ ...formData, imageUrl: url })
+                          }
+                          folder="clothes"
+                          label="Drop image here"
+                        />
+                      </div>
+                    ) : (
+                      <Input
+                        label="Image URL"
+                        variant="bordered"
+                        radius="none"
+                        value={formData.imageUrl}
+                        onChange={(e) =>
+                          setFormData({ ...formData, imageUrl: e.target.value })
+                        }
+                      />
+                    )}
+                  </div>
                 </div>
-              </CardBody>
-            </Card>
+
+                <Button
+                  fullWidth
+                  color="primary"
+                  radius="none"
+                  className="font-bold uppercase tracking-widest mt-4 shadow-lg shadow-primary/20"
+                  isLoading={saving}
+                  onPress={handleSave}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       </div>
