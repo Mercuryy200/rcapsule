@@ -7,7 +7,7 @@ import { Button } from "@heroui/react";
 interface ImageUploadProps {
   value?: string;
   onChange: (url: string) => void;
-  folder?: "clothes" | "outfits";
+  folder?: "clothes" | "outfits" | "profile";
   label?: string;
   maxSize?: number;
 }

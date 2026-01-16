@@ -2,18 +2,9 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import {
-  Button,
-  Card,
-  CardBody,
-  CardFooter,
-  Image,
-  Spinner,
-  Chip,
-} from "@heroui/react";
+import { Button, Image, Spinner, Chip } from "@heroui/react";
 import { PlusIcon, HeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
-import Link from "next/link";
 
 interface Outfit {
   id: string;
@@ -29,18 +20,15 @@ interface Outfit {
 }
 
 export default function OutfitsPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [outfits, setOutfits] = useState<Outfit[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "favorites">("all");
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    } else if (status === "authenticated") {
-      fetchOutfits();
-    }
+    if (status === "unauthenticated") router.push("/login");
+    else if (status === "authenticated") fetchOutfits();
   }, [status, router]);
 
   const fetchOutfits = async () => {
@@ -51,13 +39,18 @@ export default function OutfitsPage() {
         setOutfits(Array.isArray(data) ? data : []);
       }
     } catch (error) {
-      console.error("Error fetching outfits:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleFavorite = async (outfitId: string, currentStatus: boolean) => {
+  const toggleFavorite = async (
+    e: React.MouseEvent,
+    outfitId: string,
+    currentStatus: boolean
+  ) => {
+    e.stopPropagation();
     try {
       const response = await fetch(`/api/outfits/${outfitId}`, {
         method: "PUT",
@@ -75,179 +68,146 @@ export default function OutfitsPage() {
         );
       }
     } catch (error) {
-      console.error("Error toggling favorite:", error);
+      console.error(error);
     }
   };
 
-  if (status === "loading" || loading) {
+  if (loading)
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="h-screen flex items-center justify-center">
         <Spinner size="lg" />
       </div>
     );
-  }
 
   const filteredOutfits =
     filter === "favorites" ? outfits.filter((o) => o.isFavorite) : outfits;
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+    <div className="w-full max-w-7xl mx-auto px-6 py-12">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 border-b border-divider pb-6">
         <div>
-          <h1 className="text-4xl tracking-wide mb-2">Your Outfits</h1>
-          <p className="text-gray-500 text-sm">
-            {outfits.length} {outfits.length === 1 ? "outfit" : "outfits"} in
-            your collection
-          </p>
-        </div>
-        <Button
-          as={Link}
-          href="/outfits/new"
-          color="primary"
-          size="lg"
-          className="font-light"
-          startContent={<PlusIcon className="w-5 h-5" />}
-        >
-          Create Outfit
-        </Button>
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-3 mb-8">
-        <Button
-          variant={filter === "all" ? "solid" : "bordered"}
-          onPress={() => setFilter("all")}
-          className="font-light"
-        >
-          All Outfits
-        </Button>
-        <Button
-          variant={filter === "favorites" ? "solid" : "bordered"}
-          onPress={() => setFilter("favorites")}
-          className="font-light"
-          startContent={<HeartSolidIcon className="w-4 h-4" />}
-        >
-          Favorites
-        </Button>
-      </div>
-
-      {filteredOutfits.length === 0 ? (
-        <Card className="p-16 bg-gradient-to-br from-gray-50 to-gray-100">
-          <div className="text-center">
-            <p className="text-xl text-gray-400 font-light mb-6">
-              {filter === "favorites"
-                ? "No favorite outfits yet"
-                : "Your outfit collection is empty"}
-            </p>
-            <p className="text-sm text-gray-500 mb-8 max-w-md mx-auto">
-              Create your first outfit by combining your favorite pieces
-              together
-            </p>
-            <Button
-              as={Link}
-              href="/outfits/new"
-              color="primary"
-              size="lg"
-              className="font-light"
+          <h1 className="text-6xl font-black italic uppercase tracking-tighter mb-2">
+            Lookbook
+          </h1>
+          <div className="flex gap-6">
+            <button
+              onClick={() => setFilter("all")}
+              className={`text-xs uppercase tracking-widest font-bold transition-colors ${filter === "all" ? "text-foreground border-b-2 border-foreground" : "text-default-400 hover:text-foreground"}`}
             >
-              Create Your First Outfit
-            </Button>
+              All Looks ({outfits.length})
+            </button>
+            <button
+              onClick={() => setFilter("favorites")}
+              className={`text-xs uppercase tracking-widest font-bold transition-colors ${filter === "favorites" ? "text-foreground border-b-2 border-foreground" : "text-default-400 hover:text-foreground"}`}
+            >
+              Favorites
+            </button>
           </div>
-        </Card>
+        </div>
+
+        <Button
+          radius="none"
+          color="primary"
+          className="uppercase font-bold tracking-widest px-8"
+          startContent={<PlusIcon className="w-4 h-4" />}
+          onPress={() => router.push("/outfits/new")}
+        >
+          Curate New Look
+        </Button>
+      </div>
+
+      {/* GRID */}
+      {filteredOutfits.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-32 border border-dashed border-default-300">
+          <p className="text-xl font-light italic mb-4">
+            {filter === "favorites"
+              ? "No favorites yet."
+              : "Your collection is empty."}
+          </p>
+          <Button
+            variant="flat"
+            radius="none"
+            onPress={() => router.push("/outfits/new")}
+          >
+            Start Styling
+          </Button>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
           {filteredOutfits.map((outfit) => (
-            <Card
+            <div
               key={outfit.id}
-              className="group relative overflow-hidden border border-gray-200 hover:shadow-2xl transition-all duration-300 cursor-pointer"
-              isPressable
-              onPress={() => router.push(`/outfits/${outfit.id}`)}
+              className="group cursor-pointer"
+              onClick={() => router.push(`/outfits/${outfit.id}`)}
             >
-              <CardBody className="p-0">
-                <div className="relative w-full h-80 bg-gradient-to-br from-gray-100 to-gray-200">
-                  {outfit.imageUrl ? (
-                    <Image
-                      alt={outfit.name}
-                      className="w-full h-full object-cover"
-                      classNames={{ img: "w-full h-full object-cover" }}
-                      src={outfit.imageUrl}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <div className="text-center text-gray-400">
-                        <p className="text-6xl mb-2">👔</p>
-                        <p className="text-sm font-light">No image</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite(outfit.id, outfit.isFavorite);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        toggleFavorite(outfit.id, outfit.isFavorite);
-                      }
-                    }}
-                    className="absolute top-4 right-4 p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white transition-all duration-200 z-10 cursor-pointer"
-                  >
-                    {outfit.isFavorite ? (
-                      <HeartSolidIcon className="w-5 h-5 text-red-500" />
-                    ) : (
-                      <HeartIcon className="w-5 h-5 text-gray-600" />
-                    )}
-                  </div>
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-              </CardBody>
-              <CardFooter className="flex flex-col items-start gap-3 p-5 bg-white">
-                <div className="w-full">
-                  <h3 className="font-light text-xl tracking-wide mb-1">
-                    {outfit.name}
-                  </h3>
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <span>{outfit.itemCount} items</span>
-                    {outfit.occasion && (
-                      <>
-                        <span>•</span>
-                        <span className="capitalize">{outfit.occasion}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {(outfit.season || outfit.timesWorn > 0) && (
-                  <div className="flex gap-2 flex-wrap">
-                    {outfit.season && (
-                      <Chip
-                        size="sm"
-                        variant="flat"
-                        className="font-light text-xs"
-                      >
-                        {outfit.season}
-                      </Chip>
-                    )}
-                    {outfit.timesWorn > 0 && (
-                      <Chip
-                        size="sm"
-                        variant="flat"
-                        className="font-light text-xs"
-                      >
-                        Worn {outfit.timesWorn}x
-                      </Chip>
-                    )}
+              {/* IMAGE FRAME */}
+              <div className="relative aspect-[3/4] bg-content2 mb-4 overflow-hidden">
+                {outfit.imageUrl ? (
+                  <Image
+                    alt={outfit.name}
+                    src={outfit.imageUrl}
+                    radius="none"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    classNames={{ wrapper: "w-full h-full" }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-default-50 text-default-300">
+                    <span className="text-4xl italic font-serif">Vesti</span>
+                    <span className="text-[10px] uppercase tracking-widest mt-2">
+                      No Visual
+                    </span>
                   </div>
                 )}
-              </CardFooter>
-            </Card>
+
+                {/* Favorite Overlay */}
+                <button
+                  onClick={(e) =>
+                    toggleFavorite(e, outfit.id, outfit.isFavorite)
+                  }
+                  className="absolute top-3 right-3 z-20 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  {outfit.isFavorite ? (
+                    <HeartSolidIcon className="w-6 h-6 text-red-600 drop-shadow-md" />
+                  ) : (
+                    <HeartIcon className="w-6 h-6 text-white drop-shadow-md hover:scale-110 transition-transform" />
+                  )}
+                </button>
+
+                {/* Dark Gradient on Hover */}
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10" />
+              </div>
+
+              {/* TEXT */}
+              <div className="space-y-1">
+                <div className="flex justify-between items-start">
+                  <h3 className="text-lg font-bold uppercase tracking-tight leading-none">
+                    {outfit.name}
+                  </h3>
+                  {outfit.timesWorn > 0 && (
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-default-400">
+                      Worn {outfit.timesWorn}x
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap gap-2 text-xs text-default-500 uppercase tracking-wider">
+                  <span>{outfit.itemCount} Items</span>
+                  {outfit.occasion && (
+                    <>
+                      <span>•</span>
+                      <span>{outfit.occasion}</span>
+                    </>
+                  )}
+                  {outfit.season && (
+                    <>
+                      <span>•</span>
+                      <span>{outfit.season}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       )}
