@@ -144,7 +144,7 @@ function LoginFormContent() {
           Don&apos;t have an account?{" "}
           <Link
             className="text-primary font-bold hover:underline"
-            href="/signup"
+            href="/signp"
           >
             Sign up
           </Link>

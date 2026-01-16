@@ -81,7 +81,7 @@ export default function SignUpForm() {
           isRequired
           label="Full Name"
           name="name"
-          placeholder="Anna Wintour"
+          placeholder="Anna"
           type="text"
           variant="bordered"
           labelPlacement="outside"

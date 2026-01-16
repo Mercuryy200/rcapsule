@@ -18,7 +18,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create user in Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,

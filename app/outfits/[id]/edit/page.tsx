@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import CollageBuilder from "@/components/outfit/CollageBuilder";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import {
   Button,
   Image,
@@ -13,7 +12,6 @@ import {
   Spinner,
   Checkbox,
   Modal,
-  ModalFooter,
   ModalContent,
   ModalHeader,
   ModalBody,
@@ -25,11 +23,12 @@ import {
   ArrowLeftIcon,
   PlusIcon,
   XMarkIcon,
-  SparklesIcon,
-  CameraIcon,
 } from "@heroicons/react/24/outline";
 import { ImageUpload } from "@/components/closet/ImageUpload";
+// Make sure to import your CollageBuilder if you want that functionality here too
+import CollageBuilder from "@/components/outfit/CollageBuilder";
 
+// Types matching your API response
 interface ClothingItem {
   id: string;
   name: string;
@@ -41,26 +40,32 @@ interface ClothingItem {
 interface Wardrobe {
   id: string;
   title: string;
-  coverImage?: string;
 }
 
-export default function CreateOutfitPage() {
+export default function EditOutfitPage() {
   const { status } = useSession();
   const router = useRouter();
+  const params = useParams();
+  const outfitId = params.id as string;
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [showCollageBuilder, setShowCollageBuilder] = useState(false);
 
+  // Data State
   const [availableClothes, setAvailableClothes] = useState<ClothingItem[]>([]);
   const [availableWardrobes, setAvailableWardrobes] = useState<Wardrobe[]>([]);
+
+  // Selection State
   const [selectedClothes, setSelectedClothes] = useState<ClothingItem[]>([]);
   const [selectedWardrobes, setSelectedWardrobes] = useState<Set<string>>(
     new Set()
   );
 
-  const [imageMethod, setImageMethod] = useState<
-    "auto" | "upload" | "url" | "builder"
-  >("auto");
+  // Form State
+  const [imageMethod, setImageMethod] = useState<"upload" | "url" | "builder">(
+    "upload"
+  );
+  const [showCollageBuilder, setShowCollageBuilder] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -74,17 +79,53 @@ export default function CreateOutfitPage() {
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
-    else if (status === "authenticated") fetchData();
-  }, [status, router]);
+    else if (status === "authenticated") fetchAllData();
+  }, [status, router, outfitId]);
 
-  const fetchData = async () => {
+  const fetchAllData = async () => {
     try {
-      const [clothesRes, wardrobesRes] = await Promise.all([
+      // Fetch everything in parallel
+      const [clothesRes, wardrobesRes, outfitRes] = await Promise.all([
         fetch("/api/clothes"),
         fetch("/api/wardrobes"),
+        fetch(`/api/outfits/${outfitId}`),
       ]);
+
       if (clothesRes.ok) setAvailableClothes(await clothesRes.json());
       if (wardrobesRes.ok) setAvailableWardrobes(await wardrobesRes.json());
+
+      if (outfitRes.ok) {
+        const outfit = await outfitRes.json();
+
+        // 1. Pre-fill Form
+        setFormData({
+          name: outfit.name,
+          description: outfit.description || "",
+          season: outfit.season || "",
+          occasion: outfit.occasion || "",
+          imageUrl: outfit.imageUrl || "",
+          isFavorite: outfit.isFavorite,
+        });
+
+        // 2. Pre-fill Clothes
+        if (outfit.clothes && Array.isArray(outfit.clothes)) {
+          setSelectedClothes(outfit.clothes);
+        }
+
+        // 3. Pre-fill Wardrobes
+        if (outfit.wardrobes && Array.isArray(outfit.wardrobes)) {
+          const ids = outfit.wardrobes.map((w: any) => w.id);
+          setSelectedWardrobes(new Set(ids));
+        }
+
+        // 4. Set Image Tab default
+        if (outfit.imageUrl && !outfit.imageUrl.includes("base64")) {
+          setImageMethod("url");
+        }
+      } else {
+        alert("Outfit not found");
+        router.push("/outfits");
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -92,38 +133,7 @@ export default function CreateOutfitPage() {
     }
   };
 
-  const handleCollageSave = async (file: File) => {
-    try {
-      const uploadData = new FormData();
-      uploadData.append("file", file);
-      uploadData.append("folder", "outfits");
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: uploadData,
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setFormData({ ...formData, imageUrl: data.url });
-        setShowCollageBuilder(false); // Close builder
-      } else {
-        alert("Upload failed");
-      }
-    } catch (error) {
-      console.error("Collage upload error", error);
-    }
-  };
-
-  const handleAddClothes = (item: ClothingItem) => {
-    if (!selectedClothes.find((c) => c.id === item.id))
-      setSelectedClothes([...selectedClothes, item]);
-  };
-  const handleRemoveClothes = (itemId: string) => {
-    setSelectedClothes(selectedClothes.filter((c) => c.id !== itemId));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || selectedClothes.length === 0) {
       alert("Name and items required.");
@@ -132,32 +142,56 @@ export default function CreateOutfitPage() {
     setSubmitting(true);
 
     try {
-      let finalImageUrl = formData.imageUrl;
-      if (imageMethod === "auto" && !finalImageUrl) {
-        // Mock call to your collage function
-        // const generatedUrl = await generateCollage();
-        // if (generatedUrl) finalImageUrl = generatedUrl;
-      }
-
-      const response = await fetch("/api/outfits", {
-        method: "POST",
+      // Call PUT endpoint
+      const response = await fetch(`/api/outfits/${outfitId}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          imageUrl: finalImageUrl,
-          clothesIds: selectedClothes.map((c) => c.id),
-          wardrobeIds: Array.from(selectedWardrobes),
+          clothesIds: selectedClothes.map((c) => c.id), // Send IDs for relation update
+          wardrobeIds: Array.from(selectedWardrobes), // Send IDs for relation update
         }),
       });
 
       if (response.ok) {
-        const outfit = await response.json();
-        router.push(`/outfits/${outfit.id}`);
+        router.push(`/outfits/${outfitId}`);
+      } else {
+        const err = await response.json();
+        alert(`Failed to update: ${err.error}`);
       }
     } catch (error) {
       console.error(error);
+      alert("An error occurred");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // --- HELPER FUNCTIONS ---
+  const handleAddClothes = (item: ClothingItem) => {
+    if (!selectedClothes.find((c) => c.id === item.id))
+      setSelectedClothes([...selectedClothes, item]);
+  };
+  const handleRemoveClothes = (itemId: string) => {
+    setSelectedClothes(selectedClothes.filter((c) => c.id !== itemId));
+  };
+  const toggleWardrobe = (id: string) => {
+    const s = new Set(selectedWardrobes);
+    s.has(id) ? s.delete(id) : s.add(id);
+    setSelectedWardrobes(s);
+  };
+  const handleCollageSave = async (file: File) => {
+    const uploadData = new FormData();
+    uploadData.append("file", file);
+    uploadData.append("folder", "outfits");
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: uploadData,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setFormData({ ...formData, imageUrl: data.url });
+      setShowCollageBuilder(false);
     }
   };
 
@@ -186,41 +220,35 @@ export default function CreateOutfitPage() {
         </Button>
         <div>
           <h1 className="text-3xl font-black uppercase tracking-tighter italic">
-            The Studio
+            Edit Look
           </h1>
           <p className="text-xs uppercase tracking-widest text-default-500">
-            Curate & Assemble
+            Refine your curation
           </p>
         </div>
       </div>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleUpdate}
         className="grid grid-cols-1 lg:grid-cols-12 gap-12"
       >
-        <div className="lg:col-span-5 h-fit lg:sticky lg:top-24 space-y-6">
+        {/* LEFT: IMAGE */}
+        <div className="lg:col-span-5 h-fit space-y-6">
           <div className="aspect-[3/4] bg-content2 border border-dashed border-default-300 flex flex-col items-center justify-center relative overflow-hidden group">
-            {/* Change Tabs Logic */}
             <div className="absolute top-4 z-10">
               <Tabs
                 selectedKey={imageMethod}
                 onSelectionChange={(k) => setImageMethod(k as any)}
                 radius="none"
                 size="sm"
-                classNames={{
-                  tabList:
-                    "bg-background/80 backdrop-blur border border-default-200",
-                }}
+                classNames={{ tabList: "bg-background/80 backdrop-blur" }}
               >
-                <Tab key="builder" title="Collage Builder" />{" "}
-                {/* CHANGED FROM AUTO */}
+                <Tab key="builder" title="Collage" />
                 <Tab key="upload" title="Upload" />
                 <Tab key="url" title="URL" />
               </Tabs>
             </div>
-
             <div className="w-full h-full p-8 flex items-center justify-center">
-              {/* IF IMAGE EXISTS, SHOW IT */}
               {formData.imageUrl ? (
                 <div className="relative w-full h-full group">
                   <Image
@@ -235,72 +263,62 @@ export default function CreateOutfitPage() {
                     className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100"
                     onPress={() => setFormData({ ...formData, imageUrl: "" })}
                   >
-                    Clear
+                    Change
                   </Button>
                 </div>
-              ) : imageMethod === "builder" ? (
-                // BUILDER ENTRY POINT
-                <div className="text-center">
-                  <Button
-                    variant="flat"
-                    size="sm"
-                    radius="none"
-                    startContent={<SparklesIcon className="w-4 h-4" />}
-                    onPress={() => setShowCollageBuilder(true)}
-                    isDisabled={selectedClothes.length === 0}
-                    className="uppercase font-bold text-[10px] tracking-widest h-12 px-6"
-                  >
-                    Open Collage Studio
-                  </Button>
-                  <p className="text-[10px] text-default-400 mt-4 uppercase tracking-wider">
-                    Select clothes first
-                  </p>
-                </div>
-              ) : imageMethod === "upload" ? (
-                <ImageUpload
-                  value={formData.imageUrl}
-                  onChange={(url) =>
-                    setFormData({ ...formData, imageUrl: url })
-                  }
-                  folder="outfits"
-                  label="Upload Final Look"
-                />
               ) : (
-                <Input
-                  label="URL"
-                  variant="underlined"
-                  value={formData.imageUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, imageUrl: e.target.value })
-                  }
-                />
+                <div className="text-center">
+                  {imageMethod === "builder" ? (
+                    <Button
+                      onPress={() => setShowCollageBuilder(true)}
+                      variant="flat"
+                      className="uppercase font-bold text-[10px] tracking-widest"
+                    >
+                      Open Studio
+                    </Button>
+                  ) : imageMethod === "upload" ? (
+                    <ImageUpload
+                      value={formData.imageUrl}
+                      onChange={(url) =>
+                        setFormData({ ...formData, imageUrl: url })
+                      }
+                      folder="outfits"
+                      label="Upload"
+                    />
+                  ) : (
+                    <Input
+                      label="URL"
+                      variant="underlined"
+                      value={formData.imageUrl}
+                      onChange={(e) =>
+                        setFormData({ ...formData, imageUrl: e.target.value })
+                      }
+                    />
+                  )}
+                </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: The Tools */}
+        {/* RIGHT: FORM */}
         <div className="lg:col-span-7 space-y-12">
           {/* 1. Metadata */}
           <section className="space-y-6">
             <h3 className="text-xs font-bold uppercase tracking-widest border-b border-divider pb-2">
-              Look Details
+              Details
             </h3>
             <Input
-              isRequired
               label="Title"
-              placeholder="e.g. Gallery Opening Night"
               variant="bordered"
               radius="none"
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              classNames={{ inputWrapper: "h-12" }}
             />
             <Textarea
               label="Notes"
-              placeholder="Styling notes..."
               variant="bordered"
               radius="none"
               value={formData.description}
@@ -313,6 +331,7 @@ export default function CreateOutfitPage() {
                 label="Season"
                 variant="bordered"
                 radius="none"
+                selectedKeys={formData.season ? [formData.season] : []}
                 onChange={(e) =>
                   setFormData({ ...formData, season: e.target.value })
                 }
@@ -335,13 +354,11 @@ export default function CreateOutfitPage() {
               isSelected={formData.isFavorite}
               onValueChange={(v) => setFormData({ ...formData, isFavorite: v })}
             >
-              <span className="text-sm uppercase tracking-wide">
-                Add to Favorites
-              </span>
+              <span className="text-sm uppercase tracking-wide">Favorite</span>
             </Checkbox>
           </section>
 
-          {/* 2. Clothes Selector */}
+          {/* 2. Clothes */}
           <section className="space-y-6">
             <div className="flex justify-between items-end border-b border-divider pb-2">
               <h3 className="text-xs font-bold uppercase tracking-widest">
@@ -358,35 +375,28 @@ export default function CreateOutfitPage() {
                 Add Items
               </Button>
             </div>
-
-            {selectedClothes.length === 0 ? (
-              <div className="py-8 text-center text-default-400 text-sm italic">
-                No items selected.
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
-                {selectedClothes.map((item) => (
-                  <div
-                    key={item.id}
-                    className="relative group aspect-[3/4] border border-default-200 cursor-pointer hover:border-danger transition-colors"
-                    onClick={() => handleRemoveClothes(item.id)}
-                  >
-                    <Image
-                      src={item.imageUrl || ""}
-                      radius="none"
-                      className="w-full h-full object-cover"
-                      classNames={{ wrapper: "w-full h-full" }}
-                    />
-                    <div className="absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <XMarkIcon className="w-6 h-6 text-danger" />
-                    </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+              {selectedClothes.map((item) => (
+                <div
+                  key={item.id}
+                  className="relative group aspect-[3/4] border border-default-200 cursor-pointer hover:border-danger transition-colors"
+                  onClick={() => handleRemoveClothes(item.id)}
+                >
+                  <Image
+                    src={item.imageUrl || ""}
+                    radius="none"
+                    className="w-full h-full object-cover"
+                    classNames={{ wrapper: "w-full h-full" }}
+                  />
+                  <div className="absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <XMarkIcon className="w-6 h-6 text-danger" />
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
           </section>
 
-          {/* 3. Wardrobe Selection */}
+          {/* 3. Wardrobes */}
           <section className="space-y-6">
             <h3 className="text-xs font-bold uppercase tracking-widest border-b border-divider pb-2">
               Collections
@@ -397,11 +407,7 @@ export default function CreateOutfitPage() {
                 return (
                   <div
                     key={w.id}
-                    onClick={() => {
-                      const s = new Set(selectedWardrobes);
-                      s.has(w.id) ? s.delete(w.id) : s.add(w.id);
-                      setSelectedWardrobes(s);
-                    }}
+                    onClick={() => toggleWardrobe(w.id)}
                     className={`cursor-pointer px-4 py-2 border text-xs uppercase tracking-wide transition-all ${isSelected ? "border-primary bg-primary text-white" : "border-default-200 hover:border-default-400"}`}
                   >
                     {w.title}
@@ -411,7 +417,7 @@ export default function CreateOutfitPage() {
             </div>
           </section>
 
-          {/* ACTION */}
+          {/* ACTIONS */}
           <div className="pt-8 flex gap-4">
             <Button
               fullWidth
@@ -430,35 +436,13 @@ export default function CreateOutfitPage() {
               type="submit"
               isLoading={submitting}
             >
-              Save Look
+              Save Changes
             </Button>
           </div>
-          <Modal
-            isOpen={showCollageBuilder}
-            onClose={() => setShowCollageBuilder(false)}
-            size="5xl"
-            radius="none"
-            classNames={{
-              body: "p-0",
-              header: "border-b border-default-200",
-            }}
-          >
-            <ModalContent className="h-[80vh]">
-              <ModalHeader className="uppercase tracking-widest font-bold">
-                Collage Studio
-              </ModalHeader>
-              <ModalBody className="overflow-hidden">
-                <CollageBuilder
-                  items={selectedClothes}
-                  onSave={handleCollageSave}
-                />
-              </ModalBody>
-            </ModalContent>
-          </Modal>
         </div>
       </form>
 
-      {/* MODAL */}
+      {/* ADD MODAL & COLLAGE MODAL (Reuse from create page) */}
       <Modal
         isOpen={addClothesModal.isOpen}
         onClose={addClothesModal.onClose}
@@ -492,6 +476,26 @@ export default function CreateOutfitPage() {
                 </div>
               ))}
             </div>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={showCollageBuilder}
+        onClose={() => setShowCollageBuilder(false)}
+        size="5xl"
+        radius="none"
+        classNames={{ body: "p-0" }}
+      >
+        <ModalContent className="h-[80vh]">
+          <ModalHeader className="uppercase tracking-widest font-bold">
+            Collage Studio
+          </ModalHeader>
+          <ModalBody className="overflow-hidden">
+            <CollageBuilder
+              items={selectedClothes}
+              onSave={handleCollageSave}
+            />
           </ModalBody>
         </ModalContent>
       </Modal>

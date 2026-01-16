@@ -7,6 +7,7 @@ import {
   ArrowLeftIcon,
   PencilSquareIcon,
   SparklesIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 
 // Types...
@@ -51,6 +52,21 @@ export default function OutfitDetailPage() {
       setLoading(false);
     }
   };
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this look?")) return;
+    try {
+      const response = await fetch(`/api/outfits/${params.id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        router.push("/outfits");
+      } else {
+        alert("Failed to delete outfit");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   if (loading || !outfit)
     return (
@@ -61,7 +77,6 @@ export default function OutfitDetailPage() {
 
   return (
     <div className="w-full min-h-screen">
-      {/* NAV */}
       <div className="max-w-7xl mx-auto px-6 pt-8 pb-4">
         <Button
           variant="light"
@@ -74,7 +89,6 @@ export default function OutfitDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[80vh]">
-        {/* LEFT: VISUAL */}
         <div className="relative bg-content2 flex items-center justify-center p-8 lg:p-20 order-2 lg:order-1">
           <div className="relative w-full aspect-[3/4] shadow-2xl">
             <Image
@@ -87,7 +101,6 @@ export default function OutfitDetailPage() {
           </div>
         </div>
 
-        {/* RIGHT: DETAILS */}
         <div className="flex flex-col justify-center px-6 py-12 lg:px-24 order-1 lg:order-2">
           <div className="mb-2 flex gap-2">
             {outfit.season && (
@@ -111,17 +124,14 @@ export default function OutfitDetailPage() {
               </Chip>
             )}
           </div>
-
           <h1 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-6 leading-none">
             {outfit.name}
           </h1>
-
           {outfit.description && (
             <p className="text-default-500 font-light text-lg mb-8 border-l-2 border-foreground pl-4 italic">
               "{outfit.description}"
             </p>
           )}
-
           <div className="flex items-center gap-8 mb-12 border-y border-divider py-4">
             <div>
               <span className="block text-3xl font-light">
@@ -142,8 +152,6 @@ export default function OutfitDetailPage() {
               </div>
             )}
           </div>
-
-          {/* DECONSTRUCTED ITEMS */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-widest mb-6">
               Deconstructed Look
@@ -174,8 +182,7 @@ export default function OutfitDetailPage() {
               ))}
             </div>
           </div>
-
-          <div className="mt-12">
+          <div className="mt-12 flex gap-4">
             <Button
               variant="solid"
               color="primary"
@@ -183,9 +190,19 @@ export default function OutfitDetailPage() {
               fullWidth
               className="uppercase font-bold tracking-widest h-12"
               startContent={<PencilSquareIcon className="w-4 h-4" />}
-              onPress={() => router.push(`/outfits/${outfit.id}/edit`)}
+              onPress={() => router.push(`/outfits/${outfit.id}/edit`)} // LINKS TO EDIT PAGE
             >
               Edit Look
+            </Button>
+            <Button
+              variant="bordered"
+              color="danger"
+              radius="none"
+              className="uppercase font-bold tracking-widest h-12 min-w-[100px]"
+              startContent={<TrashIcon className="w-4 h-4" />}
+              onPress={handleDelete}
+            >
+              Delete
             </Button>
           </div>
         </div>
