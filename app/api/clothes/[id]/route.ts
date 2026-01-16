@@ -88,7 +88,6 @@ export async function PUT(
     if (data.imageUrl !== undefined)
       updatePayload.imageUrl = data.imageUrl || null;
 
-    // 2. Update Clothes Table
     const { data: updatedClothing, error } = await supabase
       .from("Clothes")
       .update(updatePayload)

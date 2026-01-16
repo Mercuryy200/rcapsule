@@ -1,22 +1,19 @@
 "use client";
 import { useState } from "react";
 import {
-  Card,
-  CardBody,
-  CardHeader,
   Checkbox,
   CheckboxGroup,
   Slider,
   Button,
-  Divider,
-  Chip,
-  CardFooter,
+  Accordion,
+  AccordionItem,
+  ScrollShadow,
 } from "@heroui/react";
-
-import { FunnelIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 import { colors, occasions, seasons, categories } from "@/lib/data";
 
+// Re-exporting this interface so it can be used by the parent page
 export interface FilterOptions {
   categories: string[];
   colors: string[];
@@ -70,158 +67,197 @@ export default function ClothesFilter({
     });
   };
 
-  const hasActiveFilters =
-    selectedCategories.length > 0 ||
-    selectedColors.length > 0 ||
-    selectedSeasons.length > 0 ||
-    selectedOccasions.length > 0 ||
-    selectedBrands.length > 0 ||
-    priceRange[0] > 0 ||
-    priceRange[1] < 500;
+  // Helper to style the accordion titles
+  const itemClasses = {
+    title: "text-xs font-bold uppercase tracking-widest text-foreground",
+    trigger: "py-4",
+    content: "pb-4 pl-1",
+  };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <FunnelIcon className="w-5 h-5" />
-          <h3 className="text-lg font-semibold">Filters</h3>
-          {hasActiveFilters && (
-            <Chip color="primary" size="sm" variant="solid">
-              Active
-            </Chip>
-          )}
-        </div>
-        {hasActiveFilters && (
-          <Button
-            color="danger"
-            onPress={handleClearFilters}
-            startContent={<XMarkIcon className="w-4 h-4" />}
-            size="sm"
-            variant="light"
-          >
-            Clear
-          </Button>
-        )}
-      </CardHeader>
-      <Divider />
-      <CardBody className="gap-6 max-h-[calc(100vh-200px)] overflow-y-auto">
-        {/* Categories */}
-        <div>
-          <h4 className="font-semibold mb-3">Category</h4>
-          <CheckboxGroup
-            value={selectedCategories}
-            onValueChange={setSelectedCategories}
-          >
-            <div className="flex flex-col gap-2">
+    <div className="w-full h-full flex flex-col bg-background border-r border-divider pr-4">
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-6 pt-1">
+        <h3 className="text-xl font-black uppercase tracking-tighter italic">
+          Refine
+        </h3>
+        <Button
+          onPress={handleClearFilters}
+          variant="light"
+          size="sm"
+          radius="none"
+          className="text-xs uppercase tracking-wider text-default-400 data-[hover=true]:text-foreground"
+          startContent={<XMarkIcon className="w-3 h-3" />}
+        >
+          Clear All
+        </Button>
+      </div>
+
+      {/* SCROLLABLE CONTENT */}
+      <ScrollShadow hideScrollBar className="flex-1 -mr-2 pr-2">
+        <Accordion
+          selectionMode="multiple"
+          defaultExpandedKeys={["category", "price"]}
+          itemClasses={itemClasses}
+          showDivider={false}
+        >
+          {/* CATEGORY */}
+          <AccordionItem key="category" aria-label="Category" title="Category">
+            <CheckboxGroup
+              value={selectedCategories}
+              onValueChange={setSelectedCategories}
+              classNames={{ wrapper: "gap-3" }}
+            >
               {categories.map((category) => (
-                <Checkbox key={category} value={category}>
-                  <span className="capitalize">{category}</span>
+                <Checkbox
+                  key={category}
+                  value={category}
+                  size="sm"
+                  radius="none" // Square checkboxes look more high-fashion
+                  classNames={{
+                    label: "text-sm text-default-500 capitalize ml-1",
+                  }}
+                >
+                  {category}
                 </Checkbox>
               ))}
+            </CheckboxGroup>
+          </AccordionItem>
+
+          {/* PRICE */}
+          <AccordionItem key="price" aria-label="Price" title="Price Range">
+            <div className="px-2 pt-2">
+              <Slider
+                step={10}
+                maxValue={500}
+                minValue={0}
+                value={priceRange}
+                formatOptions={{ style: "currency", currency: "USD" }}
+                onChange={(value) => setPriceRange(value as [number, number])}
+                size="sm"
+                color="foreground"
+                classNames={{
+                  thumb: "bg-foreground w-4 h-4 after:bg-foreground",
+                  track: "bg-default-200 h-1",
+                  filler: "bg-foreground",
+                }}
+              />
+              <div className="flex justify-between mt-4 text-xs font-medium text-default-500">
+                <span>${priceRange[0]}</span>
+                <span>${priceRange[1]}+</span>
+              </div>
             </div>
-          </CheckboxGroup>
-        </div>
-        <Divider />
-        {/* Colors */}
-        <div>
-          <h4 className="font-semibold mb-3">Color</h4>
-          <CheckboxGroup
-            value={selectedColors}
-            onValueChange={setSelectedColors}
-          >
-            <div className="flex flex-col gap-2">
+          </AccordionItem>
+
+          <AccordionItem key="color" aria-label="Color" title="Color">
+            <CheckboxGroup
+              value={selectedColors}
+              onValueChange={setSelectedColors}
+              orientation="horizontal"
+              classNames={{ wrapper: "gap-3 grid grid-cols-2" }}
+            >
               {colors.map((color) => (
-                <Checkbox key={color} value={color}>
+                <Checkbox
+                  key={color}
+                  value={color}
+                  size="sm"
+                  radius="none"
+                  classNames={{
+                    label: "text-small text-default-500 capitalize ml-1",
+                  }}
+                >
                   <div className="flex items-center gap-2">
                     <div
-                      className="w-4 h-4 rounded-full border border-gray-300"
+                      className="w-3 h-3 border border-default-200 shadow-sm"
                       style={{ backgroundColor: color }}
                     />
-                    <span className="capitalize">{color}</span>
+                    {color}
                   </div>
                 </Checkbox>
               ))}
-            </div>
-          </CheckboxGroup>
-        </div>
-        <Divider />
-        {/* Price Range */}
-        <div>
-          <h4 className="font-semibold mb-3">
-            Price Range: ${priceRange[0]} - ${priceRange[1]}
-          </h4>
-          <Slider
-            step={10}
-            maxValue={500}
-            minValue={0}
-            value={priceRange}
-            className="max-w-md"
-            formatOptions={{ style: "currency", currency: "USD" }}
-            onChange={(value) => setPriceRange(value as [number, number])}
-          />
-        </div>
-        <Divider />
-        {/* Seasons */}
-        <div>
-          <h4 className="font-semibold mb-3">Season</h4>
-          <CheckboxGroup
-            value={selectedSeasons}
-            onValueChange={setSelectedSeasons}
-          >
-            <div className="flex flex-col gap-2">
-              {seasons.map((season) => (
-                <Checkbox key={season} value={season}>
-                  <span className="capitalize">{season}</span>
-                </Checkbox>
-              ))}
-            </div>
-          </CheckboxGroup>
-        </div>
-        <Divider />
-        {/* Places to Wear */}
-        <div>
-          <h4 className="font-semibold mb-3">Places to Wear</h4>
-          <CheckboxGroup
-            value={selectedOccasions}
-            onValueChange={setSelectedOccasions}
-          >
-            <div className="flex flex-col gap-2">
-              {occasions.map((occasion) => (
-                <Checkbox key={occasion} value={occasion}>
-                  <span className="capitalize">{occasion}</span>
-                </Checkbox>
-              ))}
-            </div>
-          </CheckboxGroup>
-        </div>
-        {/* Brands - only show if there are brands */}
-        {availableBrands.length > 0 && (
-          <>
-            <Divider />
-            <div>
-              <h4 className="font-semibold mb-3">Brand</h4>
+            </CheckboxGroup>
+          </AccordionItem>
+
+          {availableBrands.length > 0 ? (
+            <AccordionItem key="brand" aria-label="Brand" title="Brand">
               <CheckboxGroup
                 value={selectedBrands}
                 onValueChange={setSelectedBrands}
+                classNames={{ wrapper: "gap-3" }}
               >
-                <div className="flex flex-col gap-2">
-                  {availableBrands.map((brand) => (
-                    <Checkbox key={brand} value={brand}>
-                      {brand}
-                    </Checkbox>
-                  ))}
-                </div>
+                {availableBrands.map((brand) => (
+                  <Checkbox
+                    key={brand}
+                    value={brand}
+                    size="sm"
+                    radius="none"
+                    classNames={{ label: "text-sm text-default-500 ml-1" }}
+                  >
+                    {brand}
+                  </Checkbox>
+                ))}
               </CheckboxGroup>
-            </div>
-          </>
-        )}
-      </CardBody>
-      <CardFooter>
-        {/* Apply Button */}
-        <Button color="primary" className="w-full" onPress={handleApplyFilters}>
-          Apply Filters
+            </AccordionItem>
+          ) : null}
+
+          <AccordionItem key="occasion" aria-label="Occasion" title="Occasion">
+            <CheckboxGroup
+              value={selectedOccasions}
+              onValueChange={setSelectedOccasions}
+              classNames={{ wrapper: "gap-3" }}
+            >
+              {occasions.map((occasion) => (
+                <Checkbox
+                  key={occasion}
+                  value={occasion}
+                  size="sm"
+                  radius="none"
+                  classNames={{
+                    label: "text-sm text-default-500 capitalize ml-1",
+                  }}
+                >
+                  {occasion}
+                </Checkbox>
+              ))}
+            </CheckboxGroup>
+          </AccordionItem>
+
+          <AccordionItem key="season" aria-label="Season" title="Season">
+            <CheckboxGroup
+              value={selectedSeasons}
+              onValueChange={setSelectedSeasons}
+              classNames={{ wrapper: "gap-3" }}
+            >
+              {seasons.map((season) => (
+                <Checkbox
+                  key={season}
+                  value={season}
+                  size="sm"
+                  radius="none"
+                  classNames={{
+                    label: "text-sm text-default-500 capitalize ml-1",
+                  }}
+                >
+                  {season}
+                </Checkbox>
+              ))}
+            </CheckboxGroup>
+          </AccordionItem>
+        </Accordion>
+      </ScrollShadow>
+
+      {/* FOOTER ACTIONS */}
+      <div className="pt-6 mt-auto">
+        <Button
+          fullWidth
+          color="primary"
+          radius="none"
+          className="font-bold uppercase tracking-widest h-12 text-xs shadow-lg shadow-primary/20"
+          onPress={handleApplyFilters}
+        >
+          View Results
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }
