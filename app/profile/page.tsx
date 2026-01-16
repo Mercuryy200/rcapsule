@@ -119,24 +119,47 @@ export default function ProfilePage() {
 
               <div className="space-y-4">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-default-400">
-                  Top Brands
+                  Top Designers
                 </h3>
-                <div className="flex flex-wrap gap-2">
-                  {Array.from(
-                    new Set(clothes.map((c) => c.brand).filter(Boolean))
+                <div className="flex flex-col gap-2">
+                  {/* Logic: Count -> Sort -> Slice Top 3 */}
+                  {Object.entries(
+                    clothes.reduce(
+                      (acc, item) => {
+                        if (item.brand) {
+                          acc[item.brand] = (acc[item.brand] || 0) + 1;
+                        }
+                        return acc;
+                      },
+                      {} as Record<string, number>
+                    )
                   )
-                    .slice(0, 5)
-                    .map((brand) => (
-                      <span
+                    .sort(([, countA], [, countB]) => countB - countA) // Sort Descending
+                    .slice(0, 3) // Take Top 3
+                    .map(([brand, count], index) => (
+                      <div
                         key={brand}
-                        className="px-4 py-2 border border-default-200 text-xs uppercase tracking-wider"
+                        className="flex justify-between items-center py-3 border-b border-default-100 group"
                       >
-                        {brand}
-                      </span>
+                        <div className="flex items-center gap-4">
+                          <span className="text-xs font-bold text-default-300">
+                            0{index + 1}
+                          </span>
+                          <span className="text-lg font-black uppercase italic tracking-tighter text-foreground group-hover:translate-x-2 transition-transform duration-300">
+                            {brand}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest bg-content2 px-2 py-1 text-default-500">
+                          {count} {count === 1 ? "Item" : "Items"}
+                        </span>
+                      </div>
                     ))}
-                  {clothes.length === 0 && (
-                    <div className="text-default-400 text-sm">
-                      Add items to see insights.
+
+                  {clothes.filter((c) => c.brand).length === 0 && (
+                    <div className="py-6 text-center border border-dashed border-default-200">
+                      <p className="text-xs uppercase tracking-widest text-default-400">
+                        No brand data available
+                      </p>
                     </div>
                   )}
                 </div>

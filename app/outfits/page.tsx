@@ -117,7 +117,6 @@ export default function OutfitsPage() {
         </Button>
       </div>
 
-      {/* GRID */}
       {filteredOutfits.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-32 border border-dashed border-default-300">
           <p className="text-xl font-light italic mb-4">
@@ -141,7 +140,6 @@ export default function OutfitsPage() {
               className="group cursor-pointer"
               onClick={() => router.push(`/outfits/${outfit.id}`)}
             >
-              {/* IMAGE FRAME */}
               <div className="relative aspect-[3/4] bg-content2 mb-4 overflow-hidden">
                 {outfit.imageUrl ? (
                   <Image
@@ -160,7 +158,6 @@ export default function OutfitsPage() {
                   </div>
                 )}
 
-                {/* Favorite Overlay */}
                 <button
                   onClick={(e) =>
                     toggleFavorite(e, outfit.id, outfit.isFavorite)
@@ -174,11 +171,9 @@ export default function OutfitsPage() {
                   )}
                 </button>
 
-                {/* Dark Gradient on Hover */}
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10" />
               </div>
 
-              {/* TEXT */}
               <div className="space-y-1">
                 <div className="flex justify-between items-start">
                   <h3 className="text-lg font-bold uppercase tracking-tight leading-none">

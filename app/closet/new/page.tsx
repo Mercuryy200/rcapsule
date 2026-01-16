@@ -3,8 +3,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button, Input, Select, SelectItem, Tabs, Tab } from "@heroui/react";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-
+import { ArrowLeftIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { colors, occasions, seasons, categories } from "@/lib/data";
 import { ImageUpload } from "@/components/closet/ImageUpload";
 
@@ -13,6 +12,7 @@ export default function NewItemPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [imageMethod, setImageMethod] = useState<"upload" | "url">("upload");
+  const [isScraping, setIsScraping] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -31,6 +31,58 @@ export default function NewItemPage() {
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
   }, [status, router]);
+
+  const handleAutoFill = async () => {
+    if (!formData.link) {
+      return;
+    }
+
+    setIsScraping(true);
+    try {
+      const res = await fetch("/api/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: formData.link }),
+      });
+
+      const data = await res.json();
+
+      if (res.status === 403 || data.blocked) {
+        // Only alert on failure
+        alert(
+          data.message ||
+            "Unable to import from this site. Please enter details manually."
+        );
+
+        if (data.prefill) {
+          setFormData((prev) => ({
+            ...prev,
+            brand: data.prefill.brand || prev.brand,
+            link: data.prefill.link || prev.link,
+          }));
+        }
+      } else if (res.ok && !data.blocked) {
+        // Silent success - just fill the form
+        setFormData((prev) => ({
+          ...prev,
+          name: data.name || prev.name,
+          brand: data.brand || prev.brand,
+          imageUrl: data.imageUrl || prev.imageUrl,
+          price: data.price || prev.price,
+          link: data.link || prev.link,
+        }));
+
+        if (data.imageUrl) {
+          setImageMethod("url");
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Unable to import. Please enter details manually.");
+    } finally {
+      setIsScraping(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.category) {
@@ -179,6 +231,39 @@ export default function NewItemPage() {
         </div>
 
         <div className="lg:col-span-7 flex flex-col gap-8">
+          <section className="pb-8 border-b border-black/10">
+            <div className="flex items-center gap-2 mb-6">
+              <SparklesIcon className="w-4 h-4 text-black/60" />
+              <h3 className="text-[10px] font-light uppercase tracking-[0.25em] text-black/60">
+                Auto Import
+              </h3>
+            </div>
+            <div className="flex gap-3">
+              <Input
+                placeholder="Paste product URL"
+                variant="bordered"
+                radius="none"
+                classNames={{
+                  input: "text-sm font-light",
+                  inputWrapper:
+                    "border-black/20 hover:border-black/40 bg-white",
+                }}
+                value={formData.link}
+                onChange={(e) =>
+                  setFormData({ ...formData, link: e.target.value })
+                }
+              />
+              <Button
+                radius="none"
+                className="bg-black text-white hover:bg-black/90 font-light tracking-[0.15em] uppercase text-[10px] px-8 h-[44px]"
+                isLoading={isScraping}
+                onPress={handleAutoFill}
+              >
+                Import
+              </Button>
+            </div>
+          </section>
+
           <section className="space-y-6">
             <h3 className="text-xs font-bold uppercase tracking-widest border-b border-divider pb-2">
               Item Details
