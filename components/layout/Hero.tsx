@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { Button } from "@heroui/react";
 import { LogIn, UserPlus, Sparkles } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
 export default function Hero() {
   return (
@@ -54,7 +53,6 @@ export default function Hero() {
         </div>
       </motion.div>
 
-      {/* Visual Placeholder: This is where you'd show a "Sneak Peek" of the app */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
