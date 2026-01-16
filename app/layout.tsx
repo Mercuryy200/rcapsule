@@ -4,7 +4,6 @@ import clsx from "clsx";
 import { Providers } from "./providers";
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
-import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -15,7 +14,7 @@ export const metadata: Metadata = {
   },
   description: "Organize your wardrobe and plan outfits with ease.",
   icons: {
-    icon: "/favicon.png",
+    icon: "/favicon.ico",
   },
 };
 

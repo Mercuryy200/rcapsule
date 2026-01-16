@@ -18,30 +18,43 @@ const config = {
   darkMode: "class",
   plugins: [
     heroui({
-   themes: {
+      themes: {
         light: {
           colors: {
             background: {
-              foreground: "#000000",
-              DEFAULT: "#f4ede4",
+              DEFAULT: "#FFFFFF",
+              foreground: "#171717",
             },
             primary: {
+              DEFAULT: "#171717",
               foreground: "#FFFFFF",
-              DEFAULT: "#a8a8a8",
             },
+            secondary: {
+              DEFAULT: "#E5E5E5",
+              foreground: "#171717",
+            },
+            focus: "#171717",
           },
         },
         dark: {
           colors: {
-            primary: {
-              foreground: "#FFFFFF",
-              DEFAULT: "#a67b5b",
+            background: {
+              DEFAULT: "#000000",
+              foreground: "#EDEDED",
             },
-         
+            primary: {
+              DEFAULT: "#FFFFFF",
+              foreground: "#000000",
+            },
+            secondary: {
+              DEFAULT: "#262626",
+              foreground: "#FFFFFF",
+            },
+            focus: "#FFFFFF",
           },
         },
       },
-}),
+    }),
   ],
 };
 

@@ -10,22 +10,25 @@ import { logout } from "@/lib/actions/auth";
 export const SignInButtonGoogle = () => {
   return (
     <Button
-      className="w-full"
+      variant="bordered"
+      className="w-full font-medium"
+      startContent={<FaGoogle />}
       onPress={() => signIn("google", { callbackUrl: "/closet" })}
     >
-      Sign in with Google
-      <FaGoogle className="ml-2" />
+      Google
     </Button>
   );
 };
+
 export const SignInButtonGithub = () => {
   return (
     <Button
-      className="w-full"
+      variant="bordered"
+      className="w-full font-medium"
+      startContent={<FaGithub />}
       onPress={() => signIn("github", { callbackUrl: "/closet" })}
     >
-      Sign in with GitHub
-      <FaGithub className="ml-2" />
+      GitHub
     </Button>
   );
 };
