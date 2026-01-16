@@ -1,13 +1,7 @@
 export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
-  name: "Closet & me",
-  description: "Closet & me - Your Personal Wardrobe Manager",
   navItems: [
-    {
-      label: "Home",
-      href: "/",
-    },
     {
       label: "Closet",
       href: "/closet",

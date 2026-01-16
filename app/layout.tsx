@@ -10,10 +10,10 @@ import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: {
-    default: siteConfig.name,
-    template: `%s - ${siteConfig.name}`,
+    default: "Vesti — Your Digital Closet",
+    template: `%s | Vesti`,
   },
-  description: siteConfig.description,
+  description: "Organize your wardrobe and plan outfits with ease.",
   icons: {
     icon: "/favicon.png",
   },
@@ -25,7 +25,6 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: dark)", color: "black" },
   ],
 };
-
 export default function RootLayout({
   children,
 }: {
@@ -36,15 +35,16 @@ export default function RootLayout({
       <head />
       <body
         className={clsx(
-          "min-h-screen text-foreground bg-background font-sans antialiased",
+          "min-h-screen bg-background font-sans antialiased text-foreground",
           fontSans.variable
         )}
       >
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
-          <div className="relative flex flex-col h-screen">
+          <div className="flex flex-col min-h-screen">
             <Header />
-            <main className="w-full pt-16 flex-grow">
-              {children} <Analytics />
+            <main className="flex-1 w-full max-w-7xl mx-auto px-6">
+              {children}
+              <Analytics />
             </main>
             <Footer />
           </div>
