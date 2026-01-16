@@ -1,14 +1,8 @@
-"use server";
-import { NavbarLoggedIn, NavbarLoggedOut } from "./Navbar";
-
 import { auth } from "@/auth";
+import { AppNavbar } from "./Navbar";
 
 export default async function Header() {
   const session = await auth();
 
-  if (session?.user) {
-    return <NavbarLoggedIn />;
-  }
-
-  return <NavbarLoggedOut />;
+  return <AppNavbar user={session?.user} />;
 }
