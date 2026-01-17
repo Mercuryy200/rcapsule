@@ -32,7 +32,7 @@ export default function ProfilePage() {
     try {
       const [wardrobesRes, clothesRes, outfitsRes] = await Promise.all([
         fetch("/api/wardrobes"),
-        fetch("/api/clothes"),
+        fetch("/api/clothes?status=owned"),
         fetch("/api/outfits"),
       ]);
 
@@ -131,8 +131,8 @@ export default function ProfilePage() {
                         }
                         return acc;
                       },
-                      {} as Record<string, number>
-                    )
+                      {} as Record<string, number>,
+                    ),
                   )
                     .sort(([, countA], [, countB]) => countB - countA) // Sort Descending
                     .slice(0, 3) // Take Top 3

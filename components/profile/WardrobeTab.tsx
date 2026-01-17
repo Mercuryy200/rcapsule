@@ -68,7 +68,8 @@ export default function WardrobeTab({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-end">
+      {/* RESPONSIVE HEADER: Column on mobile, Row on desktop */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-0">
         <div>
           <h2 className="text-xl font-bold uppercase tracking-widest">
             Curated Collections
@@ -80,7 +81,7 @@ export default function WardrobeTab({
         <Button
           radius="none"
           color="primary"
-          className="uppercase font-bold tracking-widest"
+          className="uppercase font-bold tracking-widest w-full md:w-auto"
           startContent={<PlusIcon className="w-4 h-4" />}
           onPress={onOpen}
         >
@@ -88,6 +89,7 @@ export default function WardrobeTab({
         </Button>
       </div>
 
+      {/* GRID: 1 col mobile, 2 col tablet, 3 col desktop */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {wardrobes.map((wardrobe) => (
           <Card
@@ -131,13 +133,21 @@ export default function WardrobeTab({
         ))}
       </div>
 
-      <Modal isOpen={isOpen} onClose={onClose} radius="none" size="2xl">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        radius="none"
+        size="2xl"
+        placement="center" // Better for mobile
+        scrollBehavior="inside" // Prevents body scroll issues on small screens
+      >
         <ModalContent>
           <ModalHeader className="uppercase tracking-widest font-bold text-xl">
             New Collection
           </ModalHeader>
           <ModalBody className="gap-6">
-            <div className="grid grid-cols-2 gap-6">
+            {/* INPUT GRID: Stacked on mobile, side-by-side on larger screens */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <Input
                 label="Title"
                 placeholder="Summer 2026"

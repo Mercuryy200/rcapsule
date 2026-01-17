@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { Button, Spinner } from "@heroui/react";
-import { FunnelIcon, PlusIcon, HeartIcon } from "@heroicons/react/24/outline"; // Added HeartIcon
+import { FunnelIcon, PlusIcon, HeartIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import ClothingCard from "@/components/closet/ClothingCard";
 import ClothesFilter, {
@@ -22,7 +22,7 @@ interface ClothingItem {
   link?: string;
   imageUrl?: string;
   placesToWear: string[];
-  status?: string; // Important
+  status?: string;
 }
 
 export default function WishlistPage() {
@@ -36,7 +36,7 @@ export default function WishlistPage() {
     colors: [],
     seasons: [],
     placesToWear: [],
-    priceRange: [0, 5000], // Increased range for wishlist dreams
+    priceRange: [0, 5000],
     brands: [],
   });
 
@@ -47,7 +47,8 @@ export default function WishlistPage() {
 
   const fetchClothes = async () => {
     try {
-      const response = await fetch("/api/clothes");
+      // API ALREADY FILTERS FOR US!
+      const response = await fetch("/api/clothes?status=wishlist");
       if (response.ok) {
         const data = await response.json();
         setClothes(data);
@@ -59,20 +60,16 @@ export default function WishlistPage() {
     }
   };
 
-  // --- 1. HARD FILTER: Get only Wishlist items ---
-  const wishlistItems = useMemo(() => {
-    return clothes.filter((item) => item.status === "wishlist");
-  }, [clothes]);
+  // --- REMOVED: const wishlistItems = useMemo(...) ---
+  // We use 'clothes' directly because we trust the API.
 
-  // --- 2. Calculate Brands based on Wishlist ---
   const availableBrands = useMemo(() => {
-    const brands = wishlistItems
+    const brands = clothes
       .map((item) => item.brand)
       .filter((brand): brand is string => !!brand);
     return [...new Set(brands)].sort();
-  }, [wishlistItems]);
+  }, [clothes]);
 
-  // --- 3. Apply UI Filters ---
   const filteredClothes = useMemo(() => {
     const activeFilterGroups = [];
     if (filters.categories.length > 0) activeFilterGroups.push("category");
@@ -85,19 +82,14 @@ export default function WishlistPage() {
     const isPriceFiltered =
       filters.priceRange[0] > 0 || filters.priceRange[1] < 5000;
 
-    // Default return
-    if (activeFilterGroups.length === 0 && !isPriceFiltered)
-      return wishlistItems;
+    if (activeFilterGroups.length === 0 && !isPriceFiltered) return clothes;
 
-    return wishlistItems.filter((item) => {
-      // Category Filter
+    return clothes.filter((item) => {
       if (
         filters.categories.length > 0 &&
         !filters.categories.includes(item.category)
       )
         return false;
-
-      // Brand Filter
       if (
         filters.brands.length > 0 &&
         item.brand &&
@@ -105,7 +97,6 @@ export default function WishlistPage() {
       )
         return false;
 
-      // OR Logic for attributes
       let matchedAtLeastOneFilter = false;
       if (
         filters.colors.length > 0 &&
@@ -132,7 +123,6 @@ export default function WishlistPage() {
       )
         return false;
 
-      // Price Filter
       if (isPriceFiltered && item.price !== undefined) {
         if (
           item.price < filters.priceRange[0] ||
@@ -142,10 +132,10 @@ export default function WishlistPage() {
       }
       return true;
     });
-  }, [wishlistItems, filters]);
+  }, [clothes, filters]);
 
   const handleItemClick = (itemId: string) => router.push(`/closet/${itemId}`);
-  const handleAddNew = () => router.push("/closet/new"); // Or a specific wishlist add page
+  const handleAddNew = () => router.push("/closet/new");
 
   if (status === "loading" || loading) {
     return (
@@ -157,7 +147,6 @@ export default function WishlistPage() {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-6 py-8">
-      {/* HEADER SECTION - Customized for Wishlist */}
       <header className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4 border-b border-divider pb-6">
         <div>
           <div className="flex items-center gap-3">
@@ -166,7 +155,6 @@ export default function WishlistPage() {
             </h1>
             <HeartIcon className="w-8 h-8 text-danger" />
           </div>
-
           <p className="text-xs uppercase tracking-widest text-default-500 mt-2">
             {filteredClothes.length} Items / Future Buys
           </p>
@@ -183,7 +171,7 @@ export default function WishlistPage() {
             {showFilters ? "Hide Filters" : "Filter"}
           </Button>
           <Button
-            color="danger" // Changed to Danger (Red) for visual distinction
+            color="danger"
             radius="none"
             className="font-bold uppercase text-xs tracking-wider shadow-lg shadow-danger/20"
             startContent={<PlusIcon className="w-4 h-4" />}
@@ -213,7 +201,7 @@ export default function WishlistPage() {
             <div className="flex flex-col items-center justify-center py-24 border border-dashed border-default-300">
               <HeartIcon className="w-12 h-12 text-default-300 mb-4" />
               <p className="text-lg font-light text-default-500 mb-4">
-                {wishlistItems.length === 0
+                {clothes.length === 0
                   ? "Your wishlist is empty."
                   : "No items match your filter."}
               </p>
@@ -228,8 +216,6 @@ export default function WishlistPage() {
                   key={item.id}
                   item={item}
                   onClick={handleItemClick}
-                  // Optional: Pass a flag if you want styling changes
-                  // isWishlist={true}
                 />
               ))}
             </div>

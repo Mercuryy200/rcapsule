@@ -55,7 +55,7 @@ export default function CreateOutfitPage() {
   const [availableWardrobes, setAvailableWardrobes] = useState<Wardrobe[]>([]);
   const [selectedClothes, setSelectedClothes] = useState<ClothingItem[]>([]);
   const [selectedWardrobes, setSelectedWardrobes] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   const [imageMethod, setImageMethod] = useState<
@@ -80,7 +80,7 @@ export default function CreateOutfitPage() {
   const fetchData = async () => {
     try {
       const [clothesRes, wardrobesRes] = await Promise.all([
-        fetch("/api/clothes"),
+        fetch("/api/clothes?status=owned"),
         fetch("/api/wardrobes"),
       ]);
       if (clothesRes.ok) setAvailableClothes(await clothesRes.json());
@@ -169,7 +169,7 @@ export default function CreateOutfitPage() {
     );
 
   const unselectedClothes = availableClothes.filter(
-    (item) => !selectedClothes.find((s) => s.id === item.id)
+    (item) => !selectedClothes.find((s) => s.id === item.id),
   );
 
   return (

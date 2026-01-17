@@ -58,12 +58,12 @@ export default function EditOutfitPage() {
   // Selection State
   const [selectedClothes, setSelectedClothes] = useState<ClothingItem[]>([]);
   const [selectedWardrobes, setSelectedWardrobes] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   // Form State
   const [imageMethod, setImageMethod] = useState<"upload" | "url" | "builder">(
-    "upload"
+    "upload",
   );
   const [showCollageBuilder, setShowCollageBuilder] = useState(false);
   const [formData, setFormData] = useState({
@@ -84,9 +84,8 @@ export default function EditOutfitPage() {
 
   const fetchAllData = async () => {
     try {
-      // Fetch everything in parallel
       const [clothesRes, wardrobesRes, outfitRes] = await Promise.all([
-        fetch("/api/clothes"),
+        fetch("/api/clothes?status=owned"),
         fetch("/api/wardrobes"),
         fetch(`/api/outfits/${outfitId}`),
       ]);
@@ -203,7 +202,7 @@ export default function EditOutfitPage() {
     );
 
   const unselectedClothes = availableClothes.filter(
-    (item) => !selectedClothes.find((s) => s.id === item.id)
+    (item) => !selectedClothes.find((s) => s.id === item.id),
   );
 
   return (

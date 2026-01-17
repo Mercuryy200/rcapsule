@@ -47,7 +47,8 @@ export default function ClosetPage() {
 
   const fetchClothes = async () => {
     try {
-      const response = await fetch("/api/clothes");
+      // API ALREADY FILTERS FOR US!
+      const response = await fetch("/api/clothes?status=owned");
       if (response.ok) {
         const data = await response.json();
         setClothes(data);
@@ -58,16 +59,16 @@ export default function ClosetPage() {
       setLoading(false);
     }
   };
-  const ownedClothes = useMemo(() => {
-    return clothes.filter((item) => item.status === "owned" || !item.status);
-  }, [clothes]);
+
+  // --- REMOVED: const ownedClothes = useMemo(...) ---
+  // We use 'clothes' directly because we trust the API.
 
   const availableBrands = useMemo(() => {
-    const brands = ownedClothes
+    const brands = clothes
       .map((item) => item.brand)
       .filter((brand): brand is string => !!brand);
     return [...new Set(brands)].sort();
-  }, [ownedClothes]);
+  }, [clothes]);
 
   const filteredClothes = useMemo(() => {
     const activeFilterGroups = [];
@@ -81,10 +82,9 @@ export default function ClosetPage() {
     const isPriceFiltered =
       filters.priceRange[0] > 0 || filters.priceRange[1] < 500;
 
-    if (activeFilterGroups.length === 0 && !isPriceFiltered)
-      return ownedClothes;
+    if (activeFilterGroups.length === 0 && !isPriceFiltered) return clothes;
 
-    return ownedClothes.filter((item) => {
+    return clothes.filter((item) => {
       if (
         filters.categories.length > 0 &&
         !filters.categories.includes(item.category)
@@ -98,11 +98,11 @@ export default function ClosetPage() {
         return false;
 
       let matchedAtLeastOneFilter = false;
-      // ... (Rest of logic)
-      if (filters.colors.length > 0) {
-        if (item.colors.some((c) => filters.colors.includes(c)))
-          matchedAtLeastOneFilter = true;
-      }
+      if (
+        filters.colors.length > 0 &&
+        item.colors.some((c) => filters.colors.includes(c))
+      )
+        matchedAtLeastOneFilter = true;
       if (
         filters.seasons.length > 0 &&
         item.season &&
@@ -132,7 +132,7 @@ export default function ClosetPage() {
       }
       return true;
     });
-  }, [ownedClothes, filters]);
+  }, [clothes, filters]);
 
   const handleItemClick = (itemId: string) => router.push(`/closet/${itemId}`);
   const handleAddNew = () => router.push("/closet/new");
@@ -147,7 +147,6 @@ export default function ClosetPage() {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-6 py-8">
-      {/* HEADER SECTION */}
       <header className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4 border-b border-divider pb-6">
         <div>
           <h1 className="text-4xl font-black uppercase tracking-tighter italic">

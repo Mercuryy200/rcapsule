@@ -54,7 +54,7 @@ export default function PrivacyPage() {
         <h2 className="text-xl font-bold mb-3">4. Contact</h2>
         <p className="text-gray-700 leading-relaxed">
           If you have questions about this policy, please contact us at
-          support@vesticloset.com.
+          rimanafougui99@gmail.com.
         </p>
       </section>
     </div>

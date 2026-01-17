@@ -51,7 +51,7 @@ export default function NewItemPage() {
         // Only alert on failure
         alert(
           data.message ||
-            "Unable to import from this site. Please enter details manually."
+            "Unable to import from this site. Please enter details manually.",
         );
 
         if (data.prefill) {
@@ -103,7 +103,7 @@ export default function NewItemPage() {
 
     try {
       setSaving(true);
-      const response = await fetch("/api/clothes", {
+      const response = await fetch("/api/clothes?status=owned", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
