@@ -1,13 +1,18 @@
 "use client";
+
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Tabs, Tab, Spinner, Button } from "@heroui/react";
+import { useEffect, useState, useMemo } from "react";
+import { Tabs, Tab, Spinner } from "@heroui/react";
 
 import type { Clothes, Wardrobe, Outfit } from "@/lib/database.type";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import WardrobeTab from "@/components/profile/WardrobeTab";
 import { useUser } from "@/contexts/UserContext";
+
+// Import the visualization components
+import { ColorPalette } from "@/components/closet/ColorPalette";
+import { StatsCard } from "@/components/closet/StatsCard";
 
 interface ExtendedWardrobe extends Wardrobe {
   clothesCount?: number;
@@ -52,13 +57,47 @@ export default function ProfilePage() {
     }
   };
 
-  const totalValue = clothes.reduce((sum, item) => sum + (item.price || 0), 0);
-  const stats = {
-    items: clothes.length,
-    wardrobes: wardrobes.length,
-    outfits: outfits.length,
-    totalValue: totalValue,
-  };
+  // --- CALCULATION LOGIC ---
+  const dashboardStats = useMemo(() => {
+    const totalValue = clothes.reduce(
+      (sum, item) => sum + (item.price || 0),
+      0,
+    );
+    const avgPrice = clothes.length > 0 ? totalValue / clothes.length : 0;
+
+    // Color Analysis Logic
+    const colorCounts: Record<string, number> = {};
+    let totalColorTags = 0;
+
+    clothes.forEach((item) => {
+      if (Array.isArray(item.colors)) {
+        item.colors.forEach((c) => {
+          const colorName = c.toLowerCase().trim();
+          colorCounts[colorName] = (colorCounts[colorName] || 0) + 1;
+          totalColorTags++;
+        });
+      }
+    });
+
+    const colorAnalysis = Object.entries(colorCounts)
+      .map(([color, count]) => ({
+        color,
+        count,
+        percentage:
+          totalColorTags > 0 ? Math.round((count / totalColorTags) * 100) : 0,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6); // Top 6 colors
+
+    return {
+      items: clothes.length,
+      wardrobes: wardrobes.length,
+      outfits: outfits.length,
+      totalValue,
+      avgPrice,
+      colorAnalysis,
+    };
+  }, [clothes, wardrobes, outfits]);
 
   if (loading)
     return (
@@ -68,10 +107,15 @@ export default function ProfilePage() {
     );
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-6 py-12">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-12">
       <ProfileHeader
         user={user || {}}
-        stats={stats}
+        stats={{
+          items: dashboardStats.items,
+          wardrobes: dashboardStats.wardrobes,
+          outfits: dashboardStats.outfits,
+          totalValue: dashboardStats.totalValue,
+        }}
         onEdit={() => router.push("/settings")}
       />
 
@@ -81,48 +125,65 @@ export default function ProfilePage() {
         classNames={{
           tabList:
             "gap-6 w-full relative rounded-none p-0 border-b border-divider",
-          cursor: "w-full bg-primary",
+          cursor: "w-full bg-foreground",
           tab: "max-w-fit px-0 h-12",
           tabContent:
-            "group-data-[selected=true]:text-primary text-default-500 uppercase tracking-widest font-bold text-xs",
+            "group-data-[selected=true]:text-foreground text-default-500 uppercase tracking-widest font-bold text-xs",
         }}
       >
         <Tab key="overview" title="Overview">
-          <div className="py-8">
-            {/* Empty State / Dashboard Content */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* 1. Recent Adds */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-default-400">
-                  Recently Acquired
-                </h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {clothes.slice(0, 3).map((item) => (
-                    <div
-                      key={item.id}
-                      className="aspect-[3/4] bg-content2 relative"
-                    >
-                      <img
-                        src={item.imageUrl || "/images/placeholder.png"}
-                        className="w-full h-full object-cover"
-                        alt={item.name}
-                      />
-                    </div>
-                  ))}
-                  {clothes.length === 0 && (
-                    <div className="text-default-400 text-sm">
-                      No items yet.
-                    </div>
-                  )}
+          <div className="py-8 space-y-12">
+            {/* 1. FINANCIAL SUMMARY ROW */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatsCard
+                label="Total Valuation"
+                value={`$${dashboardStats.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+                subtext="Asset value"
+              />
+              <StatsCard
+                label="Avg. Cost / Item"
+                value={`$${dashboardStats.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                subtext="Spending habit"
+              />
+              <StatsCard
+                label="Total Pieces"
+                value={dashboardStats.items}
+                subtext="Collection size"
+              />
+              <StatsCard
+                label="Outfits Created"
+                value={dashboardStats.outfits}
+                subtext="Styling combinations"
+              />
+            </div>
+
+            {/* 2. ANALYTICS GRID */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              {/* Left Col: Color DNA */}
+              <div className="bg-background border border-default-200 rounded-xl p-6 shadow-sm">
+                <div className="mb-6">
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-default-500">
+                    Color DNA
+                  </h3>
+                  <p className="text-xs text-default-400 mt-1">
+                    Dominant tones in your collection
+                  </p>
                 </div>
+                {dashboardStats.colorAnalysis.length > 0 ? (
+                  <ColorPalette colors={dashboardStats.colorAnalysis} />
+                ) : (
+                  <div className="h-32 flex items-center justify-center text-default-400 text-xs italic">
+                    Add items with colors to see analysis
+                  </div>
+                )}
               </div>
 
+              {/* Right Col: Top Designers */}
               <div className="space-y-4">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-default-400">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-default-500">
                   Top Designers
                 </h3>
                 <div className="flex flex-col gap-2">
-                  {/* Logic: Count -> Sort -> Slice Top 3 */}
                   {Object.entries(
                     clothes.reduce(
                       (acc, item) => {
@@ -134,35 +195,75 @@ export default function ProfilePage() {
                       {} as Record<string, number>,
                     ),
                   )
-                    .sort(([, countA], [, countB]) => countB - countA) // Sort Descending
-                    .slice(0, 3) // Take Top 3
+                    .sort(([, countA], [, countB]) => countB - countA)
+                    .slice(0, 5) // Increased to Top 5
                     .map(([brand, count], index) => (
                       <div
                         key={brand}
                         className="flex justify-between items-center py-3 border-b border-default-100 group"
                       >
                         <div className="flex items-center gap-4">
-                          <span className="text-xs font-bold text-default-300">
+                          <span className="text-xs font-bold text-default-300 w-4">
                             0{index + 1}
                           </span>
                           <span className="text-lg font-black uppercase italic tracking-tighter text-foreground group-hover:translate-x-2 transition-transform duration-300">
                             {brand}
                           </span>
                         </div>
-                        <span className="text-[10px] font-bold uppercase tracking-widest bg-content2 px-2 py-1 text-default-500">
+                        <span className="text-[10px] font-bold uppercase tracking-widest bg-content2 px-2 py-1 text-default-500 rounded-sm">
                           {count} {count === 1 ? "Item" : "Items"}
                         </span>
                       </div>
                     ))}
 
                   {clothes.filter((c) => c.brand).length === 0 && (
-                    <div className="py-6 text-center border border-dashed border-default-200">
+                    <div className="py-8 text-center border border-dashed border-default-200 rounded-lg">
                       <p className="text-xs uppercase tracking-widest text-default-400">
                         No brand data available
                       </p>
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* 3. RECENT ACQUISITIONS */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-default-500">
+                  Recently Acquired
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {clothes.slice(0, 4).map((item) => (
+                  <div
+                    key={item.id}
+                    className="aspect-[3/4] bg-content2 relative group overflow-hidden rounded-md"
+                  >
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        alt={item.name}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-default-300 text-xs uppercase">
+                        No Image
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-white text-[10px] uppercase font-bold truncate">
+                        {item.name}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {clothes.length === 0 && (
+                  <div className="col-span-full py-12 text-center text-default-400 text-sm border border-dashed border-default-200 rounded-lg">
+                    Start adding items to your closet to see them here.
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -26,7 +26,7 @@ export async function GET(
           notes,
           clothes:Clothes (*)
         )
-      `
+      `,
       )
       .eq("id", id)
       .eq("userId", session.user.id)
@@ -35,10 +35,11 @@ export async function GET(
     if (error || !wardrobeRaw) {
       return NextResponse.json(
         { error: "Wardrobe not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
+    // 1. Process Clothes List
     const clothes = (wardrobeRaw.WardrobeClothes || [])
       .map((wc: any) => {
         if (!wc.clothes) return null;
@@ -52,12 +53,49 @@ export async function GET(
       .sort(
         (a: any, b: any) =>
           new Date(b.addedToWardrobeAt).getTime() -
-          new Date(a.addedToWardrobeAt).getTime()
+          new Date(a.addedToWardrobeAt).getTime(),
       );
+
+    // 2. Calculate Stats (Total Cost & Color Analysis)
+    let totalValue = 0;
+    const colorCounts: Record<string, number> = {};
+    let totalColorTags = 0;
+
+    clothes.forEach((item: any) => {
+      // Sum Price
+      if (item.price) {
+        totalValue += item.price;
+      }
+
+      // Count Colors
+      if (Array.isArray(item.colors)) {
+        item.colors.forEach((color: string) => {
+          const normalizedColor = color.toLowerCase().trim();
+          colorCounts[normalizedColor] =
+            (colorCounts[normalizedColor] || 0) + 1;
+          totalColorTags++;
+        });
+      }
+    });
+
+    // Format Color Data for Charting/Display
+    const colorAnalysis = Object.entries(colorCounts)
+      .map(([color, count]) => ({
+        color,
+        count,
+        percentage:
+          totalColorTags > 0 ? Math.round((count / totalColorTags) * 100) : 0,
+      }))
+      .sort((a, b) => b.count - a.count); // Sort by most frequent
 
     const wardrobe = {
       ...wardrobeRaw,
       clothes: clothes,
+      stats: {
+        totalValue: parseFloat(totalValue.toFixed(2)),
+        itemCount: clothes.length,
+        colorAnalysis,
+      },
     };
 
     delete wardrobe.WardrobeClothes;
@@ -67,14 +105,15 @@ export async function GET(
     console.error("Error fetching wardrobe:", error);
     return NextResponse.json(
       { error: "Failed to fetch wardrobe" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
+// ... PUT and DELETE handlers remain unchanged ...
 export async function PUT(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -108,7 +147,7 @@ export async function PUT(
     if (error || !wardrobe) {
       return NextResponse.json(
         { error: "Wardrobe not found or update failed" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -117,14 +156,14 @@ export async function PUT(
     console.error("Error updating wardrobe:", error);
     return NextResponse.json(
       { error: "Failed to update wardrobe" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -145,7 +184,7 @@ export async function DELETE(
     if (fetchError || !existing || existing.userId !== session.user.id) {
       return NextResponse.json(
         { error: "Wardrobe not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
     await supabase.from("WardrobeClothes").delete().eq("wardrobeId", id);
@@ -165,7 +204,7 @@ export async function DELETE(
     console.error("Error deleting wardrobe:", error);
     return NextResponse.json(
       { error: "Failed to delete wardrobe" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,5 +1,5 @@
 export const categories = [
-  // Tops
+  //tops
   "t-shirt",
   "blouse",
   "shirt",
@@ -9,12 +9,15 @@ export const categories = [
   "corset",
   "vest",
   "tights",
+  "tube top",
 
+  //sweaters
   "sweater",
   "cardigan",
   "hoodie",
   "sweatshirt",
 
+  //bottoms
   "jeans",
   "pants",
   "trousers",
@@ -57,7 +60,6 @@ export const categories = [
 ].sort();
 
 export const colors = [
-  // Neutrals
   "black",
   "white",
   "gray",
@@ -69,12 +71,10 @@ export const colors = [
   "navy",
   "olive",
 
-  // Metallics
   "gold",
   "silver",
   "rose gold",
 
-  // Chromatics
   "red",
   "burgundy",
   "blue",
@@ -92,12 +92,10 @@ export const colors = [
   "multicolor",
   "patterned",
 ];
-// Map your display names to valid CSS values (Hex, RGB, or Gradients)
 export const colorMap: Record<string, string> = {
-  // Neutrals
   black: "#000000",
   white: "#FFFFFF",
-  gray: "#808000", // or #9CA3AF for a nicer tailwind gray
+  gray: "#808000",
   charcoal: "#36454F",
   cream: "#FFFDD0",
   beige: "#F5F5DC",
@@ -106,12 +104,10 @@ export const colorMap: Record<string, string> = {
   navy: "#000080",
   olive: "#808000",
 
-  // Metallics
   gold: "#FFD700",
   silver: "#C0C0C0",
   "rose gold": "#B76E79",
 
-  // Chromatics
   red: "#FF0000",
   burgundy: "#800020",
   blue: "#0000FF",
@@ -127,7 +123,6 @@ export const colorMap: Record<string, string> = {
   orange: "#FFA500",
   teal: "#008080",
 
-  // Patterns - You can use CSS Gradients here!
   multicolor:
     "linear-gradient(to right, red, orange, yellow, green, blue, purple)",
   patterned:

@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -36,7 +36,7 @@ export async function GET(
             coverImage
           )
         )
-      `
+      `,
       )
       .eq("id", id)
       .eq("userId", session.user.id)
@@ -47,16 +47,23 @@ export async function GET(
     }
 
     // Transform data
+    const clothesList = (outfit.OutfitClothes || [])
+      .sort((a: any, b: any) => (a.layer || 0) - (b.layer || 0))
+      .map((oc: any) => ({
+        ...oc.clothes,
+        outfitClothesId: oc.id,
+        layer: oc.layer,
+      }))
+      .filter(Boolean);
+
+    // Calculate Total Outfit Cost
+    const totalValue = clothesList.reduce((sum: number, item: any) => {
+      return sum + (item.price || 0);
+    }, 0);
+
     const transformedOutfit = {
       ...outfit,
-      clothes: (outfit.OutfitClothes || [])
-        .sort((a: any, b: any) => (a.layer || 0) - (b.layer || 0))
-        .map((oc: any) => ({
-          ...oc.clothes,
-          outfitClothesId: oc.id,
-          layer: oc.layer,
-        }))
-        .filter(Boolean),
+      clothes: clothesList,
       wardrobes: (outfit.WardrobeOutfit || [])
         .map((wo: any) => ({
           ...wo.wardrobe,
@@ -65,6 +72,10 @@ export async function GET(
           notes: wo.notes,
         }))
         .filter((w: any) => w.id),
+      stats: {
+        totalValue: parseFloat(totalValue.toFixed(2)),
+        itemCount: clothesList.length,
+      },
     };
 
     delete transformedOutfit.OutfitClothes;
@@ -75,14 +86,15 @@ export async function GET(
     console.error("Error fetching outfit:", error);
     return NextResponse.json(
       { error: "Failed to fetch outfit" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
+// ... PUT and DELETE handlers remain unchanged ...
 export async function PUT(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -146,7 +158,7 @@ export async function PUT(
             outfitId: id,
             clothesId,
             layer: index,
-          })
+          }),
         );
 
         await supabase.from("OutfitClothes").insert(outfitClothes);
@@ -174,14 +186,14 @@ export async function PUT(
     console.error("Error updating outfit:", error);
     return NextResponse.json(
       { error: "Failed to update outfit" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -223,7 +235,7 @@ export async function DELETE(
     console.error("Error deleting outfit:", error);
     return NextResponse.json(
       { error: "Failed to delete outfit" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
