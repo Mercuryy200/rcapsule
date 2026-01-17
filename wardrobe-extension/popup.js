@@ -1,22 +1,3 @@
-const UNSUPPORTED_SITES = [
-  "google.com",
-  "youtube.com",
-  "facebook.com",
-  "instagram.com",
-  "tiktok.com",
-  "x.com",
-  "twitch.com",
-  "pinterest.com",
-];
-const hostname = new URL(tab.url).hostname;
-const statusDiv = document.getElementById("status");
-
-if (UNSUPPORTED_SITES.some((site) => hostname.includes(site))) {
-  statusDiv.textContent = "This doesn't look like a clothing store!";
-  statusDiv.className = "error";
-  return;
-}
-
 function detectCategory(name) {
   const text = name.toLowerCase();
 
@@ -60,6 +41,7 @@ function detectCategory(name) {
   return "Tops";
 }
 document.getElementById("scanBtn").addEventListener("click", async () => {
+  const status = document.getElementById("status");
   status.textContent = "Scanning page...";
   status.className = "loading";
 
@@ -69,6 +51,24 @@ document.getElementById("scanBtn").addEventListener("click", async () => {
       currentWindow: true,
     });
 
+    if (tab.url) {
+      const hostname = new URL(tab.url).hostname;
+      const UNSUPPORTED_SITES = [
+        "google.com",
+        "youtube.com",
+        "facebook.com",
+        "instagram.com",
+        "tiktok.com",
+        "x.com",
+        "twitch.com",
+        "pinterest.com",
+      ];
+      if (UNSUPPORTED_SITES.some((site) => hostname.includes(site))) {
+        status.textContent = "This doesn't look like a clothing store!";
+        status.className = "error";
+        return;
+      }
+    }
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       function: extractProductData,
