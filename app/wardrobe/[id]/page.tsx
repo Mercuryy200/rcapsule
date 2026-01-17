@@ -204,7 +204,6 @@ export default function WardrobePage() {
     );
   }
 
-  // Filter items not in wardrobe
   const itemsNotInWardrobe = availableClothes.filter(
     (item) =>
       !wardrobe.clothes.some((wardrobeItem) => wardrobeItem.id === item.id),

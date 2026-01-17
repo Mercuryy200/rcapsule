@@ -45,9 +45,10 @@ import {
   Squares2X2Icon,
   PencilSquareIcon,
   TrashIcon,
+  ClockIcon,
+  FireIcon,
 } from "@heroicons/react/24/outline";
 
-// Helper Data
 const occasions = ["Casual", "Work", "Date Night", "Gym", "Event", "Lounging"];
 const weathers = ["Sunny", "Cloudy", "Rainy", "Snowy", "Windy"];
 
@@ -63,14 +64,13 @@ export default function CalendarTracker({
   const [view, setView] = useState<ViewMode>("month");
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Modal State
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedOutfitId, setSelectedOutfitId] = useState("");
 
-  // Form Metadata
   const [metadata, setMetadata] = useState({
     occasion: "",
     weather: "",
@@ -81,7 +81,6 @@ export default function CalendarTracker({
 
   const [submitting, setSubmitting] = useState(false);
 
-  // --- VIEW HELPERS ---
   const getViewRange = () => {
     switch (view) {
       case "month":
@@ -129,22 +128,27 @@ export default function CalendarTracker({
     return format(currentDate, "MMMM yyyy");
   };
 
-  // --- DATA FETCHING ---
   useEffect(() => {
     fetchLogs();
   }, [currentDate, view]);
 
   const fetchLogs = async () => {
     setLoading(true);
+    setError(null);
     const { apiStart, apiEnd } = getViewRange();
-    const res = await fetch(`/api/calendar?start=${apiStart}&end=${apiEnd}`);
-    if (res.ok) setLogs(await res.json());
-    setLoading(false);
+
+    try {
+      const res = await fetch(`/api/calendar?start=${apiStart}&end=${apiEnd}`);
+      if (!res.ok) throw new Error("Failed to fetch logs");
+      setLogs(await res.json());
+    } catch (err) {
+      setError("Failed to load calendar data");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // --- ACTIONS ---
-
-  // 1. OPEN ADD MODAL
   const openAddModal = (date: Date) => {
     setIsEditing(false);
     setSelectedDate(date);
@@ -176,65 +180,81 @@ export default function CalendarTracker({
     onOpen();
   };
 
-  // 3. SUBMIT (CREATE OR UPDATE)
   const handleSubmit = async () => {
     if (!selectedOutfitId || !selectedDate) return;
     setSubmitting(true);
+    setError(null);
 
     const payload = {
-      date: format(selectedDate, "yyyy-MM-dd"), // New Date
+      date: format(selectedDate, "yyyy-MM-dd"),
       outfitId: selectedOutfitId,
       ...metadata,
     };
 
-    let res;
-    if (isEditing) {
-      // PUT needs the original date to find the record
-      res = await fetch("/api/calendar", {
-        method: "PUT",
-        body: JSON.stringify({
-          originalDate: format(currentDate, "yyyy-MM-dd"), // Use current view date as original
-          newDate: format(selectedDate, "yyyy-MM-dd"), // Allow changing date
-          outfitId: selectedOutfitId,
-          ...metadata,
-        }),
-      });
-    } else {
-      // POST
-      res = await fetch("/api/calendar", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-    }
+    try {
+      let res;
+      if (isEditing) {
+        // For editing, we need the original date from the current view
+        res = await fetch("/api/calendar", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            originalDate: format(selectedDate, "yyyy-MM-dd"),
+            newDate: format(selectedDate, "yyyy-MM-dd"),
+            outfitId: selectedOutfitId,
+            ...metadata,
+          }),
+        });
+      } else {
+        res = await fetch("/api/calendar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
 
-    if (res.ok) {
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to save");
+        return;
+      }
+
       fetchLogs();
       onOpenChange();
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
-  // 4. DELETE
-  const handleDelete = async (outfitId: string) => {
+  const handleDelete = async (outfitId: string, date: Date) => {
     if (
       !confirm(
-        "Are you sure you want to remove this log? Stats will be updated.",
+        "Remove this wear log? Your outfit stats will be updated automatically.",
       )
     )
       return;
 
-    const dateStr = format(currentDate, "yyyy-MM-dd");
-    const res = await fetch(
-      `/api/calendar?outfitId=${outfitId}&date=${dateStr}`,
-      {
-        method: "DELETE",
-      },
-    );
+    const dateStr = format(date, "yyyy-MM-dd");
 
-    if (res.ok) fetchLogs();
+    try {
+      const res = await fetch(
+        `/api/calendar?outfitId=${outfitId}&date=${dateStr}`,
+        { method: "DELETE" },
+      );
+
+      if (res.ok) {
+        fetchLogs();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete");
+      }
+    } catch (err) {
+      alert("Failed to delete log");
+    }
   };
-
-  // --- RENDER HELPERS ---
 
   const getDayContent = (day: Date) => {
     const dayLogs = logs.filter((log) => isSameDay(new Date(log.wornAt), day));
@@ -256,12 +276,18 @@ export default function CalendarTracker({
     setView("day");
   };
 
-  // --- RENDER VIEWS ---
-
   const renderMonthOrWeek = () => {
     const { start, end } = getViewRange();
     const days = eachDayOfInterval({ start, end });
     const isWeek = view === "week";
+
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-[500px]">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      );
+    }
 
     return (
       <div
@@ -278,6 +304,7 @@ export default function CalendarTracker({
 
         {days.map((day) => {
           const isCurrentMonth = isSameMonth(day, currentDate);
+          const isToday = isSameDay(day, new Date());
           const entries = getDayContent(day);
 
           return (
@@ -286,12 +313,13 @@ export default function CalendarTracker({
               className={`bg-background p-2 transition-colors hover:bg-default-50 cursor-pointer relative group flex flex-col gap-2 
                 ${!isCurrentMonth && view === "month" ? "opacity-30 bg-default-50/50" : ""}
                 ${isWeek ? "min-h-[450px]" : "min-h-[140px]"}
+                ${isToday ? "ring-2 ring-primary ring-inset" : ""}
               `}
               onClick={() => handleDayClick(day)}
             >
               <div className="flex justify-between items-start">
                 <span
-                  className={`text-xs font-bold ${isSameDay(day, new Date()) ? "text-primary bg-primary/10 px-2 py-0.5 rounded-full" : "text-default-500"}`}
+                  className={`text-xs font-bold ${isToday ? "text-primary bg-primary/10 px-2 py-0.5 rounded-full" : "text-default-500"}`}
                 >
                   {format(day, "d")}
                 </span>
@@ -306,27 +334,34 @@ export default function CalendarTracker({
                 </div>
               </div>
 
-              {/* Thumbnails */}
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {entries.map((entry: any) => (
-                  <div key={entry.data.id} className="relative group/avatar">
-                    <Avatar
-                      src={entry.data.imageUrl}
-                      size={isWeek ? "lg" : "sm"}
-                      radius="md"
-                      className="border border-default-200 shadow-sm"
-                    />
-                    {isWeek && (
-                      <div className="hidden group-hover/avatar:block absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 bg-foreground text-background text-xs p-3 rounded-lg shadow-xl pointer-events-none">
-                        <p className="font-bold mb-1">{entry.data.name}</p>
-                        <p className="opacity-70 text-[10px] uppercase tracking-widest">
-                          {entry.metadata.occasion}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+              {entries.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {entries.map((entry: any) => (
+                    <div key={entry.data.id} className="relative group/avatar">
+                      <Avatar
+                        src={entry.data.imageUrl}
+                        size={isWeek ? "lg" : "sm"}
+                        radius="md"
+                        className="border border-default-200 shadow-sm"
+                      />
+                      {isWeek && (
+                        <div className="hidden group-hover/avatar:block absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-foreground text-background text-xs p-3 rounded-lg shadow-xl pointer-events-none">
+                          <p className="font-bold mb-1">{entry.data.name}</p>
+                          <p className="opacity-70 text-[10px] uppercase tracking-widest">
+                            {entry.metadata.occasion || "No occasion"}
+                          </p>
+                          {entry.data.timesWorn > 0 && (
+                            <div className="flex items-center gap-1 mt-2 text-[10px] opacity-60">
+                              <ClockIcon className="w-3 h-3" />
+                              Worn {entry.data.timesWorn}x
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
@@ -336,6 +371,14 @@ export default function CalendarTracker({
 
   const renderDayView = () => {
     const entries = getDayContent(currentDate);
+
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-[300px]">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      );
+    }
 
     return (
       <div className="bg-background min-h-[500px] flex flex-col gap-6 animate-in fade-in duration-300">
@@ -358,29 +401,39 @@ export default function CalendarTracker({
                 key={entry.data.id}
                 className="flex flex-col md:flex-row gap-6 p-6 border border-default-200 rounded-2xl bg-default-50/30 hover:border-default-300 transition-colors"
               >
-                {/* Image */}
                 <div className="w-full md:w-48 h-64 bg-background rounded-xl border border-default-100 shrink-0 overflow-hidden">
                   <img
                     src={entry.data.imageUrl}
+                    alt={entry.data.name}
                     className="w-full h-full object-cover"
                   />
                 </div>
 
-                {/* Content */}
                 <div className="flex-1 flex flex-col">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <div className="flex items-center gap-3 mb-1">
+                      <div className="flex items-center gap-3 mb-2">
                         <Chip size="sm" color="primary" variant="dot">
                           Outfit
                         </Chip>
-                        <span className="text-xs text-default-400 font-mono">
-                          ID: {entry.data.id.slice(0, 8)}
-                        </span>
+                        {entry.data.timesWorn > 0 && (
+                          <Chip
+                            size="sm"
+                            variant="flat"
+                            startContent={<FireIcon className="w-3 h-3" />}
+                          >
+                            Worn {entry.data.timesWorn}x
+                          </Chip>
+                        )}
                       </div>
                       <h4 className="font-black text-2xl uppercase italic">
                         {entry.data.name}
                       </h4>
+                      {entry.data.description && (
+                        <p className="text-sm text-default-500 mt-1">
+                          {entry.data.description}
+                        </p>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -396,7 +449,7 @@ export default function CalendarTracker({
                         size="sm"
                         color="danger"
                         variant="light"
-                        onPress={() => handleDelete(entry.data.id)}
+                        onPress={() => handleDelete(entry.data.id, currentDate)}
                       >
                         <TrashIcon className="w-4 h-4" />
                       </Button>
@@ -461,6 +514,13 @@ export default function CalendarTracker({
 
   return (
     <div className="bg-background border border-default-200 rounded-xl p-6 shadow-sm">
+      {/* Error Display */}
+      {error && (
+        <div className="mb-4 p-4 bg-danger/10 border border-danger/20 rounded-lg text-danger text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div className="flex items-center gap-4">
@@ -543,14 +603,14 @@ export default function CalendarTracker({
 
       {view === "day" ? renderDayView() : renderMonthOrWeek()}
 
-      {/* BIG RESPONSIVE MODAL */}
+      {/* Modal */}
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         size="5xl"
         scrollBehavior="inside"
         classNames={{
-          base: "h-[90vh] md:h-auto", // Full height on mobile
+          base: "h-[90vh] md:h-auto",
         }}
       >
         <ModalContent>
@@ -563,8 +623,13 @@ export default function CalendarTracker({
             </h3>
           </ModalHeader>
           <ModalBody className="p-0">
+            {error && (
+              <div className="m-6 p-4 bg-danger/10 border border-danger/20 rounded-lg text-danger text-sm">
+                {error}
+              </div>
+            )}
+
             <div className="flex flex-col md:flex-row h-full">
-              {/* Left: Outfit Selector */}
               <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-default-100 p-6 bg-default-50/50">
                 <p className="text-xs font-bold uppercase tracking-widest text-default-500 mb-4">
                   Select Outfit
@@ -584,19 +649,26 @@ export default function CalendarTracker({
                     <SelectItem key={item.id} textValue={item.name}>
                       <div className="flex items-center gap-3">
                         <Avatar src={item.imageUrl} size="sm" radius="sm" />
-                        <span className="font-medium">{item.name}</span>
+                        <div className="flex-1">
+                          <p className="font-medium">{item.name}</p>
+                          {item.timesWorn > 0 && (
+                            <p className="text-xs text-default-400">
+                              Worn {item.timesWorn}x
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </SelectItem>
                   ))}
                 </Select>
 
-                {/* Preview Box */}
                 <div className="aspect-[3/4] bg-background rounded-xl border-2 border-dashed border-default-200 flex items-center justify-center overflow-hidden relative">
                   {selectedOutfitId ? (
                     <img
                       src={
                         outfits.find((i) => i.id === selectedOutfitId)?.imageUrl
                       }
+                      alt="Selected outfit"
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -608,7 +680,6 @@ export default function CalendarTracker({
                     </div>
                   )}
 
-                  {/* Selected Tag */}
                   {selectedOutfitId && (
                     <div className="absolute bottom-4 left-4 right-4 bg-background/80 backdrop-blur-md p-3 rounded-lg border border-white/20">
                       <p className="font-bold text-sm truncate">
@@ -619,7 +690,6 @@ export default function CalendarTracker({
                 </div>
               </div>
 
-              {/* Right: Metadata Form */}
               <div className="w-full md:w-2/3 p-6 md:p-8 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Select
