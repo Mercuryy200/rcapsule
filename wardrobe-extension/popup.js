@@ -1,9 +1,48 @@
-document.getElementById("importBtn").addEventListener("click", async () => {
-  const button = document.getElementById("importBtn");
-  const status = document.getElementById("status");
+function detectCategory(name) {
+  const text = name.toLowerCase();
 
-  button.disabled = true;
-  status.textContent = "Extracting data...";
+  if (
+    text.includes("dress") ||
+    text.includes("gown") ||
+    text.includes("romper")
+  )
+    return "Dresses";
+  if (
+    text.includes("jacket") ||
+    text.includes("coat") ||
+    text.includes("blazer") ||
+    text.includes("parka")
+  )
+    return "Outerwear";
+  if (
+    text.includes("pant") ||
+    text.includes("jean") ||
+    text.includes("skirt") ||
+    text.includes("short") ||
+    text.includes("legging")
+  )
+    return "Bottoms";
+  if (
+    text.includes("shoe") ||
+    text.includes("sneaker") ||
+    text.includes("boot") ||
+    text.includes("sandal") ||
+    text.includes("heel")
+  )
+    return "Shoes";
+  if (
+    text.includes("bag") ||
+    text.includes("belt") ||
+    text.includes("hat") ||
+    text.includes("scarf")
+  )
+    return "Accessories";
+
+  return "Tops";
+}
+document.getElementById("scanBtn").addEventListener("click", async () => {
+  const status = document.getElementById("status");
+  status.textContent = "Scanning page...";
   status.className = "loading";
 
   try {
@@ -17,51 +56,96 @@ document.getElementById("importBtn").addEventListener("click", async () => {
       function: extractProductData,
     });
 
-    const productData = results[0].result;
+    const data = results[0].result;
 
-    if (!productData || !productData.name) {
-      status.textContent = "Could not extract product data";
+    if (!data || !data.name) {
+      status.textContent = "Could not find product details.";
       status.className = "error";
-      button.disabled = false;
       return;
     }
 
-    status.textContent = "Sending to wardrobe...";
+    document.getElementById("inputName").value = data.name || "";
+    document.getElementById("inputBrand").value = data.brand || "";
+    document.getElementById("inputPrice").value = data.price || "";
+    document.getElementById("inputSize").value = data.size || "";
+    document.getElementById("inputLink").value = data.link || "";
+    const detectedCat = detectCategory(data.name || "");
+    document.getElementById("inputCategory").value = detectedCat;
 
-    const PRODUCTION_URL =
-      "https://vesticloset.vercel.app/api/extension/import";
-
-    const response = await fetch(PRODUCTION_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(productData),
-    });
-
-    if (response.ok) {
-      status.textContent = "Successfully imported!";
-      status.className = "success";
-      setTimeout(() => window.close(), 1500);
+    const imgPreview = document.getElementById("previewImg");
+    if (data.imageUrl) {
+      imgPreview.src = data.imageUrl;
+      document.getElementById("inputImgUrl").value = data.imageUrl;
+      imgPreview.style.display = "block";
     } else {
-      const error = await response.json();
-      status.textContent = error.message || "Import failed";
-      status.className = "error";
-      button.disabled = false;
+      imgPreview.style.display = "none";
     }
+
+    document.getElementById("scanView").classList.add("hidden");
+    document.getElementById("formView").classList.remove("hidden");
+    status.textContent = "";
   } catch (error) {
-    console.error("Import error:", error);
-    status.textContent = "Error: " + error.message;
+    console.error(error);
+    status.textContent = "Error scanning page.";
     status.className = "error";
-    button.disabled = false;
   }
 });
 
-/**
- * This function runs INSIDE the web page context.
- * It cannot access variables from the popup scope.
- */
+document.getElementById("saveBtn").addEventListener("click", async () => {
+  const status = document.getElementById("status");
+  const saveBtn = document.getElementById("saveBtn");
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving...";
+  status.textContent = "";
+
+  const finalData = {
+    name: document.getElementById("inputName").value,
+    brand: document.getElementById("inputBrand").value,
+    price: document.getElementById("inputPrice").value,
+    size: document.getElementById("inputSize").value,
+    link: document.getElementById("inputLink").value,
+    imageUrl: document.getElementById("inputImgUrl").value,
+    category: document.getElementById("inputCategory").value,
+    purchaseDate: new Date().toISOString().split("T")[0],
+  };
+
+  try {
+    const API_URL = "http://vesticloset.vercel.app/api/extension/import";
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(finalData),
+    });
+
+    if (response.ok) {
+      status.textContent = "Saved to Wardrobe!";
+      status.className = "success";
+      saveBtn.textContent = "Saved";
+      setTimeout(() => window.close(), 1500);
+    } else {
+      const err = await response.json();
+      status.textContent = "Error: " + (err.message || "Save failed");
+      status.className = "error";
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Add to Wardrobe";
+    }
+  } catch (error) {
+    status.textContent = "Network Error. Check API.";
+    status.className = "error";
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Add to Wardrobe";
+  }
+});
+
+// 3. CANCEL BUTTON: Resets view
+document.getElementById("cancelBtn").addEventListener("click", () => {
+  document.getElementById("formView").classList.add("hidden");
+  document.getElementById("scanView").classList.remove("hidden");
+  document.getElementById("status").textContent = "";
+});
+
 function extractProductData() {
   const data = {
     name: "",
@@ -73,7 +157,6 @@ function extractProductData() {
     size: "",
   };
 
-  // --- 1. JSON-LD Extraction (Structured Data) ---
   const jsonLdScripts = document.querySelectorAll(
     'script[type="application/ld+json"]'
   );
@@ -100,47 +183,32 @@ function extractProductData() {
         if (product.description) data.description = product.description;
       }
     } catch (e) {
-      console.error("JSON-LD parse error:", e);
+      console.error("JSON-LD error:", e);
     }
   });
 
   // --- 2. Fallback Text Scraping ---
   if (!data.name) {
-    data.name =
-      document.querySelector('h1[class*="product"]')?.textContent?.trim() ||
-      document.querySelector("h1")?.textContent?.trim() ||
-      document.querySelector("#pdpProductNameText")?.textContent?.trim() ||
-      "";
+    data.name = document.querySelector("h1")?.textContent?.trim() || "";
   }
-
   if (!data.brand) {
     data.brand =
-      document.querySelector("#pdpBrandNameText")?.textContent?.trim() ||
       document.querySelector('meta[property="og:site_name"]')?.content ||
       new URL(window.location.href).hostname.replace("www.", "").split(".")[0];
-
-    // Formatting: Capitalize first letter
-    if (data.brand) {
+    if (data.brand)
       data.brand = data.brand.charAt(0).toUpperCase() + data.brand.slice(1);
-    }
   }
-
   if (!data.price) {
     const zaraPrice = document.querySelector("span.money-amount__main");
     data.price =
       zaraPrice?.textContent?.trim() ||
-      document.querySelector('[id*="pdpPrice"]')?.textContent?.trim() ||
       document.querySelector('[class*="price"]')?.textContent?.trim() ||
       "";
-
-    // Clean price (remove symbols)
     const match = data.price.match(/[\d,]+\.?\d*/);
     if (match) data.price = match[0].replace(/,/g, "");
   }
 
   // --- 3. SIZE EXTRACTION ---
-
-  // Strategy A: URL Parameters (Garage, Revolve, Uniqlo)
   try {
     const urlParams = new URLSearchParams(window.location.search);
     for (const [key, value] of urlParams.entries()) {
@@ -151,17 +219,12 @@ function extractProductData() {
     }
   } catch (e) {}
 
-  // Strategy B: Aritzia Specific (FIXED)
   if (!data.size) {
-    // Target the inner message element (contains "Size 2XS")
-    // instead of the button (which contains "chevron" and "Shorts")
     const aritziaText = document.querySelector(
       '[data-testid="siv-select-size-msg"]'
     );
-
     if (aritziaText) {
       let text = aritziaText.textContent.trim();
-      // Clean up: "Size 2XS — Sold Out" -> "2XS"
       text = text.replace(/^Size\s*/i, "");
       text = text.split("—")[0].trim();
       text = text.split("-")[0].trim();
@@ -169,7 +232,6 @@ function extractProductData() {
     }
   }
 
-  // Strategy C: Generic Active Selection
   if (!data.size) {
     const activeSize =
       document.querySelector(".size-selector .active") ||
@@ -177,45 +239,29 @@ function extractProductData() {
       document.querySelector('input[name="size"]:checked + label') ||
       document.querySelector('.selected[class*="size"]');
 
-    if (activeSize) {
-      data.size = activeSize.textContent.trim();
-    }
+    if (activeSize) data.size = activeSize.textContent.trim();
   }
 
-  // Final Size Cleanup (Global Safety Net)
   if (data.size) {
-    // Remove common icon text if it snuck in
     data.size = data.size
       .replace(/chevron/gi, "")
       .replace(/down/gi, "")
-      .trim();
-    // Remove newlines
-    data.size = data.size.replace(/\n/g, " ");
+      .trim()
+      .replace(/\n/g, " ");
   }
 
   // --- 4. IMAGE EXTRACTION ---
-
-  // Helper: Extract valid URL, ignoring base64 placeholders
   const getValidSrc = (img) => {
     if (!img) return null;
-
-    // Check srcset first (highest quality)
     let candidate = img.srcset || img.dataset.srcset;
     if (candidate) {
-      // Split by ", " to handle URLs with internal commas safely
       const urls = candidate.split(/,\s+/);
-      const lastEntry = urls[urls.length - 1].trim();
-      return lastEntry.split(" ")[0]; // Remove width descriptor
+      return urls[urls.length - 1].trim().split(" ")[0];
     }
-
-    // Check src, ignore data:image placeholders
     const src = img.src || img.dataset.src;
-    if (src && !src.startsWith("data:")) return src;
-
-    return img.dataset.src || null;
+    return src && !src.startsWith("data:") ? src : img.dataset.src || null;
   };
 
-  // STRATEGY 0: Brand-Specific Logic
   if (!data.imageUrl) {
     const isAritzia = window.location.hostname.includes("aritzia");
     const isZara = window.location.hostname.includes("zara");
@@ -227,17 +273,13 @@ function extractProductData() {
         document.querySelector('img[data-test="product-image"]');
       if (ssenseImg) data.imageUrl = getValidSrc(ssenseImg);
     }
-
     if (isAritzia) {
-      // Prioritize the <a> tag href which has the high-res zoom image
       const offBodyLink = document.querySelector('a[href*="_off_"]');
       const offBodyImg = document.querySelector('img[src*="_off_"]');
       if (offBodyLink) data.imageUrl = offBodyLink.href;
       else if (offBodyImg) data.imageUrl = offBodyImg.src;
     }
-
     if (isZara) {
-      // Find "Front view" image that is NOT a tiny thumbnail
       const allImages = Array.from(document.querySelectorAll("img"));
       const flatLay = allImages.find((img) => {
         const alt = (img.alt || "").toLowerCase();
@@ -248,34 +290,25 @@ function extractProductData() {
     }
   }
 
-  // STRATEGY 1: Active/Visible Image (Fallback)
   if (!data.imageUrl) {
     const activeImage =
       document.querySelector(".product-detail-images__image-container img") ||
-      document.querySelector(".media-image__image") ||
-      document.querySelector('[aria-hidden="false"] img[class*="product"]');
-
+      document.querySelector(".media-image__image");
     if (activeImage) data.imageUrl = getValidSrc(activeImage);
   }
 
-  // STRATEGY 2: Largest Visible Image (Last Resort)
   if (!data.imageUrl) {
     const images = Array.from(document.querySelectorAll("img"));
     const largeImages = images.filter((img) => {
       const valid = getValidSrc(img);
       return (img.naturalWidth > 300 || img.width > 300) && valid;
     });
-
-    if (largeImages.length > 0) {
-      data.imageUrl = getValidSrc(largeImages[0]);
-    }
+    if (largeImages.length > 0) data.imageUrl = getValidSrc(largeImages[0]);
   }
 
-  // Final Cleanup
   if (data.imageUrl) {
     if (data.imageUrl.startsWith("//"))
       data.imageUrl = "https:" + data.imageUrl;
-    // Remove query params if they contain spaces or are just messy
     if (data.imageUrl.includes(" "))
       data.imageUrl = data.imageUrl.split(" ")[0];
   }
