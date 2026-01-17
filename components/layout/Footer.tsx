@@ -11,7 +11,7 @@ export default function Footer() {
     {
       title: "Product",
       links: [
-        { name: "Features", href: "#" },
+        { name: "Features", href: "/features" },
         { name: "Pricing", href: "#" },
         { name: "Download App", href: "#" },
       ],
@@ -27,7 +27,7 @@ export default function Footer() {
       title: "Legal",
       links: [
         { name: "Privacy Policy", href: "/privacy" },
-        { name: "Terms of Service", href: "#" },
+        { name: "Terms of Service", href: "/terms" },
       ],
     },
   ];

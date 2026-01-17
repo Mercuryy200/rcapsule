@@ -17,7 +17,7 @@ import {
   SparklesIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { colors, occasions, seasons, categories } from "@/lib/data";
+import { colors, occasions, seasons, categories, colorMap } from "@/lib/data";
 import { ImageUpload } from "@/components/closet/ImageUpload";
 
 export default function NewItemPage() {
@@ -28,7 +28,6 @@ export default function NewItemPage() {
   const [imageMethod, setImageMethod] = useState<"upload" | "url">("upload");
   const [isScraping, setIsScraping] = useState(false);
 
-  // Consolidated form state
   const [formData, setFormData] = useState({
     name: "",
     category: "",

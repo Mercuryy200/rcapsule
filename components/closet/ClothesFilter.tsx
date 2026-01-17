@@ -97,11 +97,10 @@ export default function ClothesFilter({
       <ScrollShadow hideScrollBar className="flex-1 -mr-2 pr-2">
         <Accordion
           selectionMode="multiple"
-          defaultExpandedKeys={["category", "price"]}
+          defaultExpandedKeys={["price"]}
           itemClasses={itemClasses}
           showDivider={false}
         >
-          {/* CATEGORY */}
           <AccordionItem key="category" aria-label="Category" title="Category">
             <CheckboxGroup
               value={selectedCategories}
@@ -113,7 +112,7 @@ export default function ClothesFilter({
                   key={category}
                   value={category}
                   size="sm"
-                  radius="none" // Square checkboxes look more high-fashion
+                  radius="none"
                   classNames={{
                     label: "text-sm text-default-500 capitalize ml-1",
                   }}
@@ -124,7 +123,6 @@ export default function ClothesFilter({
             </CheckboxGroup>
           </AccordionItem>
 
-          {/* PRICE */}
           <AccordionItem key="price" aria-label="Price" title="Price Range">
             <div className="px-2 pt-2">
               <Slider

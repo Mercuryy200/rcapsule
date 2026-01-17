@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
 import { fontSans } from "@/config/fonts";
 import { Analytics } from "@vercel/analytics/next";
+import ScrollToTop from "@/components/ui/ScrollToTop";
 
 export const metadata: Metadata = {
   title: {
@@ -35,10 +36,11 @@ export default function RootLayout({
       <body
         className={clsx(
           "min-h-screen bg-background font-sans antialiased text-foreground",
-          fontSans.variable
+          fontSans.variable,
         )}
       >
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
+          <ScrollToTop />
           <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-1 w-full max-w-7xl mx-auto px-6">
