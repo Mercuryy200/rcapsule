@@ -12,7 +12,6 @@ document.getElementById("importBtn").addEventListener("click", async () => {
       currentWindow: true,
     });
 
-    // Inject the extraction function into the page
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       function: extractProductData,
@@ -29,10 +28,15 @@ document.getElementById("importBtn").addEventListener("click", async () => {
 
     status.textContent = "Sending to wardrobe...";
 
-    // Send to your API
-    const response = await fetch("http://localhost:3000/api/extension/import", {
+    const PRODUCTION_URL =
+      "https://vesticloset.vercel.app/api/extension/import";
+
+    const response = await fetch(PRODUCTION_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
       body: JSON.stringify(productData),
     });
 

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
-//Category Detection
 const detectCategory = (text: string): string => {
   const t = text.toLowerCase();
   const keywords: Record<string, string[]> = {
@@ -24,7 +23,7 @@ const detectCategory = (text: string): string => {
     Shoes: ["shoe", "loafer", "mule", "flat", "derby", "oxford"], // Catch-all for other shoes
 
     // Bottoms (Broken Down)
-    Skirts: ["skirt", "mini", "midi", "maxi"],
+    Skirts: ["skirt", "miniskirt", "midiskirt", "maxiskirt"],
     Jeans: ["jean", "denim"],
     Shorts: ["short", "trunk", "boardshort"],
     Pants: [
@@ -89,14 +88,19 @@ const detectCategory = (text: string): string => {
 export async function POST(req: Request) {
   try {
     const session = await auth();
-
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      console.log("[API] No session found. Cookies missing?");
+      return NextResponse.json(
+        {
+          error: "Unauthorized",
+          message: "Please log in to the website first",
+        },
+        { status: 401, headers: corsHeaders(origin) }
+      );
     }
 
     const body = await req.json();
-    const { name, brand, price, imageUrl, link, description, size } = body;
-
+    const { name, brand, price, imageUrl, link, size, description } = body;
     if (!name)
       return NextResponse.json({ error: "Missing name" }, { status: 400 });
 
@@ -132,27 +136,37 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      message: `Imported as ${detectedCategory}`,
-      data: clothingItem,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Imported successfully",
+      },
+      {
+        headers: corsHeaders(origin),
+      }
+    );
   } catch (error) {
     console.error("Server Error:", error);
     return NextResponse.json(
       { error: "Server Exception", details: String(error) },
-      { status: 500 }
+      { status: 500, headers: corsHeaders(origin) }
     );
   }
 }
 
+function corsHeaders(origin: string) {
+  return {
+    "Access-Control-Allow-Origin": origin || "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Credentials": "true",
+  };
+}
+
 export async function OPTIONS(req: Request) {
+  const origin = req.headers.get("origin") || "";
   return new NextResponse(null, {
     status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    },
+    headers: corsHeaders(origin),
   });
 }
