@@ -1,4 +1,4 @@
-export const  categories = [
+export const categories = [
   "shirt",
   "pants",
   "dress",
@@ -12,7 +12,9 @@ export const  categories = [
   "heels",
   "hoodie",
   "cardigan",
-  "blouse"
+  "blouse",
+  "short",
+  "leggings",
 ];
 export const colors = [
   "red",

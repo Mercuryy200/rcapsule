@@ -100,10 +100,11 @@ export default function WardrobeTab({
           >
             <CardBody className="p-0 aspect-[4/3] overflow-hidden relative">
               <Image
+                removeWrapper
                 radius="none"
                 src={wardrobe.coverImage || "/images/placeholder_wardrobe.jpg"}
                 alt={wardrobe.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute top-2 right-2 z-10">
                 {wardrobe.isPublic && (

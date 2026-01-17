@@ -8,6 +8,7 @@ const PROTECTED_SITES = [
   "farfetch.com",
   "net-a-porter.com",
   "mrporter.com",
+  "zara.com",
 ];
 
 export async function POST(req: Request) {
@@ -91,6 +92,53 @@ export async function POST(req: Request) {
       description: "",
     };
 
+    // --- STRATEGY 0: Extract from __INITIAL_STATE__ or __NEXT_DATA__ (Zara, modern sites) ---
+    try {
+      // Zara stores data in window.__INITIAL_STATE__ or similar
+      const scripts = $("script:not([src])");
+      scripts.each((_, el) => {
+        const scriptContent = $(el).html() || "";
+
+        // Try to find JSON data in script tags
+        if (
+          scriptContent.includes("__INITIAL_STATE__") ||
+          scriptContent.includes("__NEXT_DATA__") ||
+          scriptContent.includes("product")
+        ) {
+          // Extract JSON objects from script
+          const jsonMatches = scriptContent.match(
+            /\{[^{}]*"product"[^{}]*\{[\s\S]*?\}\}/g
+          );
+          if (jsonMatches) {
+            for (const match of jsonMatches) {
+              try {
+                const jsonData = JSON.parse(match);
+
+                // Try to extract product data
+                if (jsonData.product) {
+                  const product = jsonData.product;
+                  if (product.name && !data.name) data.name = product.name;
+                  if (product.price && !data.price)
+                    data.price = String(product.price);
+                  if (product.image && !data.imageUrl) {
+                    data.imageUrl = Array.isArray(product.image)
+                      ? product.image[0]
+                      : product.image;
+                  }
+                  if (product.description && !data.description)
+                    data.description = product.description;
+                }
+              } catch (e) {
+                // Continue trying other matches
+              }
+            }
+          }
+        }
+      });
+    } catch (e) {
+      console.error("[Scraper] Failed to extract from script tags:", e);
+    }
+
     // --- STRATEGY 1: JSON-LD (Most reliable) ---
     $('script[type="application/ld+json"]').each((_, el) => {
       try {
@@ -158,7 +206,12 @@ export async function POST(req: Request) {
 
     // --- STRATEGY 3: Common HTML Patterns ---
     if (!data.name) {
+      // Zara specific selectors
       data.name =
+        $('h1[class*="product-detail"]').first().text().trim() ||
+        $("h1.product-detail-info__header-name").first().text().trim() ||
+        $(".product-name").first().text().trim() ||
+        // General selectors
         $("h1").first().text().trim() ||
         $('[class*="product-name"]').first().text().trim() ||
         $('[class*="product-title"]').first().text().trim();
@@ -167,6 +220,12 @@ export async function POST(req: Request) {
     if (!data.price) {
       // Try multiple price selectors
       const priceSelectors = [
+        // Zara specific (priority)
+        "span.money-amount__main",
+        'span[class*="money-amount__main"]',
+        'span[class*="price__amount"]',
+        ".price-current__amount",
+        "div.product-detail-info__price span",
         // Uniqlo specific
         'p[class*="fr-ec-price-text"]',
         'span[class*="fr-ec-price-text"]',
@@ -208,12 +267,37 @@ export async function POST(req: Request) {
     }
 
     if (!data.imageUrl) {
-      const firstImg =
-        $('img[class*="product"]').first().attr("src") ||
-        $('img[itemprop="image"]').first().attr("src") ||
-        $("main img").first().attr("src") ||
-        "";
-      data.imageUrl = firstImg;
+      // Zara specific - try picture source first
+      const pictureSource = $("picture.media-image source")
+        .first()
+        .attr("srcset");
+      if (pictureSource) {
+        // Extract first URL from srcset
+        const srcsetUrl = pictureSource.split(",")[0].split(" ")[0];
+        if (srcsetUrl) data.imageUrl = srcsetUrl;
+      }
+
+      if (!data.imageUrl) {
+        const firstImg =
+          // Zara specific
+          $("img.media-image__image").first().attr("src") ||
+          $('img[class*="media-image"]').first().attr("src") ||
+          $(".product-detail-images img").first().attr("src") ||
+          // General
+          $('img[class*="product"]').first().attr("src") ||
+          $('img[itemprop="image"]').first().attr("src") ||
+          $("main img").first().attr("src") ||
+          "";
+        data.imageUrl = firstImg;
+      }
+    }
+
+    if (!data.description) {
+      // Zara stores description in expandable sections
+      data.description =
+        $(".product-detail-info__description").first().text().trim() ||
+        $('[class*="description"]').first().text().trim() ||
+        $(".expandable-text").first().text().trim();
     }
 
     // --- STRATEGY 4: Cleanup & Normalize ---
@@ -271,6 +355,37 @@ export async function POST(req: Request) {
     }
 
     console.log("[Scraper] Success:", data);
+
+    // If we got mostly empty data, treat as blocked
+    const hasMinimalData = !data.name?.trim() || data.name.trim().length < 3;
+    const hasNoImage = !data.imageUrl;
+    const hasNoPrice = !data.price;
+
+    if (hasMinimalData && hasNoImage && hasNoPrice) {
+      console.log("[Scraper] Got minimal data, likely blocked or JS-rendered");
+
+      // Extract basic info from URL for pre-filling
+      let suggestedBrand = "";
+      try {
+        const hostname = new URL(url).hostname.replace("www.", "");
+        const rawBrand = hostname.split(".")[0];
+        suggestedBrand = rawBrand.charAt(0).toUpperCase() + rawBrand.slice(1);
+      } catch (e) {}
+
+      return NextResponse.json(
+        {
+          blocked: true,
+          status: 200,
+          message:
+            "This site uses JavaScript rendering that prevents automatic import. Please enter details manually.",
+          prefill: {
+            link: url,
+            brand: suggestedBrand,
+          },
+        },
+        { status: 403 }
+      );
+    }
 
     return NextResponse.json({
       blocked: false,
