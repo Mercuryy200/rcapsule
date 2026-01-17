@@ -13,6 +13,7 @@ import { useUser } from "@/contexts/UserContext";
 // Import the visualization components
 import { ColorPalette } from "@/components/closet/ColorPalette";
 import { StatsCard } from "@/components/closet/StatsCard";
+import CalendarTracker from "@/components/calendar/CalendarTracker";
 
 interface ExtendedWardrobe extends Wardrobe {
   clothesCount?: number;
@@ -264,10 +265,14 @@ export default function ProfilePage() {
             </div>
           </div>
         </Tab>
-
         <Tab key="wardrobes" title="Wardrobes">
           <div className="py-8">
             <WardrobeTab wardrobes={wardrobes} refreshData={fetchProfileData} />
+          </div>
+        </Tab>{" "}
+        <Tab key="calendar" title="Calendar">
+          <div className="py-8">
+            <CalendarTracker clothes={clothes} outfits={outfits} />
           </div>
         </Tab>
       </Tabs>

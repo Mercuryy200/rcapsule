@@ -4,9 +4,16 @@ import { NextResponse } from "next/server";
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const protectedRoutes = ["/profile", "/closet", "/settings", "/outfits"];
+  const protectedRoutes = [
+    "/profile",
+    "/closet",
+    "/settings",
+    "/outfits",
+    "/wishlist",
+    "/calendar",
+  ];
   const isProtected = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
+    pathname.startsWith(route),
   );
 
   if (isProtected) {

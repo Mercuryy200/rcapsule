@@ -97,7 +97,7 @@ export const colors = [
 export const colorMap: Record<string, string> = {
   black: "#000000",
   white: "#FFFFFF",
-  gray: "#808000",
+  gray: "#808080",
   charcoal: "#36454F",
   cream: "#FFFDD0",
   beige: "#F5F5DC",

@@ -116,7 +116,7 @@ export default function WardrobePage() {
 
   const fetchAvailableClothes = async () => {
     try {
-      const response = await fetch("/api/clothes");
+      const response = await fetch("/api/clothes?status=owned");
       if (response.ok) {
         const data = await response.json();
         setAvailableClothes(Array.isArray(data) ? data : []);
@@ -130,7 +130,7 @@ export default function WardrobePage() {
     try {
       const response = await fetch(
         `/api/wardrobes/${wardrobeId}/clothes/${clothesId}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
       if (response.ok) {
         fetchWardrobe();
@@ -207,7 +207,7 @@ export default function WardrobePage() {
   // Filter items not in wardrobe
   const itemsNotInWardrobe = availableClothes.filter(
     (item) =>
-      !wardrobe.clothes.some((wardrobeItem) => wardrobeItem.id === item.id)
+      !wardrobe.clothes.some((wardrobeItem) => wardrobeItem.id === item.id),
   );
 
   return (
