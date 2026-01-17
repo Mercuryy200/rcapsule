@@ -8,6 +8,7 @@ interface ClothingItem {
   brand?: string;
   price?: number;
   imageUrl?: string;
+  status?: string;
 }
 
 interface ClothingCardProps {

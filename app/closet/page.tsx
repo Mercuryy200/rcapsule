@@ -4,14 +4,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { Button, Spinner } from "@heroui/react";
 import { FunnelIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { motion } from "framer-motion"; // Add animation for smoothness
-
+import { motion } from "framer-motion";
 import ClothingCard from "@/components/closet/ClothingCard";
 import ClothesFilter, {
   FilterOptions,
 } from "@/components/closet/ClothesFilter";
 
-// Define interface locally or import from types/index.ts
 interface ClothingItem {
   id: string;
   name: string;
@@ -24,12 +22,12 @@ interface ClothingItem {
   link?: string;
   imageUrl?: string;
   placesToWear: string[];
+  status?: string;
 }
 
 export default function ClosetPage() {
-  const { status } = useSession(); // Removed 'data: session' if not used directly
+  const { status } = useSession();
   const router = useRouter();
-
   const [clothes, setClothes] = useState<ClothingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -42,7 +40,6 @@ export default function ClosetPage() {
     brands: [],
   });
 
-  // Auth Protection
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
     if (status === "authenticated") fetchClothes();
@@ -61,19 +58,18 @@ export default function ClosetPage() {
       setLoading(false);
     }
   };
+  const ownedClothes = useMemo(() => {
+    return clothes.filter((item) => item.status === "owned" || !item.status);
+  }, [clothes]);
 
-  // --- FILTER LOGIC (Kept identical for functionality) ---
   const availableBrands = useMemo(() => {
-    const brands = clothes
+    const brands = ownedClothes
       .map((item) => item.brand)
       .filter((brand): brand is string => !!brand);
     return [...new Set(brands)].sort();
-  }, [clothes]);
+  }, [ownedClothes]);
 
   const filteredClothes = useMemo(() => {
-    // ... (Your existing filter logic here is perfectly fine) ...
-    // For brevity in this snippet, assuming logic is unchanged.
-    // If you need me to paste the logic back in, I can!
     const activeFilterGroups = [];
     if (filters.categories.length > 0) activeFilterGroups.push("category");
     if (filters.colors.length > 0) activeFilterGroups.push("color");
@@ -85,9 +81,10 @@ export default function ClosetPage() {
     const isPriceFiltered =
       filters.priceRange[0] > 0 || filters.priceRange[1] < 500;
 
-    if (activeFilterGroups.length === 0 && !isPriceFiltered) return clothes;
+    if (activeFilterGroups.length === 0 && !isPriceFiltered)
+      return ownedClothes;
 
-    return clothes.filter((item) => {
+    return ownedClothes.filter((item) => {
       if (
         filters.categories.length > 0 &&
         !filters.categories.includes(item.category)
@@ -135,9 +132,8 @@ export default function ClosetPage() {
       }
       return true;
     });
-  }, [clothes, filters]);
+  }, [ownedClothes, filters]);
 
-  // --- HANDLERS ---
   const handleItemClick = (itemId: string) => router.push(`/closet/${itemId}`);
   const handleAddNew = () => router.push("/closet/new");
 
@@ -185,7 +181,6 @@ export default function ClosetPage() {
       </header>
 
       <div className="flex gap-8 relative">
-        {/* FILTER SIDEBAR (Animated) */}
         {showFilters && (
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -199,7 +194,6 @@ export default function ClosetPage() {
           </motion.div>
         )}
 
-        {/* CLOTHES GRID */}
         <div className="flex-1">
           {filteredClothes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 border border-dashed border-default-300">

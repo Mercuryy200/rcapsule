@@ -170,8 +170,30 @@
 
         <input type="hidden" id="inputLink" />
         <input type="hidden" id="inputImgUrl" />
+        <div
+          class="form-group"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+          "
+        >
+          <input
+            type="checkbox"
+            id="inputWishlist"
+            style="width: 16px; height: 16px; cursor: pointer"
+          />
+          <label
+            for="inputWishlist"
+            class="label"
+            style="margin: 0; cursor: pointer; color: #111"
+            >Add to Wishlist (Not Purchased)</label
+          >
+        </div>
 
-        <button id="saveBtn" class="btn btn-primary">Add to Wardrobe</button>
+        <button id="saveBtn" class="btn btn-primary">Add to Closet</button>
         <button id="cancelBtn" class="btn btn-secondary">Cancel</button>
       </div>
 

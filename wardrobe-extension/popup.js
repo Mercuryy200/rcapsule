@@ -99,6 +99,11 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
   saveBtn.textContent = "Saving...";
   status.textContent = "";
 
+  const wishlistCheckbox = document.getElementById("inputWishlist");
+  const isWishlist = wishlistCheckbox ? wishlistCheckbox.checked : false;
+
+  console.log("Saving Item... Wishlist Mode:", isWishlist);
+
   const finalData = {
     name: document.getElementById("inputName").value,
     brand: document.getElementById("inputBrand").value,
@@ -107,9 +112,9 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
     link: document.getElementById("inputLink").value,
     imageUrl: document.getElementById("inputImgUrl").value,
     category: document.getElementById("inputCategory").value,
-    purchaseDate: new Date().toISOString().split("T")[0],
+    status: isWishlist ? "wishlist" : "owned",
+    purchaseDate: isWishlist ? null : new Date().toISOString().split("T")[0],
   };
-
   try {
     const API_URL = "http://vesticloset.vercel.app/api/extension/import";
     const response = await fetch(API_URL, {
@@ -123,6 +128,8 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
       status.textContent = "Saved to Wardrobe!";
       status.className = "success";
       saveBtn.textContent = "Saved";
+      window.open("https://vesticloset.vercel.app/closet", "_blank");
+
       setTimeout(() => window.close(), 1500);
     } else {
       const err = await response.json();
@@ -139,7 +146,6 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
   }
 });
 
-// 3. CANCEL BUTTON: Resets view
 document.getElementById("cancelBtn").addEventListener("click", () => {
   document.getElementById("formView").classList.add("hidden");
   document.getElementById("scanView").classList.remove("hidden");
@@ -158,7 +164,7 @@ function extractProductData() {
   };
 
   const jsonLdScripts = document.querySelectorAll(
-    'script[type="application/ld+json"]'
+    'script[type="application/ld+json"]',
   );
   jsonLdScripts.forEach((script) => {
     try {
@@ -221,7 +227,7 @@ function extractProductData() {
 
   if (!data.size) {
     const aritziaText = document.querySelector(
-      '[data-testid="siv-select-size-msg"]'
+      '[data-testid="siv-select-size-msg"]',
     );
     if (aritziaText) {
       let text = aritziaText.textContent.trim();

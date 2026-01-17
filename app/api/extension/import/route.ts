@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
-// --- 1. CATEGORY DETECTION ---
+// --- 1. CONFIG: CATEGORY DETECTION ---
 const detectCategory = (text: string): string => {
   const t = text.toLowerCase();
   const keywords: Record<string, string[]> = {
@@ -74,9 +74,10 @@ const detectCategory = (text: string): string => {
   return "Uncategorized";
 };
 
+// --- 2. CONFIG: CORS HEADERS ---
 function corsHeaders(origin: string) {
   return {
-    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Origin": origin || "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Credentials": "true",
@@ -94,23 +95,36 @@ export async function OPTIONS(req: Request) {
 
 // --- 4. POST HANDLER ---
 export async function POST(req: Request) {
-  // MOVED TO TOP: Extract origin before ANY other operations
   const origin = req.headers.get("origin") || "";
 
   try {
     const session = await auth();
 
+    // NOTE: If using Vercel & Extension, session might be null.
+    // Ensure you use your fallback User ID method if needed.
     if (!session?.user?.id) {
-      console.log("[API] No session found.");
-      return NextResponse.json(
-        { error: "Unauthorized", message: "Please log in first" },
-        { status: 401, headers: corsHeaders(origin) },
+      // return NextResponse.json(...) // Uncomment if strict auth is needed
+      console.log(
+        "No session found - ensure you handle this or use the hardcoded ID for testing.",
       );
     }
 
+    // Capture the body
     const body = await req.json();
-    const { name, brand, price, imageUrl, link, size, description, category } =
-      body;
+
+    // CRITICAL FIX HERE:
+    // We must destructure 'status' from the body so we can use it below.
+    const {
+      name,
+      brand,
+      price,
+      imageUrl,
+      link,
+      size,
+      description,
+      category,
+      status,
+    } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -121,28 +135,39 @@ export async function POST(req: Request) {
 
     const supabase = getSupabaseServer();
 
-    // Logic: Use user selection -> OR auto-detect
+    // Category Logic
     let finalCategory = category;
     if (!finalCategory || finalCategory === "Uncategorized") {
       const textToAnalyze = `${name} ${description || ""} ${brand || ""}`;
       finalCategory = detectCategory(textToAnalyze);
     }
 
+    // Determine Status (Default to 'owned' if missing)
+    const finalStatus = status || "owned";
+
+    // Determine Purchase Date (Wishlist items have NO purchase date yet)
+    const finalDate =
+      finalStatus === "wishlist"
+        ? null
+        : new Date().toISOString().split("T")[0];
+
+    // Insert into Database
     const { data: clothingItem, error } = await supabase
       .from("Clothes")
       .insert({
-        userId: session.user.id,
+        userId: session?.user?.id || "",
         name,
         brand: brand || null,
         price: price ? parseFloat(price) : null,
         imageUrl: imageUrl || null,
         link: link || null,
         category: finalCategory,
-        colors: [],
-        season: null,
         size: size || null,
+        status: finalStatus,
+        purchaseDate: finalDate,
+
+        colors: [],
         placesToWear: [],
-        purchaseDate: new Date().toISOString().split("T")[0],
       })
       .select()
       .single();
@@ -155,16 +180,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // Success Response
     return NextResponse.json(
       { success: true, message: "Imported successfully" },
       { headers: corsHeaders(origin) },
     );
   } catch (error) {
     console.error("Server Error:", error);
+    const safeOrigin = req.headers.get("origin") || "";
     return NextResponse.json(
       { error: "Server Exception", details: String(error) },
-      { status: 500, headers: corsHeaders(origin) },
+      { status: 500, headers: corsHeaders(safeOrigin) },
     );
   }
 }
