@@ -39,9 +39,14 @@ function LoginFormContent() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password");
-        setIsLoading(false);
-      } else if (result?.ok) {
+        if (result.code === "EmailNotVerified") {
+          setError(
+            "Please check your email to verify your account before logging in.",
+          );
+        } else {
+          setError("Invalid email or password.");
+        }
+      } else {
         router.push("/closet");
         router.refresh();
       }
@@ -57,7 +62,6 @@ function LoginFormContent() {
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-md space-y-8"
     >
-      {/* Header section */}
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-extrabold tracking-tighter uppercase italic">
           Welcome Back

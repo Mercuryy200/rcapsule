@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
@@ -6,8 +6,11 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
+class EmailNotVerifiedError extends CredentialsSignin {
+  code = "EmailNotVerified";
+}
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
@@ -38,9 +41,14 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             password: credentials.password as string,
           });
 
-          if (error || !data.user) {
+          if (error) {
+            if (error.message.includes("Email not confirmed")) {
+              throw new EmailNotVerifiedError();
+            }
             return null;
           }
+
+          if (!data.user) return null;
 
           const { data: existingUser } = await supabase
             .from("User")
@@ -64,6 +72,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             image: data.user.user_metadata?.image || null,
           };
         } catch (error) {
+          if (error instanceof EmailNotVerifiedError) {
+            throw error;
+          }
           console.error("Authorization error:", error);
           return null;
         }
@@ -85,7 +96,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           if (existingUser) {
             userId = existingUser.id;
             console.log(
-              `Linking ${account.provider} account to existing user ${userId}`
+              `Linking ${account.provider} account to existing user ${userId}`,
             );
 
             if (!existingUser.name && user.name) {
@@ -129,7 +140,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             },
             {
               onConflict: "provider,providerAccountId",
-            }
+            },
           );
 
           if (accountError) {
