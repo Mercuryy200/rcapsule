@@ -53,6 +53,8 @@ export const categories = [
   "scarf",
   "sunglasses",
   "jewelry",
+  "beanie",
+  "cap",
 
   "underwear",
   "swimwear",

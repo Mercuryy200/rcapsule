@@ -157,9 +157,7 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* 2. ANALYTICS GRID */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              {/* Left Col: Color DNA */}
               <div className="bg-background border border-default-200 rounded-xl p-6 shadow-sm">
                 <div className="mb-6">
                   <h3 className="text-sm font-bold uppercase tracking-widest text-default-500">
@@ -178,7 +176,6 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Right Col: Top Designers */}
               <div className="space-y-4">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-default-500">
                   Top Designers
@@ -196,7 +193,7 @@ export default function ProfilePage() {
                     ),
                   )
                     .sort(([, countA], [, countB]) => countB - countA)
-                    .slice(0, 5) // Increased to Top 5
+                    .slice(0, 5)
                     .map(([brand, count], index) => (
                       <div
                         key={brand}
@@ -227,7 +224,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* 3. RECENT ACQUISITIONS */}
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-default-500">

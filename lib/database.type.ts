@@ -5,7 +5,7 @@ export interface Clothes {
   brand?: string;
   category: string;
   price?: number;
-  purchaseDate?: string; 
+  purchaseDate?: string;
   colors?: string[];
   season?: string;
   size?: string;
@@ -27,7 +27,6 @@ export interface Wardrobe {
   updatedAt: string;
 }
 
-// NEW: Junction table types
 export interface WardrobeClothes {
   id: string;
   wardrobeId: string;

@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import Hero from "@/components/layout/Hero";
-
+import LandingPage from "@/components/layout/LandingPage";
 export default async function HomePage() {
   const session = await auth();
 
@@ -9,9 +8,5 @@ export default async function HomePage() {
     redirect("/closet");
   }
 
-  return (
-    <>
-      <Hero />
-    </>
-  );
+  return <LandingPage />;
 }

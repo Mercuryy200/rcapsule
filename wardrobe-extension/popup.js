@@ -63,7 +63,11 @@ document.getElementById("scanBtn").addEventListener("click", async () => {
         "twitch.com",
         "pinterest.com",
       ];
-      if (UNSUPPORTED_SITES.some((site) => hostname.includes(site))) {
+      if (
+        UNSUPPORTED_SITES.some(
+          (site) => hostname === site || hostname.endsWith("." + site),
+        )
+      ) {
         status.textContent = "This doesn't look like a clothing store!";
         status.className = "error";
         return;
