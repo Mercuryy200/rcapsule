@@ -11,7 +11,7 @@ import {
 } from "@heroui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
-import { colors, occasions, seasons, categories } from "@/lib/data";
+import { colors, occasions, seasons, categories, colorMap } from "@/lib/data";
 
 // Re-exporting this interface so it can be used by the parent page
 export interface FilterOptions {
@@ -169,7 +169,7 @@ export default function ClothesFilter({
                   <div className="flex items-center gap-2">
                     <div
                       className="w-3 h-3 border border-default-200 shadow-sm"
-                      style={{ backgroundColor: color }}
+                      style={{ background: colorMap[color] || color }}
                     />
                     {color}
                   </div>

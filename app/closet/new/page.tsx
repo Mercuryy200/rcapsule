@@ -1,25 +1,40 @@
 "use client";
+
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Button, Input, Select, SelectItem, Tabs, Tab } from "@heroui/react";
-import { ArrowLeftIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import {
+  Button,
+  Input,
+  Select,
+  SelectItem,
+  Tabs,
+  Tab,
+  Spinner,
+} from "@heroui/react";
+import {
+  ArrowLeftIcon,
+  SparklesIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import { colors, occasions, seasons, categories } from "@/lib/data";
 import { ImageUpload } from "@/components/closet/ImageUpload";
 
 export default function NewItemPage() {
   const { status } = useSession();
   const router = useRouter();
+
   const [saving, setSaving] = useState(false);
   const [imageMethod, setImageMethod] = useState<"upload" | "url">("upload");
   const [isScraping, setIsScraping] = useState(false);
 
+  // Consolidated form state
   const [formData, setFormData] = useState({
     name: "",
     category: "",
     price: "",
     colors: [] as string[],
-    season: "",
+    season: [] as string[],
     size: "",
     link: "",
     brand: "",
@@ -33,9 +48,7 @@ export default function NewItemPage() {
   }, [status, router]);
 
   const handleAutoFill = async () => {
-    if (!formData.link) {
-      return;
-    }
+    if (!formData.link) return;
 
     setIsScraping(true);
     try {
@@ -48,12 +61,10 @@ export default function NewItemPage() {
       const data = await res.json();
 
       if (res.status === 403 || data.blocked) {
-        // Only alert on failure
         alert(
           data.message ||
             "Unable to import from this site. Please enter details manually.",
         );
-
         if (data.prefill) {
           setFormData((prev) => ({
             ...prev,
@@ -62,13 +73,12 @@ export default function NewItemPage() {
           }));
         }
       } else if (res.ok && !data.blocked) {
-        // Silent success - just fill the form
         setFormData((prev) => ({
           ...prev,
           name: data.name || prev.name,
           brand: data.brand || prev.brand,
           imageUrl: data.imageUrl || prev.imageUrl,
-          price: data.price || prev.price,
+          price: data.price ? String(data.price) : prev.price,
           link: data.link || prev.link,
         }));
 
@@ -94,11 +104,14 @@ export default function NewItemPage() {
       ...formData,
       price: formData.price ? parseFloat(formData.price) : null,
       brand: formData.brand.trim() || null,
-      season: formData.season || null,
+      season: formData.season.length > 0 ? formData.season : null,
       size: formData.size || null,
       link: formData.link || null,
       imageUrl: formData.imageUrl || null,
       purchaseDate: formData.purchaseDate || null,
+      colors: formData.colors.length > 0 ? formData.colors : null,
+      placesToWear:
+        formData.placesToWear.length > 0 ? formData.placesToWear : null,
     };
 
     try {
@@ -119,21 +132,29 @@ export default function NewItemPage() {
     }
   };
 
-  if (status === "loading") return null;
+  if (status === "loading") {
+    return (
+      <div className="w-full h-screen flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-6 py-8">
-      <div className="flex items-center gap-4 mb-12">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-8 sm:mb-12">
         <Button
           isIconOnly
           variant="light"
           radius="full"
           onPress={() => router.back()}
+          className="text-default-500 hover:text-foreground"
         >
           <ArrowLeftIcon className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-black uppercase tracking-tighter italic">
+          <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter italic">
             New Acquisition
           </h1>
           <p className="text-xs uppercase tracking-widest text-default-500">
@@ -142,31 +163,31 @@ export default function NewItemPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
         <div className="lg:col-span-5 flex flex-col w-full gap-6">
-          <div className="relative w-full">
-            <div className="flex justify-center mb-4">
-              <Tabs
-                selectedKey={imageMethod}
-                onSelectionChange={(key) =>
-                  setImageMethod(key as "upload" | "url")
-                }
-                radius="sm"
-                size="sm"
-                classNames={{
-                  base: "w-auto",
-                  tabList: "bg-default-100 p-1 gap-2",
-                  cursor: "bg-foreground",
-                  tab: "px-6 h-9",
-                  tabContent:
-                    "group-data-[selected=true]:text-background text-default-600 font-medium",
-                }}
-              >
-                <Tab key="upload" title="Upload File" />
-                <Tab key="url" title="External URL" />
-              </Tabs>
-            </div>
-            <div className="aspect-[3/4] bg-content2 border-2 border-dashed border-default-300 rounded-lg overflow-hidden">
+          <div className="relative w-full top-6">
+            <Tabs
+              fullWidth
+              selectedKey={imageMethod}
+              onSelectionChange={(key) =>
+                setImageMethod(key as "upload" | "url")
+              }
+              radius="sm"
+              size="md"
+              classNames={{
+                base: "w-full mb-4",
+                tabList: "bg-default-100 p-1 gap-2",
+                cursor: "bg-background shadow-sm",
+                tab: "h-9",
+                tabContent:
+                  "group-data-[selected=true]:text-foreground text-default-500 font-medium",
+              }}
+            >
+              <Tab key="upload" title="Upload File" />
+              <Tab key="url" title="External URL" />
+            </Tabs>
+
+            <div className="aspect-[3/4] bg-content2 border border-dashed border-default-300 rounded-lg overflow-hidden relative transition-colors hover:border-default-400">
               {imageMethod === "upload" ? (
                 <div className="w-full h-full flex items-center justify-center">
                   <ImageUpload
@@ -179,31 +200,33 @@ export default function NewItemPage() {
                   />
                 </div>
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-8">
+                <div className="w-full h-full flex flex-col items-center justify-center p-6">
                   {formData.imageUrl ? (
                     <div className="relative w-full h-full group">
                       <img
                         src={formData.imageUrl}
                         alt="Preview"
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-cover rounded-md"
                       />
+                      {/* Remove Button - Always visible on mobile, hover on desktop */}
                       <Button
+                        isIconOnly
                         size="sm"
                         color="danger"
-                        variant="flat"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        variant="solid"
+                        className="absolute top-2 right-2 shadow-lg z-10"
                         onPress={() =>
                           setFormData({ ...formData, imageUrl: "" })
                         }
                       >
-                        Remove
+                        <XMarkIcon className="w-4 h-4" />
                       </Button>
                     </div>
                   ) : (
-                    <div className="w-full max-w-md space-y-4">
+                    <div className="w-full space-y-4">
                       <Input
                         label="Image URL"
-                        placeholder="https://example.com/image.jpg"
+                        placeholder="https://"
                         variant="bordered"
                         radius="sm"
                         value={formData.imageUrl}
@@ -211,8 +234,7 @@ export default function NewItemPage() {
                           setFormData({ ...formData, imageUrl: e.target.value })
                         }
                         classNames={{
-                          input: "text-sm",
-                          inputWrapper: "border-default-300",
+                          inputWrapper: "bg-background",
                         }}
                       />
                       <p className="text-xs text-default-400 text-center">
@@ -223,30 +245,32 @@ export default function NewItemPage() {
                 </div>
               )}
             </div>
-          </div>
 
-          <p className="text-[10px] text-default-400 text-center uppercase tracking-wider">
-            Supported: JPG, PNG, WEBP • Max 10MB
-          </p>
+            <p className="mt-4 text-[10px] text-default-400 text-center uppercase tracking-wider">
+              Supported: JPG, PNG, WEBP • Max 10MB
+            </p>
+          </div>
         </div>
 
-        <div className="lg:col-span-7 flex flex-col gap-8">
-          <section className="pb-8 border-b border-black/10">
-            <div className="flex items-center gap-2 mb-6">
-              <SparklesIcon className="w-4 h-4 text-black/60" />
-              <h3 className="text-[10px] font-light uppercase tracking-[0.25em] text-black/60">
+        {/* Right Column: Form Data */}
+        <div className="lg:col-span-7 flex flex-col gap-8 sm:gap-10">
+          {/* Auto Import Section */}
+          <section className="pb-8 border-b border-divider">
+            <div className="flex items-center gap-2 mb-4">
+              <SparklesIcon className="w-4 h-4 text-primary" />
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
                 Auto Import
               </h3>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <Input
-                placeholder="Paste product URL"
+                placeholder="Paste product URL to auto-fill"
                 variant="bordered"
-                radius="none"
+                radius="sm"
                 classNames={{
-                  input: "text-sm font-light",
+                  input: "text-sm",
                   inputWrapper:
-                    "border-black/20 hover:border-black/40 bg-white",
+                    "border-default-300 bg-background hover:border-default-400",
                 }}
                 value={formData.link}
                 onChange={(e) =>
@@ -254,8 +278,8 @@ export default function NewItemPage() {
                 }
               />
               <Button
-                radius="none"
-                className="bg-black text-white hover:bg-black/90 font-light tracking-[0.15em] uppercase text-[10px] px-8 h-[44px]"
+                radius="sm"
+                className="bg-foreground text-background font-medium tracking-wide uppercase text-xs px-6 sm:px-8"
                 isLoading={isScraping}
                 onPress={handleAutoFill}
               >
@@ -264,12 +288,13 @@ export default function NewItemPage() {
             </div>
           </section>
 
+          {/* Core Details */}
           <section className="space-y-6">
-            <h3 className="text-xs font-bold uppercase tracking-widest border-b border-divider pb-2">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-default-500">
               Item Details
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <Input
                 isRequired
                 label="Name"
@@ -277,7 +302,7 @@ export default function NewItemPage() {
                 labelPlacement="outside"
                 variant="bordered"
                 radius="sm"
-                classNames={{ inputWrapper: "h-12 border-default-300" }}
+                classNames={{ inputWrapper: "border-default-300" }}
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
@@ -289,7 +314,7 @@ export default function NewItemPage() {
                 labelPlacement="outside"
                 variant="bordered"
                 radius="sm"
-                classNames={{ inputWrapper: "h-12 border-default-300" }}
+                classNames={{ inputWrapper: "border-default-300" }}
                 value={formData.brand}
                 onChange={(e) =>
                   setFormData({ ...formData, brand: e.target.value })
@@ -297,15 +322,15 @@ export default function NewItemPage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <Select
                 isRequired
                 label="Category"
                 labelPlacement="outside"
                 variant="bordered"
                 radius="sm"
-                placeholder="Select..."
-                classNames={{ trigger: "h-12 border-default-300" }}
+                placeholder="Select category"
+                classNames={{ trigger: "border-default-300" }}
                 selectedKeys={formData.category ? [formData.category] : []}
                 onChange={(e) =>
                   setFormData({ ...formData, category: e.target.value })
@@ -322,7 +347,7 @@ export default function NewItemPage() {
                 labelPlacement="outside"
                 variant="bordered"
                 radius="sm"
-                classNames={{ inputWrapper: "h-12 border-default-300" }}
+                classNames={{ inputWrapper: "border-default-300" }}
                 startContent={
                   <span className="text-default-400 text-sm">$</span>
                 }
@@ -332,14 +357,15 @@ export default function NewItemPage() {
                 }
               />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <Input
                 type="date"
                 label="Purchase Date"
                 labelPlacement="outside"
                 variant="bordered"
-                radius="none"
-                classNames={{ inputWrapper: "h-12 border-default-300" }}
+                radius="sm"
+                classNames={{ inputWrapper: "border-default-300" }}
                 value={formData.purchaseDate}
                 onChange={(e) =>
                   setFormData({ ...formData, purchaseDate: e.target.value })
@@ -350,8 +376,8 @@ export default function NewItemPage() {
                 placeholder="Ex: M, 32, 8"
                 labelPlacement="outside"
                 variant="bordered"
-                radius="none"
-                classNames={{ inputWrapper: "h-12 border-default-300" }}
+                radius="sm"
+                classNames={{ inputWrapper: "border-default-300" }}
                 value={formData.size}
                 onChange={(e) =>
                   setFormData({ ...formData, size: e.target.value })
@@ -360,21 +386,22 @@ export default function NewItemPage() {
             </div>
           </section>
 
+          {/* Attributes */}
           <section className="space-y-6">
-            <h3 className="text-xs font-bold uppercase tracking-widest border-b border-divider pb-2">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-default-500">
               Attributes
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <Select
                 label="Colors"
                 labelPlacement="outside"
                 variant="bordered"
                 radius="sm"
-                placeholder="Select..."
+                placeholder="Select colors"
                 selectionMode="multiple"
                 classNames={{ trigger: "border-default-300" }}
-                selectedKeys={new Set(formData.colors || [])}
+                selectedKeys={new Set(formData.colors)}
                 onSelectionChange={(keys) => {
                   setFormData({
                     ...formData,
@@ -385,10 +412,11 @@ export default function NewItemPage() {
                 {colors.map((color) => (
                   <SelectItem
                     key={color}
+                    textValue={color}
                     startContent={
                       <div
-                        className="w-3 h-3 rounded-full border border-default-300"
-                        style={{ background: color }}
+                        className="w-4 h-4 rounded-full border border-default-200 shadow-sm"
+                        style={{ background: colorMap[color] || color }}
                       />
                     }
                   >
@@ -396,51 +424,59 @@ export default function NewItemPage() {
                   </SelectItem>
                 ))}
               </Select>
-              <Select
-                label="Season"
-                labelPlacement="outside"
-                variant="bordered"
-                radius="sm"
-                placeholder="Select..."
-                classNames={{ trigger: "border-default-300" }}
-                selectedKeys={formData.season ? [formData.season] : []}
-                onChange={(e) =>
-                  setFormData({ ...formData, season: e.target.value })
-                }
-              >
-                {seasons.map((season) => (
-                  <SelectItem key={season}>{season}</SelectItem>
-                ))}
-              </Select>
-              <Select
-                label="Occasions"
-                labelPlacement="outside"
-                variant="bordered"
-                radius="sm"
-                placeholder="Where will you wear this?"
-                selectionMode="multiple"
-                classNames={{ trigger: "border-default-300" }}
-                selectedKeys={new Set(formData.placesToWear || [])}
-                onSelectionChange={(keys) => {
-                  setFormData({
-                    ...formData,
-                    placesToWear: Array.from(keys) as string[],
-                  });
-                }}
-              >
-                {occasions.map((occ) => (
-                  <SelectItem key={occ}>{occ}</SelectItem>
-                ))}
-              </Select>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <Select
+                  label="Season"
+                  labelPlacement="outside"
+                  variant="bordered"
+                  radius="sm"
+                  placeholder="Select seasons"
+                  selectionMode="multiple"
+                  classNames={{ trigger: "border-default-300" }}
+                  selectedKeys={new Set(formData.season)}
+                  onSelectionChange={(keys) =>
+                    setFormData({
+                      ...formData,
+                      season: Array.from(keys) as string[],
+                    })
+                  }
+                >
+                  {seasons.map((season) => (
+                    <SelectItem key={season}>{season}</SelectItem>
+                  ))}
+                </Select>
+                <Select
+                  label="Occasions"
+                  labelPlacement="outside"
+                  variant="bordered"
+                  radius="sm"
+                  placeholder="Select occasions"
+                  selectionMode="multiple"
+                  classNames={{ trigger: "border-default-300" }}
+                  selectedKeys={new Set(formData.placesToWear)}
+                  onSelectionChange={(keys) => {
+                    setFormData({
+                      ...formData,
+                      placesToWear: Array.from(keys) as string[],
+                    });
+                  }}
+                >
+                  {occasions.map((occ) => (
+                    <SelectItem key={occ}>{occ}</SelectItem>
+                  ))}
+                </Select>
+              </div>
             </div>
           </section>
 
-          <div className="pt-8 flex flex-col sm:flex-row gap-4 mt-auto">
+          {/* Actions */}
+          <div className="pt-8 flex flex-col-reverse sm:flex-row gap-4 mt-auto">
             <Button
               fullWidth
               variant="bordered"
               radius="sm"
-              className="h-12 uppercase tracking-widest font-medium border-default-400 hover:bg-default-100"
+              className="h-12 uppercase tracking-widest font-medium border-default-300 hover:bg-default-100"
               onPress={() => router.back()}
             >
               Cancel
