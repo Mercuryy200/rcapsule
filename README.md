@@ -1,89 +1,39 @@
-# Closet Organizer
+# Capsule — Your Digital Closet
 
 A full-stack wardrobe management application that helps you catalog, organize, and create outfit combinations from your clothing collection.
 
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://closet-organizer-rima-nafougui.vercel.app)
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://closetwardrobe.vercel.app)
 [![GitHub](https://img.shields.io/badge/github-repo-blue)](https://github.com/Mercuryy200/ClosetOrganizer)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Features
 
 - **Secure Authentication**: Sign in with Google or GitHub using NextAuth.js or with email
-- **Wardrobe Cataloging**: Add, edit, and delete clothing items with image uploads
+- **Wardrobe Cataloging**: Add, edit, and delete clothing items with image uploads and detailed metadata (materials, condition, care instructions)
 - **Smart Organization**: Filter items by category, color, season, and custom tags
-- **Outfit Creation**: Combine clothing items to create and save outfit combinations
+- **Outfit Creation**: Combine clothing items to create and save outfit combinations with one-per-category selection logic
+- **Visual Collage Builder**: Create outfit collages with drag-and-drop positioning and resizing
+- **Chrome Extension**: Import items directly from online shopping sites
 - **Advanced Search**: Quickly find items across your entire wardrobe
+- **Analytics Dashboard**: Track wear frequency, wardrobe stats, and outfit trends
 - **Responsive Design**: Seamless experience across desktop, tablet, and mobile devices
 - **Real-time Updates**: Instant synchronization of your wardrobe data
 
 ## Tech Stack
 
-- **Frontend**: Next.js (App Router), React, Tailwind CSS
+- **Frontend**: Next.js (App Router), React , TypeScript
+- **UI Library**: NextUI (HeroUI), Tailwind CSS
 - **Backend**: Supabase (PostgreSQL)
 - **Authentication**: NextAuth.js with OAuth (Google, GitHub)
+- **Image Processing**: html2canvas for collage generation
+- **File Storage**: Supabase Storage
+- **Chrome Extension**: Manifest V3
 - **Deployment**: Vercel
 - **Performance**: 95+ Lighthouse score
 
-## Getting Started
+## Live Demo
 
-### Prerequisites
-
-- Node.js 18+ and npm/yarn/pnpm
-- A Supabase account and project
-- Google and/or GitHub OAuth credentials
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/Mercuryy200/ClosetOrganizer.git
-cd ClosetOrganizer
-```
-
-2. Install dependencies:
-```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
-```
-
-3. Set up environment variables:
-
-Create a `.env.local` file in the root directory:
-
-```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# NextAuth
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your_nextauth_secret
-
-# OAuth Providers
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-```
-
-4. Set up the database:
-
-Run the SQL migrations in your Supabase project to create the necessary tables and Row Level Security policies.
-
-5. Run the development server:
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Visit the live application at [capsulewardrobe.vercel.app](https://capsulewardrobe.vercel.app) to see Capsule in action.
 
 ## Database Schema
 
@@ -107,20 +57,6 @@ The application is deployed on Vercel with automatic CI/CD:
 - Optimized image loading and compression
 - Lighthouse score: 95+
 - Fast page loads and smooth interactions
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contact
 
