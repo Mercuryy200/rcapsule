@@ -31,6 +31,7 @@ import {
   LockClosedIcon,
   EllipsisHorizontalIcon,
   CheckCircleIcon,
+  CurrencyDollarIcon,
 } from "@heroicons/react/24/outline";
 
 interface ClothingItem {
@@ -56,6 +57,11 @@ interface Wardrobe {
   isPublic: boolean;
   coverImage?: string;
   clothes: ClothingItem[];
+  stats?: {
+    totalValue: number;
+    itemCount: number;
+    colorAnalysis: { color: string; count: number; percentage: number }[];
+  };
 }
 
 export default function WardrobePage() {
@@ -130,7 +136,7 @@ export default function WardrobePage() {
     try {
       const response = await fetch(
         `/api/wardrobes/${wardrobeId}/clothes/${clothesId}`,
-        { method: "DELETE" },
+        { method: "DELETE" }
       );
       if (response.ok) {
         fetchWardrobe();
@@ -206,7 +212,7 @@ export default function WardrobePage() {
 
   const itemsNotInWardrobe = availableClothes.filter(
     (item) =>
-      !wardrobe.clothes.some((wardrobeItem) => wardrobeItem.id === item.id),
+      !wardrobe.clothes.some((wardrobeItem) => wardrobeItem.id === item.id)
   );
 
   return (
@@ -259,7 +265,15 @@ export default function WardrobePage() {
                     {wardrobe.clothes.length === 1 ? "Piece" : "Pieces"}
                   </div>
                 </div>
-
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/20 backdrop-blur-xl text-emerald-100 text-xs font-bold uppercase tracking-wider border border-emerald-500/30 rounded-full">
+                  <CurrencyDollarIcon className="w-3.5 h-3.5" />
+                  <span>
+                    {wardrobe.stats?.totalValue?.toLocaleString("en-CA", {
+                      style: "currency",
+                      currency: "CAD",
+                    }) || "$0.00"}
+                  </span>
+                </div>
                 {/* Title */}
                 <h1 className="text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight text-white drop-shadow-2xl leading-none">
                   {wardrobe.title}
