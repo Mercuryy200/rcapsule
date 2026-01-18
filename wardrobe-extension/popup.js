@@ -1,49 +1,388 @@
+// ============================================================================
+// CONSTANTS & CONFIGURATION
+// ============================================================================
+
+const CONFIG = {
+  API_URL: "https://vesticloset.vercel.app/api/extension/import",
+  TIMEOUT_MS: 10000,
+  CLOSE_DELAY_MS: 1500,
+};
+
+const CATEGORIES = [
+  "t-shirt",
+  "blouse",
+  "shirt",
+  "tank top",
+  "bodysuit",
+  "crop top",
+  "corset",
+  "vest",
+  "tights",
+  "tube top",
+  "sweater",
+  "cardigan",
+  "hoodie",
+  "sweatshirt",
+  "jeans",
+  "pants",
+  "trousers",
+  "skirt",
+  "shorts",
+  "leggings",
+  "sweatpants",
+  "joggers",
+  "dress",
+  "jumpsuit",
+  "romper",
+  "co-ord set",
+  "jacket",
+  "coat",
+  "blazer",
+  "trench",
+  "puffer",
+  "bomber",
+  "sneakers",
+  "boots",
+  "heels",
+  "sandals",
+  "loafers",
+  "flats",
+  "slides",
+  "bag",
+  "belt",
+  "hat",
+  "scarf",
+  "sunglasses",
+  "jewelry",
+  "beanie",
+  "cap",
+  "underwear",
+  "swimwear",
+  "activewear",
+  "purse",
+  "wallet",
+  "necklace",
+  "earrings",
+  "card holder",
+  "watch",
+  "bracelet",
+  "ring",
+];
+
+const ACCESSORIES = [
+  "bag",
+  "belt",
+  "hat",
+  "scarf",
+  "sunglasses",
+  "jewelry",
+  "beanie",
+  "cap",
+  "purse",
+  "wallet",
+  "necklace",
+  "earrings",
+  "card holder",
+  "watch",
+  "bracelet",
+  "ring",
+];
+
+const UNSUPPORTED_SITES = [
+  "google.com",
+  "youtube.com",
+  "facebook.com",
+  "instagram.com",
+  "tiktok.com",
+  "x.com",
+  "twitch.com",
+  "pinterest.com",
+];
+
+// ============================================================================
+// STORAGE MANAGER (Inline version)
+// ============================================================================
+
+const StorageManager = {
+  KEYS: {
+    RECENT_SCANS: "recent_scans",
+    RATE_LIMIT: "rate_limit_data",
+    OFFLINE_QUEUE: "offline_queue",
+  },
+
+  CONFIG: {
+    MAX_RECENT_SCANS: 10,
+    RATE_LIMIT_WINDOW: 60000,
+    MAX_REQUESTS_PER_WINDOW: 10,
+    CACHE_EXPIRY: 24 * 60 * 60 * 1000,
+  },
+
+  async saveRecentScan(productData) {
+    try {
+      const result = await chrome.storage.local.get(this.KEYS.RECENT_SCANS);
+      let recentScans = result[this.KEYS.RECENT_SCANS] || [];
+
+      const scanEntry = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        data: productData,
+        url: productData.link,
+      };
+
+      recentScans.unshift(scanEntry);
+      recentScans = recentScans.slice(0, this.CONFIG.MAX_RECENT_SCANS);
+
+      await chrome.storage.local.set({ [this.KEYS.RECENT_SCANS]: recentScans });
+      return true;
+    } catch (error) {
+      console.error("Error saving recent scan:", error);
+      return false;
+    }
+  },
+
+  async getCachedScan(url) {
+    try {
+      const result = await chrome.storage.local.get(this.KEYS.RECENT_SCANS);
+      const recentScans = result[this.KEYS.RECENT_SCANS] || [];
+      const cached = recentScans.find((scan) => scan.url === url);
+
+      if (cached) {
+        const age = Date.now() - new Date(cached.timestamp).getTime();
+        if (age < this.CONFIG.CACHE_EXPIRY) {
+          return cached.data;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error("Error getting cached scan:", error);
+      return null;
+    }
+  },
+
+  async checkRateLimit() {
+    try {
+      const result = await chrome.storage.local.get(this.KEYS.RATE_LIMIT);
+      const rateLimitData = result[this.KEYS.RATE_LIMIT] || {
+        requests: [],
+        windowStart: Date.now(),
+      };
+
+      const now = Date.now();
+      const windowStart = rateLimitData.windowStart;
+
+      if (now - windowStart > this.CONFIG.RATE_LIMIT_WINDOW) {
+        rateLimitData.requests = [];
+        rateLimitData.windowStart = now;
+      }
+
+      rateLimitData.requests = rateLimitData.requests.filter(
+        (timestamp) => now - timestamp < this.CONFIG.RATE_LIMIT_WINDOW,
+      );
+
+      const requestCount = rateLimitData.requests.length;
+      const allowed = requestCount < this.CONFIG.MAX_REQUESTS_PER_WINDOW;
+      const remainingRequests = Math.max(
+        0,
+        this.CONFIG.MAX_REQUESTS_PER_WINDOW - requestCount,
+      );
+      const resetTime = windowStart + this.CONFIG.RATE_LIMIT_WINDOW;
+
+      return {
+        allowed,
+        remainingRequests,
+        resetTime,
+        currentCount: requestCount,
+      };
+    } catch (error) {
+      console.error("Error checking rate limit:", error);
+      return {
+        allowed: true,
+        remainingRequests: this.CONFIG.MAX_REQUESTS_PER_WINDOW,
+      };
+    }
+  },
+
+  async recordRequest() {
+    try {
+      const result = await chrome.storage.local.get(this.KEYS.RATE_LIMIT);
+      const rateLimitData = result[this.KEYS.RATE_LIMIT] || {
+        requests: [],
+        windowStart: Date.now(),
+      };
+
+      rateLimitData.requests.push(Date.now());
+      await chrome.storage.local.set({ [this.KEYS.RATE_LIMIT]: rateLimitData });
+      return true;
+    } catch (error) {
+      console.error("Error recording request:", error);
+      return false;
+    }
+  },
+
+  async addToOfflineQueue(productData) {
+    try {
+      const result = await chrome.storage.local.get(this.KEYS.OFFLINE_QUEUE);
+      let queue = result[this.KEYS.OFFLINE_QUEUE] || [];
+
+      queue.push({
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        data: productData,
+      });
+
+      await chrome.storage.local.set({ [this.KEYS.OFFLINE_QUEUE]: queue });
+      return true;
+    } catch (error) {
+      console.error("Error adding to offline queue:", error);
+      return false;
+    }
+  },
+
+  async getOfflineQueue() {
+    try {
+      const result = await chrome.storage.local.get(this.KEYS.OFFLINE_QUEUE);
+      return result[this.KEYS.OFFLINE_QUEUE] || [];
+    } catch (error) {
+      console.error("Error getting offline queue:", error);
+      return [];
+    }
+  },
+
+  async clearOfflineQueue() {
+    try {
+      await chrome.storage.local.remove(this.KEYS.OFFLINE_QUEUE);
+      return true;
+    } catch (error) {
+      console.error("Error clearing offline queue:", error);
+      return false;
+    }
+  },
+};
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
 function detectCategory(name) {
+  if (!name) return "Uncategorized";
+
   const text = name.toLowerCase();
+  const sortedCategories = [...CATEGORIES].sort((a, b) => b.length - a.length);
 
-  if (
-    text.includes("dress") ||
-    text.includes("gown") ||
-    text.includes("romper")
-  )
-    return "Dresses";
-  if (
-    text.includes("jacket") ||
-    text.includes("coat") ||
-    text.includes("blazer") ||
-    text.includes("parka")
-  )
-    return "Outerwear";
-  if (
-    text.includes("pant") ||
-    text.includes("jean") ||
-    text.includes("skirt") ||
-    text.includes("short") ||
-    text.includes("legging")
-  )
-    return "Bottoms";
-  if (
-    text.includes("shoe") ||
-    text.includes("sneaker") ||
-    text.includes("boot") ||
-    text.includes("sandal") ||
-    text.includes("heel")
-  )
-    return "Shoes";
-  if (
-    text.includes("bag") ||
-    text.includes("belt") ||
-    text.includes("hat") ||
-    text.includes("scarf")
-  )
-    return "Accessories";
+  for (const cat of sortedCategories) {
+    if (text.includes(cat)) {
+      return cat.charAt(0).toUpperCase() + cat.slice(1);
+    }
+  }
 
-  return "Tops";
+  return "Uncategorized";
 }
-document.getElementById("scanBtn").addEventListener("click", async () => {
-  const status = document.getElementById("status");
-  status.textContent = "Scanning page...";
-  status.className = "loading";
+
+function isUnsupportedSite(hostname) {
+  return UNSUPPORTED_SITES.some(
+    (site) => hostname === site || hostname.endsWith(`.${site}`),
+  );
+}
+
+function sanitizeProductData(data) {
+  return {
+    name: String(data.name || "").trim(),
+    brand: String(data.brand || "").trim(),
+    price: String(data.price || "").trim(),
+    size: String(data.size || "").trim(),
+    link: String(data.link || "").trim(),
+    imageUrl: String(data.imageUrl || "").trim(),
+    category: String(data.category || "Uncategorized"),
+  };
+}
+
+function setStatus(message, type = "") {
+  const statusEl = document.getElementById("status");
+  if (statusEl) {
+    statusEl.textContent = message;
+    statusEl.className = type;
+  }
+}
+
+function switchView(viewToShow) {
+  const views = ["scanView", "formView"];
+  views.forEach((viewId) => {
+    const el = document.getElementById(viewId);
+    if (el) {
+      el.classList.toggle("hidden", viewId !== viewToShow);
+    }
+  });
+}
+
+function checkOnlineStatus() {
+  return navigator.onLine;
+}
+
+function showOfflineIndicator(show) {
+  const statusEl = document.getElementById("status");
+  if (show && statusEl) {
+    statusEl.innerHTML =
+      "⚠️ You are offline. Item will be saved when connection is restored.";
+    statusEl.className = "error";
+  }
+}
+
+// ============================================================================
+// DOM MANIPULATION
+// ============================================================================
+
+function populateForm(data) {
+  const fields = {
+    inputName: data.name,
+    inputBrand: data.brand,
+    inputPrice: data.price,
+    inputSize: data.size,
+    inputLink: data.link,
+    inputCategory: data.category,
+    inputImgUrl: data.imageUrl,
+  };
+
+  Object.entries(fields).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value || "";
+  });
+
+  const imgPreview = document.getElementById("previewImg");
+  const imgPlaceholder = document.getElementById("imgPlaceholder");
+
+  if (imgPreview && data.imageUrl) {
+    imgPreview.src = data.imageUrl;
+    imgPreview.style.display = "block";
+    if (imgPlaceholder) imgPlaceholder.style.display = "none";
+  } else if (imgPreview) {
+    imgPreview.style.display = "none";
+    if (imgPlaceholder) imgPlaceholder.style.display = "block";
+  }
+}
+
+function getFormData() {
+  const isWishlist = document.getElementById("inputWishlist")?.checked || false;
+
+  return {
+    name: document.getElementById("inputName")?.value || "",
+    brand: document.getElementById("inputBrand")?.value || "",
+    price: document.getElementById("inputPrice")?.value || "",
+    size: document.getElementById("inputSize")?.value || "",
+    link: document.getElementById("inputLink")?.value || "",
+    imageUrl: document.getElementById("inputImgUrl")?.value || "",
+    category:
+      document.getElementById("inputCategory")?.value || "Uncategorized",
+    status: isWishlist ? "wishlist" : "owned",
+    purchaseDate: isWishlist ? null : new Date().toISOString().split("T")[0],
+  };
+}
+
+// ============================================================================
+// MAIN FUNCTIONS
+// ============================================================================
+
+async function scanPage() {
+  setStatus("Scanning page...", "loading");
 
   try {
     const [tab] = await chrome.tabs.query({
@@ -51,128 +390,219 @@ document.getElementById("scanBtn").addEventListener("click", async () => {
       currentWindow: true,
     });
 
+    if (!tab?.id) {
+      throw new Error("No active tab found");
+    }
+
+    // Check cache first
     if (tab.url) {
-      const hostname = new URL(tab.url).hostname;
-      const UNSUPPORTED_SITES = [
-        "google.com",
-        "youtube.com",
-        "facebook.com",
-        "instagram.com",
-        "tiktok.com",
-        "x.com",
-        "twitch.com",
-        "pinterest.com",
-      ];
-      if (
-        UNSUPPORTED_SITES.some(
-          (site) => hostname === site || hostname.endsWith("." + site),
-        )
-      ) {
-        status.textContent = "This doesn't look like a clothing store!";
-        status.className = "error";
+      const cached = await StorageManager.getCachedScan(tab.url);
+      if (cached) {
+        console.log("Using cached scan data");
+        const sanitized = sanitizeProductData(cached);
+        const detectedCategory = detectCategory(sanitized.name);
+        sanitized.category = detectedCategory;
+
+        if (ACCESSORIES.includes(detectedCategory.toLowerCase())) {
+          sanitized.size = "O/S";
+        }
+
+        populateForm(sanitized);
+        switchView("formView");
+        setStatus("✓ Loaded from cache", "success");
+        setTimeout(() => setStatus(""), 2000);
         return;
       }
     }
+
+    // Check for unsupported sites
+    if (tab.url) {
+      const hostname = new URL(tab.url).hostname;
+      if (isUnsupportedSite(hostname)) {
+        setStatus("This doesn't look like a clothing store!", "error");
+        return;
+      }
+    }
+
+    // Execute content script
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       function: extractProductData,
     });
 
-    const data = results[0].result;
+    const data = results?.[0]?.result;
 
-    if (!data || !data.name) {
-      status.textContent = "Could not find product details.";
-      status.className = "error";
+    if (!data?.name) {
+      setStatus("Could not find product details.", "error");
       return;
     }
 
-    document.getElementById("inputName").value = data.name || "";
-    document.getElementById("inputBrand").value = data.brand || "";
-    document.getElementById("inputPrice").value = data.price || "";
-    document.getElementById("inputSize").value = data.size || "";
-    document.getElementById("inputLink").value = data.link || "";
-    const detectedCat = detectCategory(data.name || "");
-    document.getElementById("inputCategory").value = detectedCat;
+    // Process data
+    const sanitized = sanitizeProductData(data);
+    const detectedCategory = detectCategory(sanitized.name);
+    sanitized.category = detectedCategory;
 
-    const imgPreview = document.getElementById("previewImg");
-    if (data.imageUrl) {
-      imgPreview.src = data.imageUrl;
-      document.getElementById("inputImgUrl").value = data.imageUrl;
-      imgPreview.style.display = "block";
-    } else {
-      imgPreview.style.display = "none";
+    if (ACCESSORIES.includes(detectedCategory.toLowerCase())) {
+      sanitized.size = "O/S";
     }
 
-    document.getElementById("scanView").classList.add("hidden");
-    document.getElementById("formView").classList.remove("hidden");
-    status.textContent = "";
-  } catch (error) {
-    console.error(error);
-    status.textContent = "Error scanning page.";
-    status.className = "error";
-  }
-});
+    // Save to cache
+    await StorageManager.saveRecentScan(sanitized);
 
-document.getElementById("saveBtn").addEventListener("click", async () => {
-  const status = document.getElementById("status");
+    // Populate form and switch view
+    populateForm(sanitized);
+    switchView("formView");
+    setStatus("");
+  } catch (error) {
+    console.error("Scan error:", error);
+    setStatus("Error scanning page. Please try again.", "error");
+  }
+}
+
+async function saveProduct() {
   const saveBtn = document.getElementById("saveBtn");
+
+  if (!saveBtn) return;
 
   saveBtn.disabled = true;
   saveBtn.textContent = "Saving...";
-  status.textContent = "";
+  setStatus("", "");
 
-  const wishlistCheckbox = document.getElementById("inputWishlist");
-  const isWishlist = wishlistCheckbox ? wishlistCheckbox.checked : false;
+  const productData = getFormData();
 
-  console.log("Saving Item... Wishlist Mode:", isWishlist);
+  // Check online status
+  if (!checkOnlineStatus()) {
+    await StorageManager.addToOfflineQueue(productData);
+    setStatus("Saved offline. Will sync when online.", "success");
+    saveBtn.textContent = "Saved Offline";
+    setTimeout(() => window.close(), CONFIG.CLOSE_DELAY_MS);
+    return;
+  }
 
-  const finalData = {
-    name: document.getElementById("inputName").value,
-    brand: document.getElementById("inputBrand").value,
-    price: document.getElementById("inputPrice").value,
-    size: document.getElementById("inputSize").value,
-    link: document.getElementById("inputLink").value,
-    imageUrl: document.getElementById("inputImgUrl").value,
-    category: document.getElementById("inputCategory").value,
-    status: isWishlist ? "wishlist" : "owned",
-    purchaseDate: isWishlist ? null : new Date().toISOString().split("T")[0],
-  };
+  // Check rate limit
+  const rateLimit = await StorageManager.checkRateLimit();
+  if (!rateLimit.allowed) {
+    const waitTime = Math.ceil((rateLimit.resetTime - Date.now()) / 1000);
+    setStatus(`Rate limit reached. Try again in ${waitTime}s`, "error");
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Add to Wardrobe";
+    return;
+  }
+
   try {
-    const API_URL = "http://vesticloset.vercel.app/api/extension/import";
-    const response = await fetch(API_URL, {
+    // Record request for rate limiting
+    await StorageManager.recordRequest();
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), CONFIG.TIMEOUT_MS);
+
+    const response = await fetch(CONFIG.API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify(finalData),
+      body: JSON.stringify(productData),
+      signal: controller.signal,
     });
 
-    if (response.ok) {
-      status.textContent = "Saved to Wardrobe!";
-      status.className = "success";
-      saveBtn.textContent = "Saved";
-      window.open("https://vesticloset.vercel.app/closet", "_blank");
+    clearTimeout(timeoutId);
 
-      setTimeout(() => window.close(), 1500);
+    if (response.ok) {
+      setStatus("Saved to Wardrobe!", "success");
+      saveBtn.textContent = "Saved";
+      setTimeout(() => window.close(), CONFIG.CLOSE_DELAY_MS);
     } else {
-      const err = await response.json();
-      status.textContent = "Error: " + (err.message || "Save failed");
-      status.className = "error";
-      saveBtn.disabled = false;
-      saveBtn.textContent = "Add to Wardrobe";
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Save failed");
     }
   } catch (error) {
-    status.textContent = "Network Error. Check API.";
-    status.className = "error";
+    console.error("Save error:", error);
+
+    if (error.name === "AbortError") {
+      setStatus("Request timeout. Please try again.", "error");
+    } else if (!checkOnlineStatus()) {
+      // Connection lost during save
+      await StorageManager.addToOfflineQueue(productData);
+      setStatus("Saved offline. Will sync when online.", "success");
+      saveBtn.textContent = "Saved Offline";
+      setTimeout(() => window.close(), CONFIG.CLOSE_DELAY_MS);
+      return;
+    } else {
+      setStatus(`Error: ${error.message}`, "error");
+    }
+
     saveBtn.disabled = false;
     saveBtn.textContent = "Add to Wardrobe";
   }
-});
+}
 
-document.getElementById("cancelBtn").addEventListener("click", () => {
-  document.getElementById("formView").classList.add("hidden");
-  document.getElementById("scanView").classList.remove("hidden");
-  document.getElementById("status").textContent = "";
-});
+function cancelForm() {
+  switchView("scanView");
+  setStatus("");
+}
+
+// ============================================================================
+// OFFLINE QUEUE PROCESSOR
+// ============================================================================
+
+async function processOfflineQueue() {
+  if (!checkOnlineStatus()) return;
+
+  const queue = await StorageManager.getOfflineQueue();
+  if (queue.length === 0) return;
+
+  console.log(`Processing ${queue.length} offline items...`);
+
+  for (const item of queue) {
+    try {
+      const response = await fetch(CONFIG.API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(item.data),
+      });
+
+      if (response.ok) {
+        console.log("Successfully synced offline item:", item.id);
+      }
+    } catch (error) {
+      console.error("Failed to sync offline item:", error);
+      break; // Stop processing if request fails
+    }
+  }
+
+  // Clear queue after successful sync
+  await StorageManager.clearOfflineQueue();
+}
+
+// ============================================================================
+// KEYBOARD SHORTCUTS
+// ============================================================================
+
+function setupKeyboardShortcuts() {
+  document.addEventListener("keydown", (e) => {
+    // Ctrl/Cmd + Enter to save
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      const formView = document.getElementById("formView");
+      if (!formView.classList.contains("hidden")) {
+        e.preventDefault();
+        saveProduct();
+      }
+    }
+
+    // Escape to cancel
+    if (e.key === "Escape") {
+      const formView = document.getElementById("formView");
+      if (!formView.classList.contains("hidden")) {
+        e.preventDefault();
+        cancelForm();
+      }
+    }
+  });
+}
+
+// ============================================================================
+// CONTENT SCRIPT (injected into page)
+// ============================================================================
 
 function extractProductData() {
   const data = {
@@ -181,14 +611,15 @@ function extractProductData() {
     price: "",
     imageUrl: "",
     link: window.location.href,
-    description: "",
     size: "",
   };
 
+  // ========== JSON-LD EXTRACTION ==========
   const jsonLdScripts = document.querySelectorAll(
     'script[type="application/ld+json"]',
   );
-  jsonLdScripts.forEach((script) => {
+
+  for (const script of jsonLdScripts) {
     try {
       const json = JSON.parse(script.textContent);
       const products = Array.isArray(json) ? json : [json];
@@ -208,55 +639,154 @@ function extractProductData() {
             : product.offers;
           if (offer?.price) data.price = String(offer.price);
         }
-        if (product.description) data.description = product.description;
       }
     } catch (e) {
-      console.error("JSON-LD error:", e);
+      console.warn("JSON-LD parsing error:", e);
     }
-  });
+  }
 
-  // --- 2. Fallback Text Scraping ---
-  if (!data.name) {
-    data.name = document.querySelector("h1")?.textContent?.trim() || "";
+  // ========== SITE-SPECIFIC EXTRACTIONS ==========
+  const hostname = window.location.hostname;
+
+  // Nike
+  if (hostname.includes("nike")) {
+    const metaTitle = document.querySelector('meta[property="og:title"]');
+    if (metaTitle) data.name = metaTitle.content.trim();
+
+    const selectedSize = document.querySelector(
+      '[data-testid="pdp-grid-selector-item-selected"] input',
+    );
+    if (selectedSize?.value) data.size = selectedSize.value;
   }
+
+  // The RealReal
+  if (hostname.includes("therealreal")) {
+    const priceEl = document.querySelector(
+      '[data-testid="product-price/final"]',
+    );
+    if (priceEl) {
+      const cleanPrice = priceEl.textContent
+        .replace(/- Price:\s*/i, "")
+        .replace(/[^0-9.]/g, "")
+        .trim();
+      data.price = cleanPrice;
+    }
+
+    const sizeEl = document.querySelector('[data-testid="product-size"]');
+    if (sizeEl) data.size = sizeEl.textContent.replace(/^Size:\s*/i, "").trim();
+
+    const zoomImg = document.querySelector("img[data-zoom]");
+    if (zoomImg?.dataset.zoom) data.imageUrl = zoomImg.dataset.zoom;
+  }
+
+  // Grailed
+  if (hostname.includes("grailed")) {
+    const metadataEl = document.querySelector('p[class*="Details_metadata"]');
+    if (metadataEl?.firstChild)
+      data.size = metadataEl.firstChild.textContent.trim();
+  }
+
+  // Uniqlo
+  if (hostname.includes("uniqlo")) {
+    const metaTitle = document.querySelector('meta[property="og:title"]');
+    if (metaTitle) data.name = metaTitle.content.trim();
+
+    const selectedChip = document.querySelector(".size-chip-selected");
+    if (selectedChip) data.size = selectedChip.textContent.trim();
+  }
+
+  // H&M
+  if (hostname.includes("hm")) {
+    const nameEl = document.querySelector('h1[data-testid="product-name"]');
+    if (nameEl) {
+      data.name = nameEl.textContent.trim();
+    } else {
+      const metaTitle = document.querySelector('meta[property="og:title"]');
+      if (metaTitle) data.name = metaTitle.content.trim();
+      else if (document.title) data.name = document.title.split("|")[0].trim();
+    }
+
+    const redPrice = document.querySelector('[data-testid="red-price"]');
+    const whitePrice = document.querySelector('[data-testid="white-price"]');
+    data.price =
+      (redPrice || whitePrice)?.textContent.trim().replace(/[^0-9.]/g, "") ||
+      "";
+
+    const selectedSize = document.querySelector(
+      '[id^="sizeButton"][aria-checked="true"]',
+    );
+    if (selectedSize) data.size = selectedSize.textContent.trim();
+
+    let productImg =
+      document.querySelector('img[alt^="View larger image"][alt$=" 5"]') ||
+      document.querySelector('img[alt^="View larger image"]');
+
+    if (productImg) {
+      let imgUrl = productImg.currentSrc || productImg.src;
+      if (imgUrl.includes("imwidth=")) {
+        imgUrl = imgUrl.replace(/imwidth=\d+/, "imwidth=2160");
+      }
+      data.imageUrl = imgUrl;
+    }
+  }
+
+  // ========== GENERIC FALLBACKS ==========
+
   if (!data.brand) {
-    data.brand =
-      document.querySelector('meta[property="og:site_name"]')?.content ||
-      new URL(window.location.href).hostname.replace("www.", "").split(".")[0];
-    if (data.brand)
-      data.brand = data.brand.charAt(0).toUpperCase() + data.brand.slice(1);
+    const siteName = document.querySelector(
+      'meta[property="og:site_name"]',
+    )?.content;
+    if (siteName) {
+      data.brand = siteName;
+    } else {
+      data.brand = hostname.replace("www.", "").split(".")[0];
+    }
+    data.brand = data.brand.charAt(0).toUpperCase() + data.brand.slice(1);
   }
+
   if (!data.price) {
     const zaraPrice = document.querySelector("span.money-amount__main");
-    data.price =
-      zaraPrice?.textContent?.trim() ||
-      document.querySelector('[class*="price"]')?.textContent?.trim() ||
-      "";
-    const match = data.price.match(/[\d,]+\.?\d*/);
+    const genericPrice = document.querySelector('[class*="price"]');
+    const priceText = zaraPrice?.textContent || genericPrice?.textContent || "";
+    const match = priceText.match(/[\d,]+\.?\d*/);
     if (match) data.price = match[0].replace(/,/g, "");
   }
 
-  // --- 3. SIZE EXTRACTION ---
-  try {
-    const urlParams = new URLSearchParams(window.location.search);
-    for (const [key, value] of urlParams.entries()) {
-      if (key.toLowerCase().endsWith("size") || key === "sz") {
-        data.size = decodeURIComponent(value);
-        break;
+  if (!data.size) {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      for (const [key, value] of urlParams.entries()) {
+        if (key.toLowerCase().includes("size") || key === "sz") {
+          data.size = decodeURIComponent(value);
+          break;
+        }
       }
+    } catch (e) {
+      console.warn("URL param error:", e);
     }
-  } catch (e) {}
+  }
 
   if (!data.size) {
-    const aritziaText = document.querySelector(
+    const ssenseDropdown = document.getElementById("pdpSizeDropdown");
+    if (ssenseDropdown) {
+      const selected = ssenseDropdown.options[ssenseDropdown.selectedIndex];
+      if (selected && !selected.disabled && selected.value) {
+        let text = selected.textContent.trim();
+        text = text.includes("=") ? text.split("=")[1].trim() : text;
+        data.size = text.split(" -")[0].trim();
+      }
+    }
+  }
+
+  if (!data.size) {
+    const aritziaSize = document.querySelector(
       '[data-testid="siv-select-size-msg"]',
     );
-    if (aritziaText) {
-      let text = aritziaText.textContent.trim();
-      text = text.replace(/^Size\s*/i, "");
-      text = text.split("—")[0].trim();
-      text = text.split("-")[0].trim();
-      data.size = text;
+    if (aritziaSize) {
+      data.size = aritziaSize.textContent
+        .replace(/^Size\s*/i, "")
+        .split(/â€"|−|-/)[0]
+        .trim();
     }
   }
 
@@ -266,72 +796,93 @@ function extractProductData() {
       document.querySelector('[class*="size"] [aria-checked="true"]') ||
       document.querySelector('input[name="size"]:checked + label') ||
       document.querySelector('.selected[class*="size"]');
-
     if (activeSize) data.size = activeSize.textContent.trim();
   }
 
   if (data.size) {
     data.size = data.size
-      .replace(/chevron/gi, "")
-      .replace(/down/gi, "")
-      .trim()
-      .replace(/\n/g, " ");
+      .replace(/chevron|down/gi, "")
+      .replace(/\n/g, " ")
+      .trim();
   }
 
-  // --- 4. IMAGE EXTRACTION ---
+  // ========== IMAGE EXTRACTION ==========
+
   const getValidSrc = (img) => {
     if (!img) return null;
-    let candidate = img.srcset || img.dataset.srcset;
-    if (candidate) {
-      const urls = candidate.split(/,\s+/);
+
+    const srcset = img.srcset || img.dataset.srcset;
+    if (srcset) {
+      const urls = srcset.split(/,\s+/);
       return urls[urls.length - 1].trim().split(" ")[0];
     }
+
     const src = img.src || img.dataset.src;
-    return src && !src.startsWith("data:") ? src : img.dataset.src || null;
+    return src && !src.startsWith("data:") ? src : null;
   };
 
-  if (!data.imageUrl) {
-    const isAritzia = window.location.hostname.includes("aritzia");
-    const isZara = window.location.hostname.includes("zara");
-    const isSsense = window.location.hostname.includes("ssense");
+  if (hostname.includes("ssense") && !data.imageUrl) {
+    const ssenseImg =
+      document.querySelector("img.product-detail-new") ||
+      document.querySelector('img[data-test="product-image"]');
+    if (ssenseImg) data.imageUrl = getValidSrc(ssenseImg);
+  }
 
-    if (isSsense) {
-      const ssenseImg =
-        document.querySelector("img.product-detail-new") ||
-        document.querySelector('img[data-test="product-image"]');
-      if (ssenseImg) data.imageUrl = getValidSrc(ssenseImg);
-    }
-    if (isAritzia) {
-      const offBodyLink = document.querySelector('a[href*="_off_"]');
-      const offBodyImg = document.querySelector('img[src*="_off_"]');
-      if (offBodyLink) data.imageUrl = offBodyLink.href;
-      else if (offBodyImg) data.imageUrl = offBodyImg.src;
-    }
-    if (isZara) {
-      const allImages = Array.from(document.querySelectorAll("img"));
-      const flatLay = allImages.find((img) => {
-        const alt = (img.alt || "").toLowerCase();
-        const width = img.naturalWidth || img.width || 0;
-        return alt.includes("front view") && width > 200;
-      });
-      if (flatLay) data.imageUrl = flatLay.src;
+  if (hostname.includes("aritzia") && !data.imageUrl) {
+    const offBodyLink = document.querySelector('a[href*="_off_"]');
+    const offBodyImg = document.querySelector('img[src*="_off_"]');
+    data.imageUrl = offBodyLink?.href || offBodyImg?.src || data.imageUrl;
+  }
+
+  if (hostname.includes("zara") && !data.imageUrl) {
+    let candidates = Array.from(
+      document.querySelectorAll(".media-image__image"),
+    );
+    if (!candidates.length)
+      candidates = Array.from(document.querySelectorAll("img"));
+
+    const getScore = (img) => {
+      let score = 0;
+      const src = img.src || "";
+      const alt = (img.alt || "").toLowerCase();
+
+      if (alt.includes("front view")) score += 10;
+      if (src.includes("-e1.")) score += 5;
+      if (src.includes("-p.")) score -= 2;
+      if ((img.naturalWidth || 0) < 200) score -= 10;
+
+      return score;
+    };
+
+    candidates.sort((a, b) => getScore(b) - getScore(a));
+
+    if (candidates[0]) {
+      data.imageUrl = candidates[0].src.split("?")[0];
+
+      if (candidates[0].srcset) {
+        const sources = candidates[0].srcset
+          .split(",")
+          .map((s) => s.trim().split(" ")[0]);
+        if (sources.length)
+          data.imageUrl = sources[sources.length - 1].split("?")[0];
+      }
     }
   }
 
   if (!data.imageUrl) {
-    const activeImage =
+    const productImg =
       document.querySelector(".product-detail-images__image-container img") ||
       document.querySelector(".media-image__image");
-    if (activeImage) data.imageUrl = getValidSrc(activeImage);
+    if (productImg) data.imageUrl = getValidSrc(productImg);
   }
 
   if (!data.imageUrl) {
     const images = Array.from(document.querySelectorAll("img"));
-    const largeImages = images.filter((img) => {
+    const largeImage = images.find((img) => {
       const valid = getValidSrc(img);
       return (img.naturalWidth > 300 || img.width > 300) && valid;
     });
-    if (largeImages.length > 0) data.imageUrl = getValidSrc(largeImages[0]);
+    if (largeImage) data.imageUrl = getValidSrc(largeImage);
   }
 
   if (data.imageUrl) {
@@ -343,3 +894,54 @@ function extractProductData() {
 
   return data;
 }
+
+// ============================================================================
+// EVENT LISTENERS & INITIALIZATION
+// ============================================================================
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const scanBtn = document.getElementById("scanBtn");
+  const saveBtn = document.getElementById("saveBtn");
+  const cancelBtn = document.getElementById("cancelBtn");
+
+  if (scanBtn) scanBtn.addEventListener("click", scanPage);
+  if (saveBtn) saveBtn.addEventListener("click", saveProduct);
+  if (cancelBtn) cancelBtn.addEventListener("click", cancelForm);
+
+  // Setup keyboard shortcuts
+  setupKeyboardShortcuts();
+
+  // Check and process offline queue
+  if (checkOnlineStatus()) {
+    processOfflineQueue();
+  }
+
+  // Monitor online/offline status
+  window.addEventListener("online", () => {
+    setStatus("✓ Back online", "success");
+    setTimeout(() => setStatus(""), 2000);
+    processOfflineQueue();
+  });
+
+  window.addEventListener("offline", () => {
+    setStatus("⚠️ Offline mode", "error");
+  });
+
+  // Show current online status
+  updateOfflineBadge();
+  if (!checkOnlineStatus()) {
+    setStatus("⚠️ You are offline", "error");
+  }
+});
+
+// Update offline badge visibility
+function updateOfflineBadge() {
+  const badge = document.getElementById("offlineBadge");
+  if (badge) {
+    badge.style.display = checkOnlineStatus() ? "none" : "block";
+  }
+}
+
+// Update badge on connection changes
+window.addEventListener("online", updateOfflineBadge);
+window.addEventListener("offline", updateOfflineBadge);

@@ -1,203 +1,692 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vesti Import</title>
     <style>
+      * {
+        box-sizing: border-box;
+      }
+
       body {
-        width: 320px;
+        width: 380px;
         font-family:
           -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         padding: 0;
         margin: 0;
         background: #f9fafb;
+        color: #111;
+        overflow-x: hidden;
       }
 
-      /* Header */
+      /* Header with subtle animation */
       .header {
-        background: #fff;
-        padding: 12px 16px;
-        border-bottom: 1px solid #e5e7eb;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        padding: 18px 20px;
+        border-bottom: 2px solid #171717;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        position: relative;
+        overflow: hidden;
       }
+
+      .header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.03),
+          transparent
+        );
+        animation: shimmer 3s infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          left: -100%;
+        }
+        100% {
+          left: 100%;
+        }
+      }
+
       .logo {
         font-weight: 800;
-        font-size: 14px;
-        letter-spacing: -0.02em;
-        color: #111;
+        font-size: 17px;
+        letter-spacing: -0.03em;
+        color: #fff;
+        text-transform: uppercase;
+        font-style: italic;
+        position: relative;
+        z-index: 1;
+      }
+
+      .version {
+        font-size: 9px;
+        color: #999;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 3px 8px;
+        border-radius: 10px;
+        position: relative;
+        z-index: 1;
       }
 
       /* Main Content */
       .container {
-        padding: 16px;
+        padding: 24px 20px;
       }
 
-      /* Buttons */
+      /* Intro Text with gradient accent */
+      .intro {
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 24px;
+        line-height: 1.6;
+        position: relative;
+        padding-left: 12px;
+        border-left: 3px solid #171717;
+      }
+
+      .intro strong {
+        color: #171717;
+        font-weight: 700;
+      }
+
+      /* Enhanced Buttons */
       .btn {
         width: 100%;
-        padding: 10px;
+        padding: 15px 16px;
         border: none;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: 600;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
         cursor: pointer;
-        transition: all 0.2s;
-      }
-      .btn-primary {
-        background: #000;
-        color: white;
-      }
-      .btn-primary:hover {
-        background: #333;
-      }
-      .btn-secondary {
-        background: #e5e7eb;
-        color: #374151;
-        margin-top: 8px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: inherit;
+        position: relative;
+        overflow: hidden;
       }
 
-      /* Form Styles */
+      .btn::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: translate(-50%, -50%);
+        transition:
+          width 0.6s,
+          height 0.6s;
+      }
+
+      .btn:active::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #171717 0%, #2d2d2d 100%);
+        color: white;
+        box-shadow:
+          0 4px 6px rgba(0, 0, 0, 0.1),
+          0 1px 3px rgba(0, 0, 0, 0.08);
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background: linear-gradient(135deg, #2d2d2d 0%, #404040 100%);
+        transform: translateY(-2px);
+        box-shadow:
+          0 6px 12px rgba(0, 0, 0, 0.15),
+          0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-primary:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-secondary {
+        background: #fff;
+        color: #171717;
+        border: 1.5px solid #e5e7eb;
+        margin-top: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .btn-secondary:hover:not(:disabled) {
+        background: #f9fafb;
+        border-color: #9ca3af;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+      }
+
+      /* Form Styles with micro-interactions */
       .hidden {
         display: none !important;
       }
+
       .form-group {
-        margin-bottom: 12px;
+        margin-bottom: 16px;
       }
+
       .label {
         display: block;
-        font-size: 11px;
+        font-size: 10px;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.12em;
         color: #6b7280;
-        margin-bottom: 4px;
-        font-weight: 600;
+        margin-bottom: 8px;
+        font-weight: 700;
+        transition: color 0.2s;
       }
-      .input {
+
+      .form-group:focus-within .label {
+        color: #171717;
+      }
+
+      .input,
+      select {
         width: 100%;
-        padding: 8px;
-        border: 1px solid #d1d5db;
+        padding: 12px 14px;
+        border: 1.5px solid #e5e7eb;
         border-radius: 4px;
         font-size: 13px;
-        box-sizing: border-box;
-      }
-      .input:focus {
-        outline: none;
-        border-color: #000;
+        font-family: inherit;
+        background: #fff;
+        color: #111;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
       }
 
-      /* Image Preview */
-      .img-preview {
+      .input:focus,
+      select:focus {
+        outline: none;
+        border-color: #171717;
+        box-shadow:
+          0 0 0 4px rgba(23, 23, 23, 0.05),
+          0 1px 2px rgba(0, 0, 0, 0.05);
+        transform: translateY(-1px);
+      }
+
+      .input::placeholder {
+        color: #9ca3af;
+      }
+
+      /* Flex Row for Side-by-Side Fields */
+      .flex-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .flex-row .form-group {
+        margin-bottom: 0;
+      }
+
+      /* Enhanced Image Preview with loading state */
+      .img-container {
         width: 100%;
         aspect-ratio: 3/4;
-        object-fit: cover;
-        border-radius: 4px;
-        border: 1px solid #e5e7eb;
-        margin-bottom: 16px;
-        background: #fff;
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border: 2px solid #e5e7eb;
+        border-radius: 6px;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
       }
 
-      /* Status Messages */
+      .img-preview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        animation: fadeIn 0.3s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .img-placeholder {
+        position: absolute;
+        font-size: 11px;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .img-placeholder::before {
+        content: "🖼️";
+        font-size: 32px;
+        opacity: 0.3;
+      }
+
+      /* Status Messages with icons */
       #status {
-        margin-top: 12px;
-        font-size: 12px;
+        margin-top: 16px;
+        font-size: 11px;
         text-align: center;
         min-height: 20px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        padding: 8px 12px;
+        border-radius: 4px;
+        transition: all 0.3s ease;
       }
+
       .error {
-        color: #dc2626;
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.05);
       }
+
       .success {
-        color: #059669;
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.05);
       }
+
       .loading {
         color: #6b7280;
+        background: rgba(107, 114, 128, 0.05);
+      }
+
+      /* Enhanced Wishlist Checkbox */
+      .checkbox-wrapper {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin: 20px 0;
+        padding: 16px;
+        background: #fff;
+        border: 2px solid #e5e7eb;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+
+      .checkbox-wrapper:hover {
+        border-color: #d1d5db;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        transform: translateY(-1px);
+      }
+
+      .checkbox-wrapper:has(input:checked) {
+        border-color: #171717;
+        background: rgba(23, 23, 23, 0.02);
+      }
+
+      .checkbox-wrapper input[type="checkbox"] {
+        margin-top: 2px;
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: #171717;
+      }
+
+      .checkbox-label {
+        flex: 1;
+        cursor: pointer;
+      }
+
+      .checkbox-title {
+        font-size: 12px;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 4px;
+        color: #111;
+      }
+
+      .checkbox-desc {
+        font-size: 10px;
+        color: #6b7280;
+        line-height: 1.4;
+      }
+
+      /* Loading Animation */
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .loading {
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+
+      /* Scan view icon animation */
+      .scan-icon {
+        display: inline-block;
+        margin-right: 8px;
+        animation: rotate 2s linear infinite;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Accessibility */
+      .btn:focus-visible,
+      .input:focus-visible,
+      select:focus-visible {
+        outline: 2px solid #171717;
+        outline-offset: 2px;
+      }
+
+      /* Scrollbar styling */
+      select::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      select::-webkit-scrollbar-track {
+        background: #f9fafb;
+        border-radius: 10px;
+      }
+
+      select::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #d1d5db, #9ca3af);
+        border-radius: 10px;
+      }
+
+      select::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #9ca3af, #6b7280);
+      }
+
+      /* Shortcut hints */
+      .shortcut-hint {
+        font-size: 9px;
+        color: #9ca3af;
+        text-align: center;
+        margin-top: 16px;
+        letter-spacing: 0.05em;
+        opacity: 0.7;
+      }
+
+      .shortcut-hint kbd {
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-family: monospace;
+        font-size: 9px;
+        margin: 0 2px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Offline indicator */
+      .offline-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: #ef4444;
+        color: white;
+        font-size: 8px;
+        padding: 4px 8px;
+        border-radius: 10px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        animation: pulse 2s ease-in-out infinite;
+        z-index: 10;
+      }
+
+      /* Smooth transitions for view switching */
+      #scanView,
+      #formView {
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
     </style>
   </head>
   <body>
     <div class="header">
-      <span class="logo">CLOSET IMPORT</span>
+      <span class="logo">Vesti / Import</span>
+      <span class="version">v1.0</span>
+      <div id="offlineBadge" class="offline-badge" style="display: none">
+        OFFLINE
+      </div>
     </div>
 
     <div class="container">
+      <!-- Scan View -->
       <div id="scanView">
-        <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px">
-          Go to a product page and click below to extract details.
+        <p class="intro">
+          Navigate to a product page on <strong>Zara</strong>,
+          <strong>SSENSE</strong>, <strong>Aritzia</strong>,
+          <strong>Grailed</strong>, <strong>Nike</strong>, <strong>H&M</strong>,
+          or other supported retailers to automatically extract details.
         </p>
-        <button id="scanBtn" class="btn btn-primary">Scan Page</button>
-      </div>
-
-      <div id="formView" class="hidden">
-        <img id="previewImg" src="" class="img-preview" />
-
-        <div class="form-group">
-          <label class="label">Name</label>
-          <input type="text" id="inputName" class="input" />
-        </div>
-
-        <div class="form-group">
-          <label class="label">Category</label>
-          <select id="inputCategory" class="input" style="background: white">
-            <option value="Tops">Tops</option>
-            <option value="Bottoms">Bottoms</option>
-            <option value="Dresses">Dresses</option>
-            <option value="Outerwear">Outerwear</option>
-            <option value="Shoes">Shoes</option>
-            <option value="Accessories">Accessories</option>
-          </select>
-        </div>
-
-        <div class="flex-row" style="display: flex; gap: 10px">
-          <div class="form-group" style="flex: 1">
-            <label class="label">Brand</label>
-            <input type="text" id="inputBrand" class="input" />
-          </div>
-          <div class="form-group" style="flex: 1">
-            <label class="label">Price</label>
-            <input type="text" id="inputPrice" class="input" />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="label">Size</label>
-          <input
-            type="text"
-            id="inputSize"
-            class="input"
-            placeholder="e.g. M, 32, 8"
-          />
-        </div>
-
-        <input type="hidden" id="inputLink" />
-        <input type="hidden" id="inputImgUrl" />
-        <div
-          class="form-group"
-          style="
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
-            margin-bottom: 10px;
-          "
+        <button
+          id="scanBtn"
+          class="btn btn-primary"
+          aria-label="Scan current page for product details"
         >
-          <input
-            type="checkbox"
-            id="inputWishlist"
-            style="width: 16px; height: 16px; cursor: pointer"
-          />
-          <label
-            for="inputWishlist"
-            class="label"
-            style="margin: 0; cursor: pointer; color: #111"
-            >Add to Wishlist (Not Purchased)</label
-          >
+          Scan Current Page
+        </button>
+        <div class="shortcut-hint">
+          Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> to scan from
+          anywhere
         </div>
-
-        <button id="saveBtn" class="btn btn-primary">Add to Closet</button>
-        <button id="cancelBtn" class="btn btn-secondary">Cancel</button>
       </div>
 
-      <div id="status"></div>
+      <!-- Form View -->
+      <div id="formView" class="hidden">
+        <div class="img-container">
+          <img
+            id="previewImg"
+            src=""
+            alt="Product preview"
+            class="img-preview"
+            style="display: none"
+          />
+          <span class="img-placeholder" id="imgPlaceholder">
+            No Image Available
+          </span>
+        </div>
+
+        <form id="productForm" onsubmit="return false;">
+          <div class="form-group">
+            <label class="label" for="inputName">Product Name</label>
+            <input
+              type="text"
+              id="inputName"
+              class="input"
+              required
+              aria-required="true"
+              placeholder="e.g. Slim Fit Oxford Shirt"
+            />
+          </div>
+
+          <div class="flex-row">
+            <div class="form-group" style="flex: 1">
+              <label class="label" for="inputBrand">Brand</label>
+              <input
+                type="text"
+                id="inputBrand"
+                class="input"
+                placeholder="e.g. Zara"
+              />
+            </div>
+            <div class="form-group" style="flex: 1">
+              <label class="label" for="inputPrice">Price</label>
+              <input
+                type="text"
+                id="inputPrice"
+                class="input"
+                placeholder="e.g. 49.99"
+              />
+            </div>
+          </div>
+
+          <div class="flex-row">
+            <div class="form-group" style="flex: 1">
+              <label class="label" for="inputSize">Size</label>
+              <input
+                type="text"
+                id="inputSize"
+                class="input"
+                placeholder="e.g. M"
+              />
+            </div>
+            <div class="form-group" style="flex: 1.5">
+              <label class="label" for="inputCategory">Category</label>
+              <select
+                id="inputCategory"
+                class="input"
+                aria-label="Product category"
+              >
+                <option value="Uncategorized">-- Select --</option>
+                <option value="Activewear">Activewear</option>
+                <option value="Bag">Bag</option>
+                <option value="Beanie">Beanie</option>
+                <option value="Belt">Belt</option>
+                <option value="Blazer">Blazer</option>
+                <option value="Blouse">Blouse</option>
+                <option value="Bodysuit">Bodysuit</option>
+                <option value="Bomber">Bomber</option>
+                <option value="Boots">Boots</option>
+                <option value="Bracelet">Bracelet</option>
+                <option value="Cap">Cap</option>
+                <option value="Card Holder">Card Holder</option>
+                <option value="Cardigan">Cardigan</option>
+                <option value="Co-ord Set">Co-ord Set</option>
+                <option value="Coat">Coat</option>
+                <option value="Corset">Corset</option>
+                <option value="Crop Top">Crop Top</option>
+                <option value="Dress">Dress</option>
+                <option value="Earrings">Earrings</option>
+                <option value="Flats">Flats</option>
+                <option value="Hat">Hat</option>
+                <option value="Heels">Heels</option>
+                <option value="Hoodie">Hoodie</option>
+                <option value="Jacket">Jacket</option>
+                <option value="Jeans">Jeans</option>
+                <option value="Jewelry">Jewelry</option>
+                <option value="Joggers">Joggers</option>
+                <option value="Jumpsuit">Jumpsuit</option>
+                <option value="Leggings">Leggings</option>
+                <option value="Loafers">Loafers</option>
+                <option value="Pants">Pants</option>
+                <option value="Puffer">Puffer</option>
+                <option value="Ring">Ring</option>
+                <option value="Romper">Romper</option>
+                <option value="Sandals">Sandals</option>
+                <option value="Scarf">Scarf</option>
+                <option value="Shirt">Shirt</option>
+                <option value="Shorts">Shorts</option>
+                <option value="Skirt">Skirt</option>
+                <option value="Slides">Slides</option>
+                <option value="Sneakers">Sneakers</option>
+                <option value="Sunglasses">Sunglasses</option>
+                <option value="Sweater">Sweater</option>
+                <option value="Sweatpants">Sweatpants</option>
+                <option value="Sweatshirt">Sweatshirt</option>
+                <option value="Swimwear">Swimwear</option>
+                <option value="T-shirt">T-shirt</option>
+                <option value="Tank Top">Tank Top</option>
+                <option value="Tights">Tights</option>
+                <option value="Trench">Trench</option>
+                <option value="Trousers">Trousers</option>
+                <option value="Tube Top">Tube Top</option>
+                <option value="Underwear">Underwear</option>
+                <option value="Vest">Vest</option>
+                <option value="Watch">Watch</option>
+              </select>
+            </div>
+          </div>
+
+          <input type="hidden" id="inputLink" />
+          <input type="hidden" id="inputImgUrl" />
+
+          <div class="checkbox-wrapper">
+            <input
+              type="checkbox"
+              id="inputWishlist"
+              aria-describedby="wishlistDesc"
+            />
+            <label for="inputWishlist" class="checkbox-label">
+              <span class="checkbox-title">💫 Save to Wishlist</span>
+              <span class="checkbox-desc" id="wishlistDesc">
+                Item will not affect your total stats
+              </span>
+            </label>
+          </div>
+
+          <button
+            id="saveBtn"
+            type="submit"
+            class="btn btn-primary"
+            aria-label="Add product to wardrobe"
+          >
+            Add to Wardrobe
+          </button>
+          <button
+            id="cancelBtn"
+            type="button"
+            class="btn btn-secondary"
+            aria-label="Cancel and return to scan"
+          >
+            Cancel
+          </button>
+
+          <div class="shortcut-hint">
+            <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to save • <kbd>Esc</kbd> to cancel
+          </div>
+        </form>
+      </div>
+
+      <div id="status" role="status" aria-live="polite"></div>
     </div>
 
     <script src="popup.js"></script>
