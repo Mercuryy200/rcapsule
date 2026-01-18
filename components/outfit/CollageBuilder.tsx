@@ -88,18 +88,35 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
       try {
         if (!canvasRef.current) return;
 
+        // Get the actual dimensions of the canvas area
+        const rect = canvasRef.current.getBoundingClientRect();
+
         const canvas = await html2canvas(canvasRef.current, {
           useCORS: true, // Crucial for external images
           backgroundColor: "#ffffff",
           scale: 2, // Higher quality
+          width: rect.width,
+          height: rect.height,
+          windowWidth: rect.width,
+          windowHeight: rect.height,
+          // Preserve original aspect ratio
+          ignoreElements: (element) => {
+            return element.classList.contains("bg-grid-pattern");
+          },
         });
 
-        canvas.toBlob(async (blob) => {
-          if (blob) {
-            const file = new File([blob], "collage.png", { type: "image/png" });
-            await onSave(file);
-          }
-        });
+        canvas.toBlob(
+          async (blob) => {
+            if (blob) {
+              const file = new File([blob], "collage.png", {
+                type: "image/png",
+              });
+              await onSave(file);
+            }
+          },
+          "image/png",
+          1.0
+        );
       } catch (err) {
         console.error("Collage failed", err);
         alert("Failed to generate image. Ensure images allow CORS.");
@@ -144,7 +161,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
         </div>
       </div>
 
-      <div className="flex gap-4 h-[500px]">
+      <div className="flex gap-4" style={{ height: "600px" }}>
         {/* SIDEBAR: AVAILABLE ITEMS */}
         <div className="w-32 flex-shrink-0 overflow-y-auto border border-default-200 p-2 space-y-2 bg-default-50">
           <p className="text-[10px] text-center uppercase tracking-widest text-default-400 mb-2">
@@ -168,7 +185,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
 
         {/* CANVAS AREA */}
         <div
-          className="flex-1 bg-white border border-dashed border-default-300 relative overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]"
+          className="flex-1 bg-white border border-dashed border-default-300 relative overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] bg-grid-pattern"
           ref={canvasRef}
         >
           {canvasItems.length === 0 && (
@@ -212,6 +229,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                   src={item.imageUrl}
                   alt="collage-item"
                   className="w-full h-full object-contain pointer-events-none"
+                  crossOrigin="anonymous"
                 />
                 {/* Delete Button (Visible only when selected) */}
                 {selectedId === item.uniqueId && (

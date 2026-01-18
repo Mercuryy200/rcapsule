@@ -11,13 +11,22 @@ import {
   Tabs,
   Tab,
   Spinner,
+  Textarea,
 } from "@heroui/react";
 import {
   ArrowLeftIcon,
   SparklesIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { colors, occasions, seasons, categories, colorMap } from "@/lib/data";
+import {
+  colors,
+  occasions,
+  seasons,
+  categories,
+  colorMap,
+  materials,
+  conditions,
+} from "@/lib/data";
 import { ImageUpload } from "@/components/closet/ImageUpload";
 
 export default function NewItemPage() {
@@ -40,6 +49,9 @@ export default function NewItemPage() {
     imageUrl: "",
     placesToWear: [] as string[],
     purchaseDate: "",
+    materials: [] as string[],
+    condition: "excellent" as string,
+    careInstructions: "",
   });
 
   useEffect(() => {
@@ -111,6 +123,9 @@ export default function NewItemPage() {
       colors: formData.colors.length > 0 ? formData.colors : null,
       placesToWear:
         formData.placesToWear.length > 0 ? formData.placesToWear : null,
+      materials: formData.materials.length > 0 ? formData.materials : null,
+      condition: formData.condition || "excellent",
+      careInstructions: formData.careInstructions.trim() || null,
     };
 
     try {
@@ -466,6 +481,72 @@ export default function NewItemPage() {
                   ))}
                 </Select>
               </div>
+            </div>
+          </section>
+
+          {/* Care & Condition */}
+          <section className="space-y-6">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-default-500">
+              Care & Condition
+            </h3>
+
+            <div className="grid grid-cols-1 gap-6">
+              <Select
+                label="Materials"
+                labelPlacement="outside"
+                variant="bordered"
+                radius="sm"
+                placeholder="Select materials"
+                selectionMode="multiple"
+                classNames={{ trigger: "border-default-300" }}
+                selectedKeys={new Set(formData.materials)}
+                onSelectionChange={(keys) => {
+                  setFormData({
+                    ...formData,
+                    materials: Array.from(keys) as string[],
+                  });
+                }}
+              >
+                {materials.map((material) => (
+                  <SelectItem key={material}>{material}</SelectItem>
+                ))}
+              </Select>
+
+              <Select
+                label="Condition"
+                labelPlacement="outside"
+                variant="bordered"
+                radius="sm"
+                placeholder="Select condition"
+                classNames={{ trigger: "border-default-300" }}
+                selectedKeys={formData.condition ? [formData.condition] : []}
+                onChange={(e) =>
+                  setFormData({ ...formData, condition: e.target.value })
+                }
+              >
+                {conditions.map((condition) => (
+                  <SelectItem key={condition} value={condition}>
+                    {condition.charAt(0).toUpperCase() + condition.slice(1)}
+                  </SelectItem>
+                ))}
+              </Select>
+
+              <Textarea
+                label="Care Instructions"
+                labelPlacement="outside"
+                variant="bordered"
+                radius="sm"
+                placeholder="e.g., Hand wash cold, lay flat to dry..."
+                classNames={{ inputWrapper: "border-default-300" }}
+                value={formData.careInstructions}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    careInstructions: e.target.value,
+                  })
+                }
+                minRows={3}
+              />
             </div>
           </section>
 

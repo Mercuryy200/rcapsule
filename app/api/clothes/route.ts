@@ -11,12 +11,10 @@ export async function GET(req: Request) {
     const userId = session.user.id;
     const { searchParams } = new URL(req.url);
     const wardrobeId = searchParams.get("wardrobeId");
-    const statusFilter = searchParams.get("status"); // <--- Get the param
+    const statusFilter = searchParams.get("status");
     const supabase = getSupabaseServer();
 
     if (wardrobeId) {
-      // 1. FETCHING A SPECIFIC WARDROBE
-      // (Usually we show everything in a wardrobe, regardless of status)
       const { data: wardrobeClothes, error } = await supabase
         .from("WardrobeClothes")
         .select(

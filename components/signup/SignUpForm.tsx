@@ -65,7 +65,7 @@ export default function SignUpForm() {
     >
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-extrabold tracking-tighter uppercase italic">
-          Join Vesti
+          Join Capsule
         </h2>
         <p className="text-default-500 text-sm tracking-wide">
           Start digitizing your wardrobe today

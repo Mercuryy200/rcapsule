@@ -128,7 +128,7 @@ function LoginFormContent() {
           isLoading={isLoading}
           type="submit"
         >
-          Sign In to Vesti
+          Sign In to Capsule
         </Button>
 
         <div className="flex items-center w-full gap-4 my-2">

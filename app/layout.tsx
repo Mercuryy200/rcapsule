@@ -10,8 +10,8 @@ import ScrollToTop from "@/components/ui/ScrollToTop";
 
 export const metadata: Metadata = {
   title: {
-    default: "Vesti — Your Digital Closet",
-    template: `%s | Vesti`,
+    default: "Capsule — Your Digital Closet",
+    template: `%s | Capsule`,
   },
   description: "Organize your wardrobe and plan outfits with ease.",
   icons: {

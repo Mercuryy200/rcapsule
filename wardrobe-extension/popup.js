@@ -3,7 +3,7 @@
 // ============================================================================
 
 const CONFIG = {
-  API_URL: "https://vesticloset.vercel.app/api/extension/import",
+  API_URL: "https://closetwardrobe.vercel.app/api/extension/import",
   TIMEOUT_MS: 10000,
   CLOSE_DELAY_MS: 1500,
 };

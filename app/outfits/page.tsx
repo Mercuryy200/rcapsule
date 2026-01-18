@@ -151,7 +151,7 @@ export default function OutfitsPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-default-50 text-default-300">
-                    <span className="text-4xl italic font-serif">Vesti</span>
+                    <span className="text-4xl italic font-serif">Capsule</span>
                     <span className="text-[10px] uppercase tracking-widest mt-2">
                       No Visual
                     </span>

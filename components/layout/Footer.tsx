@@ -89,7 +89,7 @@ export default function Footer() {
 
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-xs text-default-400">
-            © {currentYear} Vesti Inc. All rights reserved.
+            © {currentYear} Capsule Inc. All rights reserved.
           </p>
 
           <div className="flex gap-6">

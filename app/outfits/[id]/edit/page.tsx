@@ -15,6 +15,7 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
+  ModalFooter,
   useDisclosure,
   Tabs,
   Tab,
@@ -41,6 +42,26 @@ interface Wardrobe {
   id: string;
   title: string;
 }
+
+// Define accessory categories that can have multiple items
+const ACCESSORY_CATEGORIES = [
+  "Bag",
+  "Belt",
+  "Hat",
+  "Scarf",
+  "Sunglasses",
+  "Jewelry",
+  "Beanie",
+  "Cap",
+  "Purse",
+  "Wallet",
+  "Necklace",
+  "Earrings",
+  "Card Holder",
+  "Watch",
+  "Bracelet",
+  "Ring",
+];
 
 export default function EditOutfitPage() {
   const { status } = useSession();
@@ -168,11 +189,41 @@ export default function EditOutfitPage() {
 
   // --- HELPER FUNCTIONS ---
   const handleAddClothes = (item: ClothingItem) => {
-    if (!selectedClothes.find((c) => c.id === item.id))
+    // Check if item is already selected
+    if (selectedClothes.find((c) => c.id === item.id)) return;
+
+    const isAccessory = ACCESSORY_CATEGORIES.includes(item.category);
+
+    if (!isAccessory) {
+      // For non-accessories, remove any existing item from the same category
+      const filtered = selectedClothes.filter(
+        (c) => c.category !== item.category,
+      );
+      setSelectedClothes([...filtered, item]);
+    } else {
+      // For accessories, just add it
       setSelectedClothes([...selectedClothes, item]);
+    }
   };
+
   const handleRemoveClothes = (itemId: string) => {
     setSelectedClothes(selectedClothes.filter((c) => c.id !== itemId));
+  };
+
+  // Helper function to check if an item can be selected
+  const canSelectItem = (item: ClothingItem): boolean => {
+    const isAccessory = ACCESSORY_CATEGORIES.includes(item.category);
+    if (isAccessory) return true;
+
+    // For non-accessories, check if there's already an item from this category
+    return !selectedClothes.some((c) => c.category === item.category);
+  };
+
+  // Get the selected item for a non-accessory category
+  const getSelectedInCategory = (
+    category: string,
+  ): ClothingItem | undefined => {
+    return selectedClothes.find((c) => c.category === category);
   };
   const toggleWardrobe = (id: string) => {
     const s = new Set(selectedWardrobes);
@@ -203,6 +254,16 @@ export default function EditOutfitPage() {
 
   const unselectedClothes = availableClothes.filter(
     (item) => !selectedClothes.find((s) => s.id === item.id),
+  );
+
+  // Group clothes by category
+  const groupedClothes = unselectedClothes.reduce(
+    (acc, item) => {
+      if (!acc[item.category]) acc[item.category] = [];
+      acc[item.category].push(item);
+      return acc;
+    },
+    {} as Record<string, ClothingItem[]>,
   );
 
   return (
@@ -374,25 +435,57 @@ export default function EditOutfitPage() {
                 Add Items
               </Button>
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
-              {selectedClothes.map((item) => (
-                <div
-                  key={item.id}
-                  className="relative group aspect-[3/4] border border-default-200 cursor-pointer hover:border-danger transition-colors"
-                  onClick={() => handleRemoveClothes(item.id)}
-                >
-                  <Image
-                    src={item.imageUrl || ""}
-                    radius="none"
-                    className="w-full h-full object-cover"
-                    classNames={{ wrapper: "w-full h-full" }}
-                  />
-                  <div className="absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                    <XMarkIcon className="w-6 h-6 text-danger" />
-                  </div>
-                </div>
-              ))}
-            </div>
+{selectedClothes.length === 0 ? (
+              <div className="py-8 text-center text-default-400 text-sm italic">
+                No items selected. Click "Add Items" to start building your look.
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Group selected items by category */}
+                {Object.entries(
+                  selectedClothes.reduce(
+                    (acc, item) => {
+                      if (!acc[item.category]) acc[item.category] = [];
+                      acc[item.category].push(item);
+                      return acc;
+                    },
+                    {} as Record<string, ClothingItem[]>,
+                  ),
+                )
+                  .sort(([catA], [catB]) => catA.localeCompare(catB))
+                  .map(([category, items]) => (
+                    <div key={category}>
+                      <div className="text-[10px] uppercase tracking-widest text-default-500 mb-2">
+                        {category}
+                      </div>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {items.map((item) => (
+                          <div
+                            key={item.id}
+                            className="relative group aspect-[3/4] border-2 border-default-200 cursor-pointer hover:border-danger transition-colors"
+                            onClick={() => handleRemoveClothes(item.id)}
+                          >
+                            <Image
+                              src={item.imageUrl || ""}
+                              radius="none"
+                              className="w-full h-full object-cover"
+                              classNames={{ wrapper: "w-full h-full" }}
+                            />
+                            <div className="absolute bottom-0 w-full bg-white/90 p-1 text-[9px] uppercase truncate text-center">
+                              {item.name}
+                            </div>
+                            <div className="absolute inset-0 bg-danger/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <div className="bg-danger text-white p-2 rounded-full">
+                                <XMarkIcon className="w-5 h-5" />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </section>
 
           {/* 3. Wardrobes */}
@@ -445,37 +538,109 @@ export default function EditOutfitPage() {
       <Modal
         isOpen={addClothesModal.isOpen}
         onClose={addClothesModal.onClose}
-        size="3xl"
+        size="5xl"
         scrollBehavior="inside"
         radius="none"
       >
         <ModalContent>
-          <ModalHeader className="uppercase tracking-widest font-bold">
-            Select Pieces
+          <ModalHeader className="uppercase tracking-widest font-bold flex justify-between items-center">
+            <span>Select Pieces</span>
+            <span className="text-xs text-default-400 font-normal">
+              One per category (unlimited accessories)
+            </span>
           </ModalHeader>
-          <ModalBody>
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
-              {unselectedClothes.map((item) => (
-                <div
-                  key={item.id}
-                  className="aspect-[3/4] cursor-pointer group relative"
-                  onClick={() => {
-                    handleAddClothes(item);
-                    addClothesModal.onClose();
-                  }}
-                >
-                  <Image
-                    src={item.imageUrl || ""}
-                    radius="none"
-                    className="w-full h-full object-cover opacity-100 group-hover:opacity-80"
-                  />
-                  <div className="absolute bottom-0 w-full bg-white/90 p-1 text-[10px] uppercase truncate text-center">
-                    {item.name}
+          <ModalBody className="pb-6">
+            {Object.entries(groupedClothes)
+              .sort(([catA], [catB]) => catA.localeCompare(catB))
+              .map(([category, items]) => {
+                const isAccessory = ACCESSORY_CATEGORIES.includes(category);
+                const selectedInCategory = getSelectedInCategory(category);
+
+                return (
+                  <div key={category} className="mb-8">
+                    <div className="flex items-center gap-3 mb-4 pb-2 border-b border-default-200">
+                      <h4 className="text-xs font-bold uppercase tracking-widest">
+                        {category}
+                      </h4>
+                      <span className="text-[10px] text-default-400 uppercase tracking-wider">
+                        {isAccessory ? "Accessories" : "Pick One"}
+                      </span>
+                      {!isAccessory && selectedInCategory && (
+                        <span className="text-[10px] text-success-600 uppercase tracking-wider ml-auto">
+                          ✓ Selected: {selectedInCategory.name}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                      {items.map((item) => {
+                        const isSelected = selectedClothes.some(
+                          (c) => c.id === item.id,
+                        );
+                        const isDisabled =
+                          !isAccessory &&
+                          selectedInCategory &&
+                          selectedInCategory.id !== item.id;
+
+                        return (
+                          <div
+                            key={item.id}
+                            className={`aspect-[3/4] cursor-pointer group relative border-2 transition-all ${
+                              isSelected
+                                ? "border-primary shadow-lg"
+                                : isDisabled
+                                  ? "border-default-100 opacity-40 cursor-not-allowed"
+                                  : "border-transparent hover:border-default-300"
+                            }`}
+                            onClick={() => {
+                              if (!isDisabled) {
+                                handleAddClothes(item);
+                              }
+                            }}
+                          >
+                            <Image
+                              src={item.imageUrl || ""}
+                              radius="none"
+                              className={`w-full h-full object-cover ${!isDisabled && "group-hover:opacity-80"}`}
+                            />
+                            <div
+                              className={`absolute bottom-0 w-full p-1 text-[9px] uppercase truncate text-center ${
+                                isSelected
+                                  ? "bg-primary text-white"
+                                  : "bg-white/90 text-foreground"
+                              }`}
+                            >
+                              {item.name}
+                            </div>
+                            {isSelected && (
+                              <div className="absolute top-1 right-1 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                                ✓
+                              </div>
+                            )}
+                            {isDisabled && (
+                              <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                                <span className="text-[10px] text-danger font-bold uppercase">
+                                  Replace {selectedInCategory?.name}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                );
+              })}
           </ModalBody>
+          <ModalFooter>
+            <Button
+              radius="none"
+              variant="light"
+              onPress={addClothesModal.onClose}
+            >
+              Done
+            </Button>
+          </ModalFooter>
         </ModalContent>
       </Modal>
 

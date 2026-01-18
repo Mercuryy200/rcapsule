@@ -156,3 +156,43 @@ export const occasions = [
   "school",
   "rain/snow",
 ];
+
+export const materials = [
+  "cotton",
+  "polyester",
+  "wool",
+  "silk",
+  "linen",
+  "denim",
+  "leather",
+  "suede",
+  "cashmere",
+  "velvet",
+  "satin",
+  "chiffon",
+  "nylon",
+  "spandex",
+  "rayon",
+  "acrylic",
+  "modal",
+  "bamboo",
+  "hemp",
+  "fleece",
+  "tweed",
+  "corduroy",
+  "canvas",
+  "jersey",
+  "mesh",
+  "lace",
+  "faux leather",
+  "faux fur",
+  "synthetic blend",
+].sort();
+
+export const conditions = [
+  "new",
+  "excellent",
+  "good",
+  "fair",
+  "poor",
+] as const;

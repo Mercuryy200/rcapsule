@@ -13,6 +13,7 @@ import {
   Tabs,
   Tab,
   Spinner,
+  Textarea,
 } from "@heroui/react";
 import {
   ArrowLeftIcon,
@@ -24,7 +25,15 @@ import {
 } from "@heroicons/react/24/outline";
 
 import type { Clothes } from "@/lib/database.type";
-import { colors, occasions, seasons, categories, colorMap } from "@/lib/data";
+import {
+  colors,
+  occasions,
+  seasons,
+  categories,
+  colorMap,
+  materials,
+  conditions,
+} from "@/lib/data";
 import { ImageUpload } from "@/components/closet/ImageUpload";
 
 export default function ItemPage() {
@@ -52,6 +61,9 @@ export default function ItemPage() {
     imageUrl: "",
     placesToWear: [] as string[],
     purchaseDate: "",
+    materials: [] as string[],
+    condition: "excellent" as string,
+    careInstructions: "",
   });
 
   useEffect(() => {
@@ -88,6 +100,9 @@ export default function ItemPage() {
           purchaseDate: data.purchaseDate
             ? data.purchaseDate.split("T")[0]
             : "",
+          materials: data.materials || [],
+          condition: data.condition || "excellent",
+          careInstructions: data.careInstructions || "",
         });
 
         if (data.imageUrl && !data.imageUrl.startsWith("https")) {
@@ -123,6 +138,9 @@ export default function ItemPage() {
       placesToWear:
         formData.placesToWear.length > 0 ? formData.placesToWear : null,
       colors: formData.colors.length > 0 ? formData.colors : null,
+      materials: formData.materials.length > 0 ? formData.materials : null,
+      condition: formData.condition || "excellent",
+      careInstructions: formData.careInstructions.trim() || null,
     };
 
     try {
@@ -305,6 +323,53 @@ export default function ItemPage() {
                       </span>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Care & Condition */}
+              {(item.materials?.length ||
+                item.condition ||
+                item.careInstructions) && (
+                <Divider className="my-4" />
+              )}
+
+              {item.materials && item.materials.length > 0 && (
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-default-400 mb-2">
+                    Materials
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {item.materials.map((material) => (
+                      <span
+                        key={material}
+                        className="px-3 py-1 bg-default-100 rounded-full text-xs font-medium capitalize"
+                      >
+                        {material}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {item.condition && (
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-default-400 mb-2">
+                    Condition
+                  </span>
+                  <span className="px-3 py-1 bg-default-100 rounded-full text-xs font-medium capitalize inline-block">
+                    {item.condition}
+                  </span>
+                </div>
+              )}
+
+              {item.careInstructions && (
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-default-400 mb-2">
+                    Care Instructions
+                  </span>
+                  <p className="text-sm text-default-600 leading-relaxed">
+                    {item.careInstructions}
+                  </p>
                 </div>
               )}
 
@@ -525,6 +590,75 @@ export default function ItemPage() {
                       <SelectItem key={o}>{o}</SelectItem>
                     ))}
                   </Select>
+                </div>
+
+                {/* Care & Condition Section */}
+                <div className="pt-4 border-t border-divider">
+                  <h3 className="text-xs font-bold uppercase tracking-widest mb-3 text-default-500">
+                    Care & Condition
+                  </h3>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <Select
+                      label="Materials"
+                      variant="bordered"
+                      radius="sm"
+                      placeholder="Select materials"
+                      selectionMode="multiple"
+                      selectedKeys={new Set(formData.materials || [])}
+                      onSelectionChange={(keys) =>
+                        setFormData({
+                          ...formData,
+                          materials: Array.from(keys) as string[],
+                        })
+                      }
+                      classNames={{ trigger: "border-default-300" }}
+                    >
+                      {materials.map((material) => (
+                        <SelectItem key={material}>{material}</SelectItem>
+                      ))}
+                    </Select>
+
+                    <Select
+                      label="Condition"
+                      variant="bordered"
+                      radius="sm"
+                      placeholder="Select condition"
+                      selectedKeys={
+                        formData.condition ? [formData.condition] : []
+                      }
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          condition: e.target.value,
+                        })
+                      }
+                      classNames={{ trigger: "border-default-300" }}
+                    >
+                      {conditions.map((condition) => (
+                        <SelectItem key={condition} value={condition}>
+                          {condition.charAt(0).toUpperCase() +
+                            condition.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </Select>
+
+                    <Textarea
+                      label="Care Instructions"
+                      variant="bordered"
+                      radius="sm"
+                      placeholder="e.g., Hand wash cold, lay flat to dry..."
+                      value={formData.careInstructions}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          careInstructions: e.target.value,
+                        })
+                      }
+                      classNames={{ inputWrapper: "border-default-300" }}
+                      minRows={3}
+                    />
+                  </div>
                 </div>
 
                 {/* Edit Image Section */}
