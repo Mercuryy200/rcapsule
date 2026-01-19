@@ -136,7 +136,7 @@ export default function WardrobePage() {
     try {
       const response = await fetch(
         `/api/wardrobes/${wardrobeId}/clothes/${clothesId}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
       if (response.ok) {
         fetchWardrobe();
@@ -212,7 +212,7 @@ export default function WardrobePage() {
 
   const itemsNotInWardrobe = availableClothes.filter(
     (item) =>
-      !wardrobe.clothes.some((wardrobeItem) => wardrobeItem.id === item.id)
+      !wardrobe.clothes.some((wardrobeItem) => wardrobeItem.id === item.id),
   );
 
   return (
@@ -265,7 +265,7 @@ export default function WardrobePage() {
                     {wardrobe.clothes.length === 1 ? "Piece" : "Pieces"}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/20 backdrop-blur-xl text-emerald-100 text-xs font-bold uppercase tracking-wider border border-emerald-500/30 rounded-full">
+                <div className="flex items-center gap-2 px-4 py-1.5 text-white text-xs font-bold uppercase">
                   <CurrencyDollarIcon className="w-3.5 h-3.5" />
                   <span>
                     {wardrobe.stats?.totalValue?.toLocaleString("en-CA", {
@@ -330,7 +330,6 @@ export default function WardrobePage() {
         </div>
       </div>
 
-      {/* --- CONTENT GRID --- */}
       <div className="max-w-7xl mx-auto px-6 py-16">
         {wardrobe.clothes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 border border-dashed border-default-300">
@@ -370,7 +369,6 @@ export default function WardrobePage() {
                     classNames={{ wrapper: "w-full h-full" }}
                   />
 
-                  {/* Hover Actions Overlay */}
                   <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
                     <Button
                       isIconOnly
@@ -409,7 +407,6 @@ export default function WardrobePage() {
               </div>
             ))}
 
-            {/* "Add More" Card at the end of grid */}
             <div
               className="aspect-[3/4] border border-dashed border-default-300 flex flex-col items-center justify-center cursor-pointer hover:bg-default-50 transition-colors group"
               onClick={addExistingModal.onOpen}
