@@ -2,15 +2,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Button, Spinner, Chip, Image, Divider } from "@heroui/react";
+import { Button, Spinner, Chip, Image as HeroImage } from "@heroui/react";
+
 import {
   ArrowLeftIcon,
   PencilSquareIcon,
-  SparklesIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
 
-// Types...
 interface Outfit {
   id: string;
   name: string;
@@ -52,6 +51,7 @@ export default function OutfitDetailPage() {
       setLoading(false);
     }
   };
+
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this look?")) return;
     try {
@@ -89,18 +89,19 @@ export default function OutfitDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[80vh]">
-        <div className="relative bg-content2 flex items-center justify-center p-8 lg:p-20 order-2 lg:order-1">
-          <div className="relative w-full aspect-[3/4] shadow-2xl">
-            <Image
+        {/* IMAGE SECTION */}
+        <div className="bg-content2 flex items-center justify-center p-8 lg:p-20 order-2 lg:order-1">
+          <div className="w-full max-w-lg shadow-2xl bg-white overflow-hidden aspect-[3/4]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={outfit.imageUrl || "/images/placeholder.png"}
               alt={outfit.name}
-              radius="none"
-              className="w-full h-full object-cover"
-              classNames={{ wrapper: "w-full h-full" }}
+              className="w-full h-full object-cover block"
             />
           </div>
         </div>
 
+        {/* DETAILS SECTION */}
         <div className="flex flex-col justify-center px-6 py-12 lg:px-24 order-1 lg:order-2">
           <div className="mb-2 flex gap-2">
             {outfit.season && (
@@ -164,10 +165,12 @@ export default function OutfitDetailPage() {
                   onClick={() => router.push(`/closet/${item.id}`)}
                 >
                   <div className="w-16 h-16 bg-default-50 border border-default-200">
-                    <Image
+                    <HeroImage
+                      removeWrapper
                       src={item.imageUrl || ""}
                       radius="none"
                       className="w-full h-full object-cover"
+                      alt={item.name}
                     />
                   </div>
                   <div>
@@ -190,7 +193,7 @@ export default function OutfitDetailPage() {
               fullWidth
               className="uppercase font-bold tracking-widest h-12"
               startContent={<PencilSquareIcon className="w-4 h-4" />}
-              onPress={() => router.push(`/outfits/${outfit.id}/edit`)} // LINKS TO EDIT PAGE
+              onPress={() => router.push(`/outfits/${outfit.id}/edit`)}
             >
               Edit Look
             </Button>

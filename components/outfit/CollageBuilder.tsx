@@ -2,7 +2,7 @@
 import React, { useState, useRef } from "react";
 import { Rnd } from "react-rnd";
 import html2canvas from "html2canvas";
-import { Button, Spinner } from "@heroui/react";
+import { Button } from "@heroui/react";
 import {
   XMarkIcon,
   ArrowDownTrayIcon,
@@ -16,7 +16,7 @@ interface ClothingItem {
 }
 
 interface CanvasItem extends ClothingItem {
-  uniqueId: string; // To allow adding the same item multiple times
+  uniqueId: string;
   x: number;
   y: number;
   width: number;
@@ -35,30 +35,45 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
   const [isSaving, setIsSaving] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // Add item to canvas (center it initially)
+  // --- CHANGED FUNCTION ---
   const addToCanvas = (item: ClothingItem) => {
     if (!item.imageUrl) return;
 
-    const newItem: CanvasItem = {
-      ...item,
-      uniqueId: `${item.id}-${Date.now()}`,
-      x: 100, // Default position
-      y: 100,
-      width: 200, // Default size
-      height: 200, // Keep aspect ratio logic in Rnd if needed
-      zIndex: canvasItems.length + 1,
-    };
+    // 1. Create a temporary image to read natural dimensions
+    const img = new Image();
+    img.crossOrigin = "anonymous"; // Good practice for external images
+    img.src = item.imageUrl;
 
-    setCanvasItems([...canvasItems, newItem]);
-    setSelectedId(newItem.uniqueId);
+    img.onload = () => {
+      // 2. Define a base width (e.g., 200px)
+      const baseWidth = 200;
+
+      // 3. Calculate height based on the image's natural aspect ratio
+      // Formula: (Natural Height / Natural Width) * Target Width
+      const aspectRatio = img.naturalWidth / img.naturalHeight;
+      const calculatedHeight = baseWidth / aspectRatio;
+
+      const newItem: CanvasItem = {
+        ...item,
+        uniqueId: `${item.id}-${Date.now()}`,
+        x: 100,
+        y: 100,
+        width: baseWidth,
+        height: calculatedHeight, // Uses the real image proportions
+        zIndex: canvasItems.length + 1,
+      };
+
+      setCanvasItems((prev) => [...prev, newItem]);
+      setSelectedId(newItem.uniqueId);
+    };
   };
 
   // Update item position/size
   const updateItem = (uniqueId: string, data: Partial<CanvasItem>) => {
     setCanvasItems((prev) =>
       prev.map((item) =>
-        item.uniqueId === uniqueId ? { ...item, ...data } : item
-      )
+        item.uniqueId === uniqueId ? { ...item, ...data } : item,
+      ),
     );
   };
 
@@ -68,7 +83,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
     setCanvasItems((prev) => {
       const maxZ = Math.max(...prev.map((i) => i.zIndex), 0);
       return prev.map((item) =>
-        item.uniqueId === uniqueId ? { ...item, zIndex: maxZ + 1 } : item
+        item.uniqueId === uniqueId ? { ...item, zIndex: maxZ + 1 } : item,
       );
     });
   };
@@ -81,42 +96,26 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
   const handleSave = async () => {
     if (!canvasRef.current || canvasItems.length === 0) return;
     setIsSaving(true);
-    setSelectedId(null); // Deselect to hide borders before screenshot
+    setSelectedId(null);
 
-    // Wait for render to clear selection
     setTimeout(async () => {
       try {
         if (!canvasRef.current) return;
 
-        // Get the actual dimensions of the canvas area
-        const rect = canvasRef.current.getBoundingClientRect();
-
+        // Use standard html2canvas config
         const canvas = await html2canvas(canvasRef.current, {
-          useCORS: true, // Crucial for external images
+          useCORS: true,
+          allowTaint: false,
           backgroundColor: "#ffffff",
-          scale: 2, // Higher quality
-          width: rect.width,
-          height: rect.height,
-          windowWidth: rect.width,
-          windowHeight: rect.height,
-          // Preserve original aspect ratio
-          ignoreElements: (element) => {
-            return element.classList.contains("bg-grid-pattern");
-          },
+          scale: 2,
         });
 
-        canvas.toBlob(
-          async (blob) => {
-            if (blob) {
-              const file = new File([blob], "collage.png", {
-                type: "image/png",
-              });
-              await onSave(file);
-            }
-          },
-          "image/png",
-          1.0
-        );
+        canvas.toBlob(async (blob) => {
+          if (blob) {
+            const file = new File([blob], "collage.png", { type: "image/png" });
+            await onSave(file);
+          }
+        });
       } catch (err) {
         console.error("Collage failed", err);
         alert("Failed to generate image. Ensure images allow CORS.");
@@ -161,7 +160,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
         </div>
       </div>
 
-      <div className="flex gap-4" style={{ height: "600px" }}>
+      <div className="flex gap-4 h-[500px]">
         {/* SIDEBAR: AVAILABLE ITEMS */}
         <div className="w-32 flex-shrink-0 overflow-y-auto border border-default-200 p-2 space-y-2 bg-default-50">
           <p className="text-[10px] text-center uppercase tracking-widest text-default-400 mb-2">
@@ -185,7 +184,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
 
         {/* CANVAS AREA */}
         <div
-          className="flex-1 bg-white border border-dashed border-default-300 relative overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] bg-grid-pattern"
+          className="flex-1 bg-white border border-dashed border-default-300 relative overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]"
           ref={canvasRef}
         >
           {canvasItems.length === 0 && (
@@ -213,7 +212,6 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                 });
               }}
               onMouseDown={() => bringToFront(item.uniqueId)}
-              // Only show resize handles when selected
               enableResizing={selectedId === item.uniqueId}
               style={{ zIndex: item.zIndex }}
               className={
@@ -221,17 +219,18 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                   ? "border border-primary border-dashed"
                   : ""
               }
-              lockAspectRatio={true} // Optional: keep garment shape
+              lockAspectRatio={true}
             >
               <div className="w-full h-full relative group">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={item.imageUrl}
                   alt="collage-item"
-                  className="w-full h-full object-contain pointer-events-none"
+                  // Use 'fill' to ensure image fills the Rnd container we just sized perfectly
+                  className="w-full h-full object-fill pointer-events-none"
                   crossOrigin="anonymous"
                 />
-                {/* Delete Button (Visible only when selected) */}
+
                 {selectedId === item.uniqueId && (
                   <button
                     className="absolute -top-3 -right-3 bg-danger text-white rounded-full p-1 shadow-md z-50 hover:scale-110 transition-transform"
