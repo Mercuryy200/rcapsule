@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const folder = (formData.get("folder") as string) || "clothes"; // 'clothes' or 'outfits'
+    const folder = (formData.get("folder") as string) || "clothes";
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         {
           error: "Invalid file type. Only JPEG, PNG, WEBP, and GIF are allowed",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     if (file.size > maxSize) {
       return NextResponse.json(
         { error: "File too large. Maximum size is 5MB" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       console.error("Upload error:", error);
       return NextResponse.json(
         { error: "Failed to upload file" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     console.error("Error uploading file:", error);
     return NextResponse.json(
       { error: "Failed to upload file" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -110,7 +110,7 @@ export async function DELETE(req: Request) {
       console.error("Delete error:", error);
       return NextResponse.json(
         { error: "Failed to delete file" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -119,7 +119,7 @@ export async function DELETE(req: Request) {
     console.error("Error deleting file:", error);
     return NextResponse.json(
       { error: "Failed to delete file" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -435,9 +435,10 @@ export default function EditOutfitPage() {
                 Add Items
               </Button>
             </div>
-{selectedClothes.length === 0 ? (
+            {selectedClothes.length === 0 ? (
               <div className="py-8 text-center text-default-400 text-sm italic">
-                No items selected. Click "Add Items" to start building your look.
+                No items selected. Click "Add Items" to start building your
+                look.
               </div>
             ) : (
               <div className="space-y-6">

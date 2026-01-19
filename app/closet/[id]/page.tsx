@@ -25,13 +25,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 import type { Clothes } from "@/lib/database.type";
-import {
-  colors,
-  occasions,
-  seasons,
-  categories,
-  colorMap,
-} from "@/lib/data";
+import { colors, occasions, seasons, categories, colorMap } from "@/lib/data";
 import { ImageUpload } from "@/components/closet/ImageUpload";
 
 export default function ItemPage() {
