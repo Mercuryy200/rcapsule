@@ -6,6 +6,10 @@ A full-stack wardrobe management application that helps you catalog, organize, a
 [![GitHub](https://img.shields.io/badge/github-repo-blue)](https://github.com/Mercuryy200/ClosetOrganizer)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+## Extension Showcase
+
+![Showcase](public/images/showcase.gif)
+
 ## Features
 
 - **Secure Authentication**: Sign in with Google or GitHub using NextAuth.js or with email
