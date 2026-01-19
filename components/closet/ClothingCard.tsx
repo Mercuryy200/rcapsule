@@ -23,11 +23,12 @@ export default function ClothingCard({ item, onClick }: ClothingCardProps) {
       isPressable
       onPress={() => onClick(item.id)}
     >
-      <CardBody className="p-0 overflow-hidden rounded-none aspect-[3/4] bg-content2 relative">
+      <CardBody className="p-0 overflow-hidden rounded-none aspect-[3/4] bg-content2 relative flex justify-center items-center">
         <Image
           alt={item.name}
           src={item.imageUrl || "/images/placeholder.png"}
-          className="object-cover w-full h-full transform transition-transform duration-500 group-hover:scale-105"
+          // object-contain ensures the image aspect ratio is preserved within the box
+          className="w-full h-full object-contain transform transition-transform duration-500 group-hover:scale-105"
           radius="none"
           width="100%"
         />
