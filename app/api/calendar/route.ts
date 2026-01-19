@@ -30,7 +30,6 @@ async function updateOutfitStats(
     lastWornAt: latestWear,
   };
 
-  // Only update weather/temp/location if provided
   if (metadata) {
     if (metadata.weather) updates.weatherWorn = metadata.weather;
     if (metadata.temperature)
@@ -41,7 +40,6 @@ async function updateOutfitStats(
   await supabase.from("Outfit").update(updates).eq("id", outfitId);
 }
 
-// IMPROVED: Also update individual clothes stats
 async function updateClothesStats(supabase: any, clothesIds: string[]) {
   for (const clothesId of clothesIds) {
     const { data: distinctWears } = await supabase
@@ -54,26 +52,19 @@ async function updateClothesStats(supabase: any, clothesIds: string[]) {
       distinctWears?.map((log: any) => log.wornAt.split("T")[0]) || [],
     );
 
-    // Update ClothesAnalytics table if it exists
     const totalWears = uniqueDates.size;
     const lastWorn = distinctWears?.[0]?.wornAt || null;
     const firstWorn = distinctWears?.[distinctWears.length - 1]?.wornAt || null;
-
-    // Check if Clothes table has these columns
     await supabase
       .from("Clothes")
       .update({
-        // Add these columns to Clothes table if they don't exist:
-        // timesWorn: integer DEFAULT 0
-        // lastWornAt: timestamp
         timesWorn: totalWears,
         lastWornAt: lastWorn,
       })
       .eq("id", clothesId)
       .then(() => {})
-      .catch(() => {}); // Silently fail if columns don't exist
+      .catch(() => {});
 
-    // If you have ClothesAnalytics table, update it here
     await supabase
       .from("ClothesAnalytics")
       .upsert({
@@ -85,7 +76,7 @@ async function updateClothesStats(supabase: any, clothesIds: string[]) {
         lastCalculatedAt: new Date().toISOString(),
       })
       .then(() => {})
-      .catch(() => {}); // Silently fail if table doesn't exist
+      .catch(() => {});
   }
 }
 

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { Rnd } from "react-rnd";
 import html2canvas from "html2canvas";
 import { Button } from "@heroui/react";
@@ -182,7 +182,6 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
           ))}
         </div>
 
-        {/* CANVAS AREA */}
         <div
           className="flex-1 bg-white border border-dashed border-default-300 relative overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]"
           ref={canvasRef}

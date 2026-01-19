@@ -2,27 +2,53 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Button, Input, Switch, Avatar, Divider } from "@heroui/react";
+import {
+  Button,
+  Input,
+  Switch,
+  Avatar,
+  Divider,
+  Select,
+  SelectItem,
+  RadioGroup,
+  Radio,
+} from "@heroui/react";
 import {
   UserCircleIcon,
   ShieldCheckIcon,
   EyeIcon,
   ArrowLeftIcon,
+  AdjustmentsHorizontalIcon,
 } from "@heroicons/react/24/outline";
 import { useUser } from "@/contexts/UserContext";
-import { ImageUpload } from "@/components/closet/ImageUpload"; // Reusing your existing component
+import { ImageUpload } from "@/components/closet/ImageUpload";
+
+const STYLE_OPTIONS = [
+  { label: "Minimalist", value: "minimalist" },
+  { label: "Streetwear", value: "streetwear" },
+  { label: "Vintage", value: "vintage" },
+  { label: "Business", value: "business" },
+  { label: "Casual", value: "casual" },
+  { label: "Athleisure", value: "athleisure" },
+  { label: "Bohemian", value: "bohemian" },
+];
+
+const SUSTAINABILITY_OPTIONS = [
+  { label: "Eco-friendly Materials", key: "eco_materials" },
+  { label: "Second-hand / Thrifting", key: "second_hand" },
+  { label: "Fair Trade", key: "fair_trade" },
+  { label: "Local Production", key: "local" },
+];
 
 export default function SettingsPage() {
   const { data: session, status } = useSession();
   const { user, refreshUser } = useUser();
   const router = useRouter();
 
-  // State
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [activeTab, setActiveTab] = useState("profile");
 
-  // Forms
   const [profileData, setProfileData] = useState({ name: "", image: "" });
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -31,7 +57,22 @@ export default function SettingsPage() {
   });
   const [isPublic, setIsPublic] = useState(false);
 
-  // Init Data
+  const [prefLoading, setPrefLoading] = useState(false);
+  const [prefData, setPrefData] = useState({
+    budgetGoal: 0,
+    temperature_unit: "celsius",
+    location_city: "",
+    location_country: "",
+    styleGoals: new Set<string>([]),
+    sustainabilityGoals: {} as Record<string, boolean>,
+    notifications: {
+      email: true,
+      push: false,
+      marketing: false,
+    } as Record<string, boolean>,
+    analyticsPrivacy: "private",
+  });
+
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
     else if (status === "authenticated" && user) {
@@ -39,6 +80,12 @@ export default function SettingsPage() {
       fetchVisibility();
     }
   }, [status, router, user]);
+
+  useEffect(() => {
+    if (activeTab === "preferences" && status === "authenticated") {
+      fetchPreferences();
+    }
+  }, [activeTab, status]);
 
   const fetchVisibility = async () => {
     try {
@@ -52,7 +99,64 @@ export default function SettingsPage() {
     }
   };
 
-  // --- HANDLERS ---
+  const fetchPreferences = async () => {
+    setPrefLoading(true);
+    try {
+      const res = await fetch("/api/user/preference");
+      if (res.ok) {
+        const data = await res.json();
+
+        setPrefData({
+          ...data,
+          budgetGoal: data.budgetGoal || 0,
+          location_city: data.location_city || "",
+          location_country: data.location_country || "",
+          styleGoals: new Set(data.styleGoals || []),
+          sustainabilityGoals: data.sustainabilityGoals || {},
+          notifications: data.notifications || {
+            email: true,
+            push: false,
+            marketing: false,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch preferences", error);
+    } finally {
+      setPrefLoading(false);
+    }
+  };
+
+  const handleSavePreferences = async () => {
+    setLoading(true);
+    setMessage({ text: "", type: "" });
+
+    try {
+      const payload = {
+        ...prefData,
+        styleGoals: Array.from(prefData.styleGoals),
+      };
+
+      const response = await fetch("/api/user/preference", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        setMessage({
+          text: "Preferences saved successfully.",
+          type: "success",
+        });
+      } else {
+        setMessage({ text: "Failed to save preferences.", type: "error" });
+      }
+    } catch (error) {
+      setMessage({ text: "An error occurred.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleUpdateProfile = async () => {
     setLoading(true);
@@ -66,7 +170,7 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
-        await refreshUser(); // Update context
+        await refreshUser();
         setMessage({ text: "Profile updated successfully.", type: "success" });
       } else {
         setMessage({ text: "Failed to update profile.", type: "error" });
@@ -131,10 +235,24 @@ export default function SettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ profilePublic: value }),
       });
-      if (!response.ok) setIsPublic(!value); // Revert on fail
+      if (!response.ok) setIsPublic(!value);
     } catch (error) {
       setIsPublic(!value);
     }
+  };
+
+  const updateJsonField = (
+    field: "sustainabilityGoals" | "notifications",
+    key: string,
+    value: boolean,
+  ) => {
+    setPrefData((prev) => ({
+      ...prev,
+      [field]: {
+        ...prev[field],
+        [key]: value,
+      },
+    }));
   };
 
   if (status === "loading") return null;
@@ -174,24 +292,15 @@ export default function SettingsPage() {
         {/* SIDEBAR TABS */}
         <div className="lg:col-span-3">
           <div className="flex flex-col gap-2 sticky top-24">
-            <button
-              onClick={() => setActiveTab("profile")}
-              className={`text-left px-4 py-3 text-xs uppercase tracking-widest font-bold transition-all border-l-2 ${activeTab === "profile" ? "border-primary text-primary bg-primary/5" : "border-transparent text-default-400 hover:text-foreground"}`}
-            >
-              Profile
-            </button>
-            <button
-              onClick={() => setActiveTab("security")}
-              className={`text-left px-4 py-3 text-xs uppercase tracking-widest font-bold transition-all border-l-2 ${activeTab === "security" ? "border-primary text-primary bg-primary/5" : "border-transparent text-default-400 hover:text-foreground"}`}
-            >
-              Security
-            </button>
-            <button
-              onClick={() => setActiveTab("privacy")}
-              className={`text-left px-4 py-3 text-xs uppercase tracking-widest font-bold transition-all border-l-2 ${activeTab === "privacy" ? "border-primary text-primary bg-primary/5" : "border-transparent text-default-400 hover:text-foreground"}`}
-            >
-              Privacy
-            </button>
+            {["profile", "security", "privacy", "preferences"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`text-left px-4 py-3 text-xs uppercase tracking-widest font-bold transition-all border-l-2 ${activeTab === tab ? "border-primary text-primary bg-primary/5" : "border-transparent text-default-400 hover:text-foreground"}`}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -225,7 +334,7 @@ export default function SettingsPage() {
                       onChange={(url) =>
                         setProfileData({ ...profileData, image: url })
                       }
-                      folder="profile" // Saves to: user_id/profile/filename
+                      folder="profile"
                       label="Change Photo"
                     />
                   </div>
@@ -363,6 +472,197 @@ export default function SettingsPage() {
                     wrapper: "group-data-[selected=true]:bg-foreground",
                   }}
                 />
+              </div>
+            </div>
+          )}
+
+          {/* USER PREFERENCES SECTION */}
+          {activeTab === "preferences" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div>
+                <h2 className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
+                  <AdjustmentsHorizontalIcon className="w-6 h-6" /> Preferences
+                </h2>
+                <Divider className="my-4" />
+
+                {prefLoading ? (
+                  <div className="w-full h-40 flex items-center justify-center text-default-400">
+                    Loading preferences...
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* LEFT COLUMN: General & Location */}
+                    <div className="space-y-6">
+                      <h3 className="font-semibold text-default-500 uppercase text-xs tracking-wider">
+                        General Settings
+                      </h3>
+
+                      <Input
+                        type="number"
+                        label="Monthly Budget Goal"
+                        placeholder="0.00"
+                        variant="bordered"
+                        radius="none"
+                        value={prefData.budgetGoal.toString()}
+                        onChange={(e) =>
+                          setPrefData({
+                            ...prefData,
+                            budgetGoal: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        startContent={
+                          <span className="text-default-400 text-small">$</span>
+                        }
+                      />
+
+                      <div className="flex gap-4">
+                        <Input
+                          type="text"
+                          label="City"
+                          variant="bordered"
+                          radius="none"
+                          value={prefData.location_city}
+                          onChange={(e) =>
+                            setPrefData({
+                              ...prefData,
+                              location_city: e.target.value,
+                            })
+                          }
+                        />
+                        <Input
+                          type="text"
+                          label="Country"
+                          variant="bordered"
+                          radius="none"
+                          value={prefData.location_country}
+                          onChange={(e) =>
+                            setPrefData({
+                              ...prefData,
+                              location_country: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+
+                      <div className="pt-2">
+                        <RadioGroup
+                          label="Temperature Unit"
+                          orientation="horizontal"
+                          value={prefData.temperature_unit}
+                          onValueChange={(val) =>
+                            setPrefData({ ...prefData, temperature_unit: val })
+                          }
+                        >
+                          <Radio value="celsius">Celsius (°C)</Radio>
+                          <Radio value="fahrenheit">Fahrenheit (°F)</Radio>
+                        </RadioGroup>
+                      </div>
+
+                      <Divider className="my-2" />
+
+                      <h3 className="font-semibold text-default-500 uppercase text-xs tracking-wider">
+                        Notifications
+                      </h3>
+                      <div className="flex flex-col gap-3">
+                        <Switch
+                          isSelected={prefData.notifications?.email}
+                          onValueChange={(val) =>
+                            updateJsonField("notifications", "email", val)
+                          }
+                        >
+                          Email Alerts
+                        </Switch>
+                        <Switch
+                          isSelected={prefData.notifications?.push}
+                          onValueChange={(val) =>
+                            updateJsonField("notifications", "push", val)
+                          }
+                        >
+                          Push Notifications
+                        </Switch>
+                      </div>
+                    </div>
+
+                    {/* RIGHT COLUMN: Goals & Metadata */}
+                    <div className="space-y-6">
+                      <h3 className="font-semibold text-default-500 uppercase text-xs tracking-wider">
+                        Style & Sustainability
+                      </h3>
+
+                      <Select
+                        label="Style Goals"
+                        placeholder="Select your styles"
+                        selectionMode="multiple"
+                        variant="bordered"
+                        radius="none"
+                        selectedKeys={prefData.styleGoals}
+                        onSelectionChange={(keys) =>
+                          setPrefData({
+                            ...prefData,
+                            styleGoals: new Set(keys as unknown as string[]),
+                          })
+                        }
+                      >
+                        {STYLE_OPTIONS.map((style) => (
+                          <SelectItem key={style.value}>
+                            {style.label}
+                          </SelectItem>
+                        ))}
+                      </Select>
+
+                      <div className="flex flex-col gap-3 p-4 border border-default-200">
+                        <span className="text-small text-default-500">
+                          Sustainability Focus
+                        </span>
+                        {SUSTAINABILITY_OPTIONS.map((opt) => (
+                          <Switch
+                            key={opt.key}
+                            size="sm"
+                            isSelected={!!prefData.sustainabilityGoals[opt.key]}
+                            onValueChange={(val) =>
+                              updateJsonField(
+                                "sustainabilityGoals",
+                                opt.key,
+                                val,
+                              )
+                            }
+                          >
+                            {opt.label}
+                          </Switch>
+                        ))}
+                      </div>
+
+                      <Select
+                        label="Analytics Privacy"
+                        variant="bordered"
+                        radius="none"
+                        selectedKeys={[prefData.analyticsPrivacy]}
+                        onChange={(e) =>
+                          setPrefData({
+                            ...prefData,
+                            analyticsPrivacy: e.target.value,
+                          })
+                        }
+                      >
+                        <SelectItem key="private">Private</SelectItem>
+                        <SelectItem key="shared">Share Anonymously</SelectItem>
+                        <SelectItem key="public">Public</SelectItem>
+                      </Select>
+                    </div>
+
+                    <div className="col-span-1 md:col-span-2 pt-4 flex justify-end">
+                      <Button
+                        color="primary"
+                        radius="none"
+                        className="uppercase font-bold tracking-widest px-8 shadow-lg shadow-primary/20"
+                        isLoading={loading}
+                        onPress={handleSavePreferences}
+                      >
+                        Save Preferences
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -13,7 +13,6 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 
 import { colors, occasions, seasons, categories, colorMap } from "@/lib/data";
 
-// Re-exporting this interface so it can be used by the parent page
 export interface FilterOptions {
   categories: string[];
   colors: string[];
@@ -67,7 +66,6 @@ export default function ClothesFilter({
     });
   };
 
-  // Helper to style the accordion titles
   const itemClasses = {
     title: "text-xs font-bold uppercase tracking-widest text-foreground",
     trigger: "py-4",
@@ -76,7 +74,6 @@ export default function ClothesFilter({
 
   return (
     <div className="w-full h-full flex flex-col bg-background border-r border-divider pr-4">
-      {/* HEADER */}
       <div className="flex justify-between items-center mb-6 pt-1">
         <h3 className="text-xl font-black uppercase tracking-tighter italic">
           Refine
@@ -93,7 +90,6 @@ export default function ClothesFilter({
         </Button>
       </div>
 
-      {/* SCROLLABLE CONTENT */}
       <ScrollShadow hideScrollBar className="flex-1 -mr-2 pr-2">
         <Accordion
           selectionMode="multiple"
@@ -244,7 +240,6 @@ export default function ClothesFilter({
         </Accordion>
       </ScrollShadow>
 
-      {/* FOOTER ACTIONS */}
       <div className="pt-6 mt-auto">
         <Button
           fullWidth
