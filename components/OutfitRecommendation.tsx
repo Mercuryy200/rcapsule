@@ -77,6 +77,8 @@ export default function OutfitRecommendation({
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [selectedOccasion, setSelectedOccasion] = useState<string>("");
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [isLogging, setIsLogging] = useState(false);
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
@@ -88,12 +90,14 @@ export default function OutfitRecommendation({
     try {
       const params = new URLSearchParams();
       if (occasion) params.set("occasion", occasion);
-      params.set("count", "3");
+      params.set("count", "1");
+
       const res = await fetch(`/api/recommendations?${params}`);
       const result = await res.json();
 
       if (!res.ok) {
         setErrorCode(result.code);
+        setRemaining(result.remaining ?? 0);
         if (result.code === "LOCATION_NOT_SET") {
           onLocationNotSet?.();
         }
@@ -101,6 +105,7 @@ export default function OutfitRecommendation({
       }
 
       setData(result);
+      setRemaining(result.remaining);
       setCurrentIndex(0);
     } catch (err: any) {
       setError(err.message);
@@ -131,6 +136,31 @@ export default function OutfitRecommendation({
   const handlePrevOutfit = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
+    }
+  };
+  const handleLogOutfit = async () => {
+    if (!currentRecommendation) return;
+
+    setIsLogging(true);
+    try {
+      const itemIds = currentRecommendation.items.map((item) => item.id);
+
+      const res = await fetch("/api/wear-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: itemIds,
+          date: new Date().toISOString(),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to log outfit");
+
+      onOpenChange();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLogging(false);
     }
   };
 
@@ -192,6 +222,11 @@ export default function OutfitRecommendation({
               AI styling.
             </p>
           )}
+          {errorCode === "RATE_LIMIT_EXCEEDED" && (
+            <p className="text-[10px] text-default-500 italic">
+              *Your daily recommendations reset at midnight.
+            </p>
+          )}
 
           {!errorCode && (
             <Button
@@ -201,6 +236,8 @@ export default function OutfitRecommendation({
               className="uppercase font-bold tracking-widest border-default-400"
               startContent={<ArrowPathIcon className="w-4 h-4" />}
               onPress={handleRefresh}
+              isLoading={loading}
+              isDisabled={remaining === 0}
             >
               Retry
             </Button>
@@ -227,6 +264,11 @@ export default function OutfitRecommendation({
               </h3>
               <p className="text-[10px] font-bold uppercase tracking-widest text-default-400 mt-1">
                 {data.weather.temperature}°C • {data.weather.description}
+                {remaining !== null && (
+                  <span className="ml-2 text-primary">
+                    • {remaining} left today
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -266,6 +308,7 @@ export default function OutfitRecommendation({
               className="h-10 w-10 border border-default-200"
               onPress={handleRefresh}
               isLoading={loading}
+              isDisabled={remaining === 0}
             >
               <ArrowPathIcon className="w-4 h-4" />
             </Button>
@@ -485,7 +528,8 @@ export default function OutfitRecommendation({
             <Button
               color="primary"
               radius="none"
-              onPress={onOpenChange}
+              onPress={handleLogOutfit}
+              isLoading={isLogging}
               className="uppercase font-bold tracking-widest text-xs px-8"
             >
               Confirm Log
