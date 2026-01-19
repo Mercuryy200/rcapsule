@@ -1,6 +1,3 @@
-// lib/services/ai-recommendations.ts
-// AI-powered outfit recommendation service
-
 import type { WeatherContext } from "./weather";
 
 export interface ClothingItem {
@@ -26,7 +23,7 @@ export interface OutfitRecommendation {
   reasoning: string;
   styleNotes: string;
   weatherConsiderations: string;
-  alternativeIds?: string[]; // IDs of alternative items if user wants to swap
+  alternativeIds?: string[];
 }
 
 interface RecommendationContext {
@@ -36,13 +33,13 @@ interface RecommendationContext {
     styleGoals?: string[];
     preferredColors?: string[];
   };
-  recentlyWorn?: string[]; // IDs of items worn in last 7 days
+  recentlyWorn?: string[];
 }
 
 // Build the prompt for the AI
 function buildPrompt(
   clothes: ClothingItem[],
-  context: RecommendationContext
+  context: RecommendationContext,
 ): string {
   const { weather, occasion, userPreferences, recentlyWorn } = context;
 
@@ -71,7 +68,7 @@ ${weather.needsLayers ? "Large temperature swing - layering recommended." : ""}
 `.trim();
 
   // Build occasion context
-  const occasionDesc = occasion 
+  const occasionDesc = occasion
     ? `The user has ${occasion} planned today.`
     : "No specific occasion mentioned - suggest a versatile everyday outfit.";
 
@@ -130,7 +127,7 @@ Keep explanations concise but helpful.`;
 // Call OpenAI API
 async function callOpenAI(prompt: string): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
-  
+
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not configured");
   }
@@ -139,14 +136,15 @@ async function callOpenAI(prompt: string): Promise<string> {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: "You are a fashion-savvy AI stylist. Always respond with valid JSON only, no markdown formatting.",
+          content:
+            "You are a fashion-savvy AI stylist. Always respond with valid JSON only, no markdown formatting.",
         },
         {
           role: "user",
@@ -161,7 +159,9 @@ async function callOpenAI(prompt: string): Promise<string> {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(`OpenAI API error: ${error.error?.message || response.statusText}`);
+    throw new Error(
+      `OpenAI API error: ${error.error?.message || response.statusText}`,
+    );
   }
 
   const data = await response.json();
@@ -171,7 +171,7 @@ async function callOpenAI(prompt: string): Promise<string> {
 // Alternative: Call Anthropic Claude API
 async function callClaude(prompt: string): Promise<string> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  
+
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY is not configured");
   }
@@ -189,7 +189,9 @@ async function callClaude(prompt: string): Promise<string> {
       messages: [
         {
           role: "user",
-          content: prompt + "\n\nRespond with valid JSON only, no explanation or markdown.",
+          content:
+            prompt +
+            "\n\nRespond with valid JSON only, no explanation or markdown.",
         },
       ],
     }),
@@ -197,7 +199,9 @@ async function callClaude(prompt: string): Promise<string> {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(`Claude API error: ${error.error?.message || response.statusText}`);
+    throw new Error(
+      `Claude API error: ${error.error?.message || response.statusText}`,
+    );
   }
 
   const data = await response.json();
@@ -208,19 +212,21 @@ async function callClaude(prompt: string): Promise<string> {
 export async function getOutfitRecommendation(
   clothes: ClothingItem[],
   context: RecommendationContext,
-  provider: "openai" | "anthropic" = "openai"
+  provider: "openai" | "anthropic" = "openai",
 ): Promise<OutfitRecommendation> {
   // Filter to only owned clothes (not wishlist)
-  const ownedClothes = clothes.filter((item: any) => item.status !== "wishlist");
-  
+  const ownedClothes = clothes.filter(
+    (item: any) => item.status !== "wishlist",
+  );
+
   if (ownedClothes.length < 2) {
     throw new Error("Not enough clothes in wardrobe to make a recommendation");
   }
 
   const prompt = buildPrompt(ownedClothes, context);
-  
+
   let responseText: string;
-  
+
   if (provider === "anthropic" && process.env.ANTHROPIC_API_KEY) {
     responseText = await callClaude(prompt);
   } else {
@@ -240,22 +246,24 @@ export async function getOutfitRecommendation(
     if (cleanJson.endsWith("```")) {
       cleanJson = cleanJson.slice(0, -3);
     }
-    
+
     const recommendation = JSON.parse(cleanJson.trim()) as OutfitRecommendation;
-    
+
     // Validate that returned IDs exist in the clothes array
-    const clothesIds = new Set(ownedClothes.map(c => c.id));
-    recommendation.items = recommendation.items.filter(item => clothesIds.has(item.id));
-    
+    const clothesIds = new Set(ownedClothes.map((c) => c.id));
+    recommendation.items = recommendation.items.filter((item) =>
+      clothesIds.has(item.id),
+    );
+
     // Enrich with image URLs from original data
-    recommendation.items = recommendation.items.map(item => {
-      const originalItem = ownedClothes.find(c => c.id === item.id);
+    recommendation.items = recommendation.items.map((item) => {
+      const originalItem = ownedClothes.find((c) => c.id === item.id);
       return {
         ...item,
         imageUrl: originalItem?.imageUrl,
       };
     });
-    
+
     return recommendation;
   } catch (parseError) {
     console.error("Failed to parse AI response:", responseText);
@@ -267,29 +275,35 @@ export async function getOutfitRecommendation(
 export async function getOutfitOptions(
   clothes: ClothingItem[],
   context: RecommendationContext,
-  count: number = 3
+  count: number = 3,
 ): Promise<OutfitRecommendation[]> {
   const results: OutfitRecommendation[] = [];
   const usedItemIds = new Set<string>();
-  
+
   for (let i = 0; i < count; i++) {
     try {
       // Add previously recommended items to "recently worn" to get variety
       const modifiedContext = {
         ...context,
-        recentlyWorn: [...(context.recentlyWorn || []), ...Array.from(usedItemIds)],
+        recentlyWorn: [
+          ...(context.recentlyWorn || []),
+          ...Array.from(usedItemIds),
+        ],
       };
-      
-      const recommendation = await getOutfitRecommendation(clothes, modifiedContext);
+
+      const recommendation = await getOutfitRecommendation(
+        clothes,
+        modifiedContext,
+      );
       results.push(recommendation);
-      
+
       // Track used items for variety
-      recommendation.items.forEach(item => usedItemIds.add(item.id));
+      recommendation.items.forEach((item) => usedItemIds.add(item.id));
     } catch (error) {
       console.error(`Failed to get recommendation ${i + 1}:`, error);
       // Continue trying to get more recommendations
     }
   }
-  
+
   return results;
 }

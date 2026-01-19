@@ -3,17 +3,36 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
-import { Tabs, Tab, Spinner } from "@heroui/react";
+import {
+  Tabs,
+  Tab,
+  Spinner,
+  Button,
+  Modal,
+  ModalContent,
+  ModalBody,
+  useDisclosure,
+} from "@heroui/react";
+import {
+  SparklesIcon,
+  MapPinIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 
 import type { Clothes, Wardrobe, Outfit } from "@/lib/database.type";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import WardrobeTab from "@/components/profile/WardrobeTab";
 import { useUser } from "@/contexts/UserContext";
 
-// Import the visualization components
+// Import Visualization Components
 import { ColorPalette } from "@/components/closet/ColorPalette";
 import { StatsCard } from "@/components/closet/StatsCard";
 import CalendarTracker from "@/components/calendar/CalendarTracker";
+
+// Import New Components (Adjust paths as needed)
+import OutfitRecommendation from "@/components/OutfitRecommendation";
+import LocationSettings from "@/components/LocationSettings";
+import WeatherWidget from "@/components/WeatherWidget"; // Optional if you have it
 
 interface ExtendedWardrobe extends Wardrobe {
   clothesCount?: number;
@@ -24,10 +43,19 @@ export default function ProfilePage() {
   const { user } = useUser();
   const router = useRouter();
 
+  // Data State
   const [loading, setLoading] = useState(true);
   const [wardrobes, setWardrobes] = useState<ExtendedWardrobe[]>([]);
   const [clothes, setClothes] = useState<Clothes[]>([]);
   const [outfits, setOutfits] = useState<Outfit[]>([]);
+
+  // UI State
+  const [showRecommendation, setShowRecommendation] = useState(false);
+  const {
+    isOpen: isLocOpen,
+    onOpen: onLocOpen,
+    onOpenChange: onLocChange,
+  } = useDisclosure();
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -88,7 +116,7 @@ export default function ProfilePage() {
           totalColorTags > 0 ? Math.round((count / totalColorTags) * 100) : 0,
       }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 6); // Top 6 colors
+      .slice(0, 6);
 
     return {
       items: clothes.length,
@@ -125,15 +153,84 @@ export default function ProfilePage() {
         variant="underlined"
         classNames={{
           tabList:
-            "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+            "gap-8 w-full relative rounded-none p-0 border-b border-divider mb-8",
           cursor: "w-full bg-foreground",
           tab: "max-w-fit px-0 h-12",
           tabContent:
             "group-data-[selected=true]:text-foreground text-default-500 uppercase tracking-widest font-bold text-xs",
         }}
       >
+        {/* --- NEW TAB: THE EDIT (Stylist) --- */}
+        <Tab key="stylist" title="The Edit">
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Header / Utility Bar */}
+            <div className="flex justify-between items-end">
+              <div>
+                <h2 className="text-2xl font-black uppercase italic tracking-tighter">
+                  Daily Curator
+                </h2>
+                <p className="text-xs text-default-400 uppercase tracking-widest mt-1">
+                  AI-Powered Personal Styling
+                </p>
+              </div>
+              <Button
+                variant="light"
+                size="sm"
+                startContent={<MapPinIcon className="w-4 h-4" />}
+                onPress={onLocOpen}
+                className="uppercase font-bold text-[10px] tracking-widest text-default-500"
+              >
+                Location Settings
+              </Button>
+            </div>
+
+            {/* The Trigger Area */}
+            {!showRecommendation ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Weather Context - Left Side */}
+                <div className="md:col-span-1">
+                  <WeatherWidget onLocationNotSet={onLocOpen} compact={false} />
+                </div>
+
+                <div className="md:col-span-2 h-64 border border-default-200 bg-content1 flex flex-col items-center justify-center gap-6 relative overflow-hidden group">
+                  {/* Decorative Background Element */}
+
+                  <div className="z-10 text-center space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-default-400">
+                      Ready to dress?
+                    </p>
+                    <Button
+                      size="lg"
+                      radius="none"
+                      color="primary"
+                      className="uppercase font-bold tracking-widest px-12 py-6 shadow-xl"
+                      startContent={<SparklesIcon className="w-5 h-5" />}
+                      onPress={() => setShowRecommendation(true)}
+                    >
+                      Curate Today's Look
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="relative">
+                {/* When showing recommendation, use compact weather */}
+                <div className="flex items-center justify-between mb-4">
+                  <button
+                    onClick={() => setShowRecommendation(false)}
+                    className="text-[10px] uppercase font-bold tracking-widest text-default-400 hover:text-danger flex items-center gap-1 transition-colors"
+                  >
+                    <XMarkIcon className="w-3 h-3" /> Close Curator
+                  </button>
+                </div>
+                <OutfitRecommendation onLocationNotSet={onLocOpen} />
+              </div>
+            )}
+          </div>
+        </Tab>
+
         <Tab key="overview" title="Overview">
-          <div className="py-8 space-y-12">
+          <div className="space-y-12">
             {/* 1. FINANCIAL SUMMARY ROW */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatsCard
@@ -159,7 +256,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              <div className="bg-background border border-default-200 rounded-xl p-6 shadow-sm">
+              <div className="bg-background border border-default-200 p-6 shadow-sm">
                 <div className="mb-6">
                   <h3 className="text-sm font-bold uppercase tracking-widest text-default-500">
                     Color DNA
@@ -269,13 +366,30 @@ export default function ProfilePage() {
           <div className="py-8">
             <WardrobeTab wardrobes={wardrobes} refreshData={fetchProfileData} />
           </div>
-        </Tab>{" "}
+        </Tab>
         <Tab key="calendar" title="Calendar">
           <div className="py-8">
             <CalendarTracker clothes={clothes} outfits={outfits} />
           </div>
         </Tab>
       </Tabs>
+
+      {/* LOCATION MODAL */}
+      <Modal
+        isOpen={isLocOpen}
+        onOpenChange={onLocChange}
+        size="2xl"
+        classNames={{
+          base: "bg-background border border-default-200 rounded-none p-10",
+          closeButton: "hover:bg-default-100 active:bg-default-200",
+        }}
+      >
+        <ModalContent>
+          <ModalBody className="p-0">
+            <LocationSettings />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
