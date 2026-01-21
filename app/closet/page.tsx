@@ -137,6 +137,7 @@ export default function ClosetPage() {
       return true;
     });
   }, [clothes, filters]);
+
   const clothesByCategory = useMemo(() => {
     const groups: Record<string, ClothingItem[]> = {};
 
@@ -165,13 +166,11 @@ export default function ClosetPage() {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-6 py-8">
-      <header className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4 border-b border-divider pb-6">
+    <div className="wardrobe-page-container">
+      <header className="wardrobe-page-header">
         <div>
-          <h1 className="text-4xl font-black uppercase tracking-tighter italic">
-            Collection
-          </h1>
-          <p className="text-xs uppercase tracking-widest text-default-500 mt-2">
+          <h1 className="wardrobe-page-title">Collection</h1>
+          <p className="wardrobe-page-subtitle">
             {filteredClothes.length} Items / Season 2026
           </p>
         </div>
@@ -230,7 +229,7 @@ export default function ClosetPage() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="w-72 flex-shrink-0 sticky top-24 h-fit z-20"
+            className="wardrobe-filters-sidebar"
           >
             <ClothesFilter
               onFilterChange={setFilters}
@@ -240,10 +239,8 @@ export default function ClosetPage() {
         )}
 
         <div className="flex-1 min-w-0">
-          {" "}
-          {/* min-w-0 prevents flex overflow issues */}
           {filteredClothes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 border border-dashed border-default-300">
+            <div className="wardrobe-empty-state">
               <p className="text-lg font-light text-default-500 mb-4">
                 {clothes.length === 0
                   ? "Your closet is empty."
@@ -256,7 +253,7 @@ export default function ClosetPage() {
           ) : (
             <>
               {viewMode === "grid" && (
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
+                <div className="wardrobe-grid">
                   {filteredClothes.map((item) => (
                     <ClothingCard
                       key={item.id}
@@ -269,25 +266,19 @@ export default function ClosetPage() {
 
               {viewMode === "gallery" && (
                 <div className="space-y-12 pb-20">
-                  {/* .map() directly over the sorted array */}
                   {clothesByCategory.map(([category, items]) => (
                     <div key={category} className="space-y-3">
-                      <div className="flex items-center gap-4">
-                        <h2 className="text-xl font-black uppercase italic tracking-tighter">
-                          {category}
-                        </h2>
+                      <div className="wardrobe-category-header">
+                        <h2 className="wardrobe-category-title">{category}</h2>
                         <div className="h-[1px] flex-1 bg-default-200"></div>
-                        <span className="text-[10px] font-bold text-default-400 uppercase tracking-widest">
+                        <span className="wardrobe-category-count">
                           {items.length}
                         </span>
                       </div>
 
-                      <div className="flex overflow-x-auto gap-4 pb-4 pt-2 snap-x scrollbar-hide -mx-2 px-2">
+                      <div className="wardrobe-gallery-row">
                         {items.map((item) => (
-                          <div
-                            key={item.id}
-                            className="min-w-[160px] max-w-[160px] md:min-w-[200px] md:max-w-[200px] snap-start"
-                          >
+                          <div key={item.id} className="wardrobe-gallery-item">
                             <div className="h-full w-full">
                               <ClothingCard
                                 item={item}

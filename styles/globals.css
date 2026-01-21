@@ -9,3 +9,150 @@
   --color-earth-brown: #5e4b3b;
   --color-charcoal-grey: #3c3c3c;
 }
+/* Wardrobe Page Shared Styles */
+
+/* Main container */
+.wardrobe-page-container {
+  width: 100%;
+  max-width: 1280px; /* max-w-7xl */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem; /* px-6 */
+  padding-right: 1.5rem;
+  padding-top: 2rem; /* py-8 */
+  padding-bottom: 2rem;
+}
+
+/* Header section */
+.wardrobe-page-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 3rem; /* mb-12 */
+  gap: 1rem; /* gap-4 */
+  border-bottom: 1px solid;
+  border-color: hsl(var(--heroui-divider));
+  padding-bottom: 1.5rem; /* pb-6 */
+}
+
+@media (min-width: 768px) {
+  .wardrobe-page-header {
+    flex-direction: row;
+  }
+}
+
+/* Title */
+.wardrobe-page-title {
+  font-size: 2.25rem; /* text-4xl */
+  font-weight: 900; /* font-black */
+  text-transform: uppercase;
+  letter-spacing: -0.05em; /* tracking-tighter */
+  font-style: italic;
+}
+
+/* Subtitle */
+.wardrobe-page-subtitle {
+  font-size: 0.75rem; /* text-xs */
+  text-transform: uppercase;
+  letter-spacing: 0.1em; /* tracking-widest */
+  color: hsl(var(--heroui-default-500));
+  margin-top: 0.5rem; /* mt-2 */
+}
+
+/* Filters sidebar */
+.wardrobe-filters-sidebar {
+  width: 18rem; /* w-72 */
+  flex-shrink: 0;
+  position: sticky;
+  top: 6rem; /* top-24 */
+  height: fit-content;
+  z-index: 20;
+}
+
+/* Grid view */
+.wardrobe-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2.5rem 1.5rem; /* gap-y-10 gap-x-6 */
+}
+
+@media (min-width: 768px) {
+  .wardrobe-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .wardrobe-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Category header (gallery view) */
+.wardrobe-category-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.wardrobe-category-title {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 900; /* font-black */
+  text-transform: uppercase;
+  font-style: italic;
+  letter-spacing: -0.05em; /* tracking-tighter */
+}
+
+.wardrobe-category-count {
+  font-size: 0.625rem; /* text-[10px] */
+  font-weight: 700; /* font-bold */
+  color: hsl(var(--heroui-default-400));
+  text-transform: uppercase;
+  letter-spacing: 0.1em; /* tracking-widest */
+}
+
+/* Gallery row (horizontal scroll) */
+.wardrobe-gallery-row {
+  display: flex;
+  overflow-x: auto;
+  gap: 1rem; /* gap-4 */
+  padding-bottom: 1rem; /* pb-4 */
+  padding-top: 0.5rem; /* pt-2 */
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  margin-left: -0.5rem; /* -mx-2 */
+  margin-right: -0.5rem;
+  padding-left: 0.5rem; /* px-2 */
+  padding-right: 0.5rem;
+}
+
+.wardrobe-gallery-row::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.wardrobe-gallery-item {
+  min-width: 160px;
+  max-width: 160px;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 768px) {
+  .wardrobe-gallery-item {
+    min-width: 200px;
+    max-width: 200px;
+  }
+}
+
+/* Empty state */
+.wardrobe-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 6rem; /* py-24 */
+  padding-bottom: 6rem;
+  border: 1px dashed;
+  border-color: hsl(var(--heroui-default-300));
+}

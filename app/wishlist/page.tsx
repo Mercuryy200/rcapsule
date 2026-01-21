@@ -2,8 +2,14 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
-import { Button, Spinner } from "@heroui/react";
-import { FunnelIcon, PlusIcon, HeartIcon } from "@heroicons/react/24/outline";
+import { Button, Spinner, ButtonGroup } from "@heroui/react";
+import {
+  FunnelIcon,
+  PlusIcon,
+  HeartIcon,
+  Squares2X2Icon,
+  ViewColumnsIcon,
+} from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import ClothingCard from "@/components/closet/ClothingCard";
 import ClothesFilter, {
@@ -28,6 +34,9 @@ interface ClothingItem {
 export default function WishlistPage() {
   const { status } = useSession();
   const router = useRouter();
+
+  const [viewMode, setViewMode] = useState<"grid" | "gallery">("grid");
+
   const [clothes, setClothes] = useState<ClothingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -47,7 +56,6 @@ export default function WishlistPage() {
 
   const fetchClothes = async () => {
     try {
-      // API ALREADY FILTERS FOR US!
       const response = await fetch("/api/clothes?status=wishlist");
       if (response.ok) {
         const data = await response.json();
@@ -59,9 +67,6 @@ export default function WishlistPage() {
       setLoading(false);
     }
   };
-
-  // --- REMOVED: const wishlistItems = useMemo(...) ---
-  // We use 'clothes' directly because we trust the API.
 
   const availableBrands = useMemo(() => {
     const brands = clothes
@@ -134,6 +139,22 @@ export default function WishlistPage() {
     });
   }, [clothes, filters]);
 
+  const clothesByCategory = useMemo(() => {
+    const groups: Record<string, ClothingItem[]> = {};
+
+    filteredClothes.forEach((item) => {
+      const cat = item.category || "Uncategorized";
+      if (!groups[cat]) {
+        groups[cat] = [];
+      }
+      groups[cat].push(item);
+    });
+
+    return Object.entries(groups).sort(([, itemsA], [, itemsB]) => {
+      return itemsB.length - itemsA.length;
+    });
+  }, [filteredClothes]);
+
   const handleItemClick = (itemId: string) => router.push(`/closet/${itemId}`);
   const handleAddNew = () => router.push("/closet/new");
 
@@ -146,21 +167,46 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-6 py-8">
-      <header className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4 border-b border-divider pb-6">
+    <div className="wardrobe-page-container">
+      <header className="wardrobe-page-header">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-4xl font-black uppercase tracking-tighter italic">
-              Wishlist
-            </h1>
+            <h1 className="wardrobe-page-title">Wishlist</h1>
             <HeartIcon className="w-8 h-8 text-danger" />
           </div>
-          <p className="text-xs uppercase tracking-widest text-default-500 mt-2">
+          <p className="wardrobe-page-subtitle">
             {filteredClothes.length} Items / Future Buys
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          <ButtonGroup variant="flat" className="mr-2">
+            <Button
+              isIconOnly
+              radius="none"
+              className={
+                viewMode === "grid"
+                  ? "bg-default-200 text-black"
+                  : "bg-transparent text-default-400"
+              }
+              onPress={() => setViewMode("grid")}
+            >
+              <Squares2X2Icon className="w-5 h-5" />
+            </Button>
+            <Button
+              isIconOnly
+              radius="none"
+              className={
+                viewMode === "gallery"
+                  ? "bg-default-200 text-black"
+                  : "bg-transparent text-default-400"
+              }
+              onPress={() => setViewMode("gallery")}
+            >
+              <ViewColumnsIcon className="w-5 h-5" />
+            </Button>
+          </ButtonGroup>
+
           <Button
             variant="bordered"
             radius="none"
@@ -168,7 +214,7 @@ export default function WishlistPage() {
             startContent={<FunnelIcon className="w-4 h-4" />}
             onPress={() => setShowFilters(!showFilters)}
           >
-            {showFilters ? "Hide Filters" : "Filter"}
+            {showFilters ? "Hide" : "Filter"}
           </Button>
           <Button
             color="danger"
@@ -187,7 +233,7 @@ export default function WishlistPage() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="w-72 flex-shrink-0 sticky top-24 h-fit"
+            className="wardrobe-filters-sidebar"
           >
             <ClothesFilter
               onFilterChange={setFilters}
@@ -196,9 +242,9 @@ export default function WishlistPage() {
           </motion.div>
         )}
 
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {filteredClothes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 border border-dashed border-default-300">
+            <div className="wardrobe-empty-state">
               <HeartIcon className="w-12 h-12 text-default-300 mb-4" />
               <p className="text-lg font-light text-default-500 mb-4">
                 {clothes.length === 0
@@ -210,15 +256,48 @@ export default function WishlistPage() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
-              {filteredClothes.map((item) => (
-                <ClothingCard
-                  key={item.id}
-                  item={item}
-                  onClick={handleItemClick}
-                />
-              ))}
-            </div>
+            <>
+              {viewMode === "grid" && (
+                <div className="wardrobe-grid">
+                  {filteredClothes.map((item) => (
+                    <ClothingCard
+                      key={item.id}
+                      item={item}
+                      onClick={handleItemClick}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {viewMode === "gallery" && (
+                <div className="space-y-12 pb-20">
+                  {clothesByCategory.map(([category, items]) => (
+                    <div key={category} className="space-y-3">
+                      <div className="wardrobe-category-header">
+                        <h2 className="wardrobe-category-title">{category}</h2>
+                        <div className="h-[1px] flex-1 bg-default-200"></div>
+                        <span className="wardrobe-category-count">
+                          {items.length}
+                        </span>
+                      </div>
+
+                      <div className="wardrobe-gallery-row">
+                        {items.map((item) => (
+                          <div key={item.id} className="wardrobe-gallery-item">
+                            <div className="h-full w-full">
+                              <ClothingCard
+                                item={item}
+                                onClick={handleItemClick}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
