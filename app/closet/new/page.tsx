@@ -95,7 +95,7 @@ export default function NewItemPage() {
     if (status === "unauthenticated") router.push("/login");
   }, [status, router]);
 
-  const handleAutoFill = async () => {
+  /* const handleAutoFill = async () => {
     if (!formData.link) return;
 
     setIsScraping(true);
@@ -141,7 +141,7 @@ export default function NewItemPage() {
       setIsScraping(false);
     }
   };
-
+*/
   const handleAddTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
       setFormData({
@@ -361,6 +361,7 @@ export default function NewItemPage() {
         {/* Right Column: Form with Tabs */}
         <div className="lg:col-span-7 flex flex-col gap-6">
           {/* Auto Import Section */}
+          {/*
           <section className="pb-6 border-b border-divider">
             <div className="flex items-center gap-2 mb-4">
               <SparklesIcon className="w-4 h-4 text-primary" />
@@ -393,7 +394,7 @@ export default function NewItemPage() {
               </Button>
             </div>
           </section>
-
+          */}
           {/* Tabbed Form Sections */}
           <Tabs
             selectedKey={activeTab}
@@ -926,7 +927,6 @@ export default function NewItemPage() {
               </div>
             </Tab>
           </Tabs>
-
           {/* Submit Buttons */}
           <div className="pt-6 flex flex-col-reverse sm:flex-row gap-4 border-t border-divider">
             <Button
