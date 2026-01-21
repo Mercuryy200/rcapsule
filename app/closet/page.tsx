@@ -530,11 +530,11 @@ export default function ClosetPage() {
             <Button
               variant="bordered"
               radius="none"
-              className="border-default-200 font-medium uppercase text-[10px] tracking-[0.15em] h-10 px-4 min-w-[80px] hover:border-primary transition-colors"
-              startContent={<FunnelIcon className="w-3 h-3" />}
+              className="border-default-200 font-medium uppercase text-xs tracking-wider"
+              startContent={<FunnelIcon className="w-4 h-4" />}
               onPress={() => setShowFilters(!showFilters)}
             >
-              Filter
+              {showFilters ? "Hide" : "Filter"}
             </Button>
 
             <Button
