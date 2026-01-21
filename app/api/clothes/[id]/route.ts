@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -32,7 +32,7 @@ export async function GET(
             coverImage
           )
         )
-      `
+      `,
       )
       .eq("id", id)
       .eq("userId", session.user.id)
@@ -41,7 +41,7 @@ export async function GET(
     if (error || !clothing) {
       return NextResponse.json(
         { error: "Clothing not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -50,14 +50,14 @@ export async function GET(
     console.error("Error fetching clothing:", error);
     return NextResponse.json(
       { error: "Failed to fetch clothing" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -72,6 +72,7 @@ export async function PUT(
       updatedAt: new Date().toISOString(),
     };
 
+    // Basic fields
     if (data.name !== undefined) updatePayload.name = data.name;
     if (data.category !== undefined) updatePayload.category = data.category;
     if (data.brand !== undefined) updatePayload.brand = data.brand || null;
@@ -82,11 +83,45 @@ export async function PUT(
     if (data.colors !== undefined) updatePayload.colors = data.colors || [];
     if (data.placesToWear !== undefined)
       updatePayload.placesToWear = data.placesToWear || [];
-    if (data.season !== undefined) updatePayload.season = data.season || null;
+    if (data.season !== undefined) updatePayload.season = data.season || [];
     if (data.size !== undefined) updatePayload.size = data.size || null;
     if (data.link !== undefined) updatePayload.link = data.link || null;
     if (data.imageUrl !== undefined)
       updatePayload.imageUrl = data.imageUrl || null;
+
+    // New fields
+    if (data.materials !== undefined)
+      updatePayload.materials = data.materials || null;
+    if (data.careInstructions !== undefined)
+      updatePayload.careInstructions = data.careInstructions || null;
+    if (data.sustainability !== undefined)
+      updatePayload.sustainability = data.sustainability || null;
+    if (data.condition !== undefined)
+      updatePayload.condition = data.condition || "excellent";
+    if (data.tags !== undefined) updatePayload.tags = data.tags || [];
+    if (data.silhouette !== undefined)
+      updatePayload.silhouette = data.silhouette || null;
+    if (data.style !== undefined) updatePayload.style = data.style || null;
+    if (data.neckline !== undefined)
+      updatePayload.neckline = data.neckline || null;
+    if (data.pattern !== undefined)
+      updatePayload.pattern = data.pattern || null;
+    if (data.length !== undefined) updatePayload.length = data.length || null;
+    if (data.fit !== undefined) updatePayload.fit = data.fit || null;
+    if (data.purchaseLocation !== undefined)
+      updatePayload.purchaseLocation = data.purchaseLocation || null;
+    if (data.originalPrice !== undefined)
+      updatePayload.originalPrice = data.originalPrice
+        ? parseFloat(data.originalPrice)
+        : null;
+    if (data.purchaseType !== undefined)
+      updatePayload.purchaseType = data.purchaseType || null;
+    if (data.purchaseCurrency !== undefined)
+      updatePayload.purchaseCurrency = data.purchaseCurrency || "CAD";
+    if (data.description !== undefined)
+      updatePayload.description = data.description || null;
+    if (data.status !== undefined)
+      updatePayload.status = data.status || "owned";
 
     const { data: updatedClothing, error } = await supabase
       .from("Clothes")
@@ -98,7 +133,7 @@ export async function PUT(
     if (error || !updatedClothing || updatedClothing.length === 0) {
       return NextResponse.json(
         { error: "Clothing not found or unauthorized" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -124,7 +159,7 @@ export async function PUT(
           addedAt,
           wardrobe:Wardrobe(id, title)
         )
-      `
+      `,
       )
       .eq("id", id)
       .single();
@@ -134,14 +169,14 @@ export async function PUT(
     console.error("Error updating clothing:", error);
     return NextResponse.json(
       { error: "Failed to update clothing" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -164,7 +199,7 @@ export async function DELETE(
     if (error || !deletedClothing || deletedClothing.length === 0) {
       return NextResponse.json(
         { error: "Clothing not found or unauthorized" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -173,7 +208,7 @@ export async function DELETE(
     console.error("Error deleting clothing:", error);
     return NextResponse.json(
       { error: "Failed to delete clothing" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

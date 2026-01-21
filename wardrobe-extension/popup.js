@@ -106,9 +106,6 @@ const UNSUPPORTED_SITES = [
 // ============================================================================
 // STORAGE MANAGER (Inline version)
 // ============================================================================
-// ============================================================================
-// STORAGE MANAGER (Updated)
-// ============================================================================
 
 const StorageManager = {
   // Storage keys
@@ -325,6 +322,7 @@ function sanitizeProductData(data) {
     imageUrl: String(data.imageUrl || "").trim(),
     category: String(data.category || "Uncategorized"),
     materials: String(data.materials || "").trim(),
+    description: String(data.description || "").trim(),
   };
 }
 
@@ -373,6 +371,7 @@ function populateForm(data) {
     inputCategory: data.category,
     inputImgUrl: data.imageUrl,
     inputMaterials: data.materials,
+    inputText: data.description,
   };
 
   Object.entries(fields).forEach(([id, value]) => {
@@ -408,6 +407,7 @@ function getFormData() {
     status: isWishlist ? "wishlist" : "owned",
     purchaseDate: isWishlist ? null : new Date().toISOString().split("T")[0],
     materials: document.getElementById("inputMaterials")?.value || "",
+    description: document.getElementById("inputDescription")?.value || "",
   };
 }
 
@@ -467,7 +467,7 @@ async function scanPage() {
     const data = results?.[0]?.result;
 
     if (!data?.name) {
-      setStatus("Could not find product details.", "error");
+      setStatus("Could not find product name.", "error");
       return;
     }
 
@@ -654,7 +654,8 @@ async function extractProductData() {
     imageUrl: "",
     link: window.location.href,
     size: "",
-    materials: "", // Initialize this
+    materials: "",
+    description: "",
   };
 
   // Helper function to pause execution
@@ -792,9 +793,19 @@ async function extractProductData() {
       );
 
       if (materialsList) {
-        const textNode = materialsList.querySelector("li:first-child p");
-        if (textNode) {
-          data.materials = textNode.textContent.trim();
+        const listItems = Array.from(materialsList.querySelectorAll("li"));
+
+        const contentItem = listItems.find((item) =>
+          item.textContent.includes("Content:"),
+        );
+
+        if (contentItem) {
+          data.materials = contentItem.textContent
+            .replace("Content:", "")
+            .trim();
+          console.log("Success:", data.materials);
+        } else {
+          console.log("Found list, but no 'Content' line.");
         }
       }
     }
@@ -804,19 +815,44 @@ async function extractProductData() {
 
     if (selectedButton) {
       data.size = selectedButton.textContent.trim();
-    }
-
-    // STRATEGY 2: Fallback to the text message (if button fails)
-    else {
+    } else {
       const sizeMsg = document.querySelector(
         '[data-testid="siv-select-size-msg"]',
       );
       if (sizeMsg) {
         data.size = sizeMsg.textContent
-          .replace(/^Size\s*/i, "") // Remove "Size"
-          .split(/[—–-]/)[0] // Split at Em-dash, En-dash, or Hyphen
+          .replace(/^Size\s*/i, "")
+          .split(/[—–-]/)[0]
           .trim();
       }
+    }
+  }
+  //lululemon
+  if (hostname.includes("lululemon")) {
+    const titleEl = document.querySelector("h1");
+    if (titleEl) {
+      data.name = titleEl.innerText
+        .replace(/\n/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    if (!data.name && document.title) {
+      data.name = document.title.split("|")[0].trim();
+    }
+    const materialLists = document.querySelectorAll(
+      'dl[class*="material-and-care"]',
+    );
+
+    if (materialLists.length > 0) {
+      const lines = Array.from(materialLists).map((dl) => {
+        const label = dl.querySelector("dt")?.textContent.trim() || "";
+        const values = Array.from(dl.querySelectorAll("dd"))
+          .map((dd) => dd.textContent.trim())
+          .join(" ");
+        return `${label} ${values}`;
+      });
+      data.materials = lines.join("; ").trim();
     }
   }
 

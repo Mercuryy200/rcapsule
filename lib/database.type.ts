@@ -7,13 +7,35 @@ export interface Clothes {
   price?: number;
   purchaseDate?: string;
   colors?: string[];
-  season?: string;
+  season?: string[];
   size?: string;
   link?: string;
   imageUrl?: string;
   placesToWear?: string[];
   createdAt: string;
   updatedAt: string;
+  status: "owned" | "wishlist";
+  materials?: string;
+  careInstructions?: string;
+  sustainability?: string;
+  condition?: string;
+  tags?: string[];
+  silhouette?: string;
+  style?: string;
+  neckline?: string;
+  pattern?: string;
+  length?: string;
+  fit?: string;
+  retiredAt?: string;
+  retirementReason?: string;
+  purchaseLocation?: string;
+  originalPrice?: number;
+  purchaseType?: string;
+  purchaseCurrency?: string;
+  timesworn?: number;
+  lastwornat?: string;
+  description?: string;
+  processed_image_url?: string;
 }
 
 export interface Wardrobe {

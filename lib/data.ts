@@ -189,10 +189,89 @@ export const materials = [
   "synthetic blend",
 ].sort();
 
-export const conditions = [
-  "new",
-  "excellent",
-  "good",
-  "fair",
-  "poor",
-] as const;
+export const conditions = ["new", "excellent", "good", "fair", "poor"] as const;
+
+export const purchaseTypes = [
+  "retail",
+  "thrift",
+  "vintage",
+  "gift",
+  "secondhand",
+];
+
+export const silhouettes = [
+  "Fitted",
+  "Relaxed",
+  "Oversized",
+  "Tailored",
+  "Slim",
+  "Regular",
+  "Loose",
+  "A-Line",
+  "Bodycon",
+  "Straight",
+];
+
+export const styles = [
+  "Casual",
+  "Formal",
+  "Business",
+  "Streetwear",
+  "Minimalist",
+  "Vintage",
+  "Bohemian",
+  "Preppy",
+  "Athletic",
+  "Grunge",
+  "Classic",
+  "Trendy",
+];
+
+export const necklines = [
+  "Crew",
+  "V-Neck",
+  "Scoop",
+  "Boat",
+  "Turtleneck",
+  "Cowl",
+  "Off-Shoulder",
+  "Halter",
+  "Square",
+  "Sweetheart",
+];
+
+export const patterns = [
+  "Solid",
+  "Striped",
+  "Plaid",
+  "Floral",
+  "Polka Dot",
+  "Animal Print",
+  "Geometric",
+  "Abstract",
+  "Checkered",
+  "Paisley",
+];
+
+export const lengths = [
+  "Cropped",
+  "Regular",
+  "Long",
+  "Mini",
+  "Midi",
+  "Maxi",
+  "Knee-Length",
+  "Ankle-Length",
+  "Floor-Length",
+];
+
+export const fits = [
+  "Tight",
+  "Fitted",
+  "Regular",
+  "Relaxed",
+  "Loose",
+  "Oversized",
+];
+
+export const currencies = ["CAD", "USD", "EUR", "GBP"];
