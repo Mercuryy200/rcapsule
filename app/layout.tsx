@@ -8,6 +8,7 @@ import { fontSans } from "@/config/fonts";
 import { Analytics } from "@vercel/analytics/next";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 import * as Sentry from "@sentry/nextjs";
+import { Toaster } from "sonner";
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
@@ -60,6 +61,7 @@ export default function RootLayout({
             <Header />
             <main className="flex-1 w-full max-w-7xl mx-auto px-6">
               {children}
+              <Toaster position="top-right" richColors />
               <Analytics />
             </main>
             <Footer />

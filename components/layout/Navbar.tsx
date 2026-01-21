@@ -22,7 +22,7 @@ import { Logo } from "@/components/logo";
 export const AppNavbar = ({ user }: { user: any }) => {
   const [isMenuOpen, setIsMenuOpen] = React.useReducer(
     (current) => !current,
-    false
+    false,
   );
 
   return (
@@ -53,7 +53,7 @@ export const AppNavbar = ({ user }: { user: any }) => {
                 <NextLink
                   className={clsx(
                     linkStyles({ color: "foreground" }),
-                    "text-sm uppercase tracking-widest font-medium"
+                    "text-sm uppercase tracking-widest font-medium",
                   )}
                   href={item.href}
                 >

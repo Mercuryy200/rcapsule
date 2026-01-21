@@ -666,7 +666,7 @@ function EditMode({
             <div className="w-full h-full flex flex-col items-center justify-center p-6 gap-4">
               {formData.imageUrl ? (
                 <div className="relative w-full h-full group">
-                  <img
+                  <Image
                     src={formData.imageUrl}
                     alt="Preview"
                     className="w-full h-full object-contain rounded-md"

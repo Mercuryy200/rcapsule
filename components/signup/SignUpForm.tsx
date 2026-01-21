@@ -4,6 +4,7 @@ import { Form, Input, Button, Link, Divider } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   SignInButtonGithub,
@@ -51,6 +52,7 @@ export default function SignUpForm() {
       }
 
       router.push("/login?signup=success");
+      toast.success("Successfuly Signed Up!");
     } catch (err) {
       setError("An unexpected error occurred");
       setIsLoading(false);

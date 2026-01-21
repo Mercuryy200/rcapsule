@@ -48,7 +48,7 @@ export default function OutfitsPage() {
   const toggleFavorite = async (
     e: React.MouseEvent,
     outfitId: string,
-    currentStatus: boolean
+    currentStatus: boolean,
   ) => {
     e.stopPropagation();
     try {
@@ -63,8 +63,8 @@ export default function OutfitsPage() {
           prev.map((outfit) =>
             outfit.id === outfitId
               ? { ...outfit, isFavorite: !currentStatus }
-              : outfit
-          )
+              : outfit,
+          ),
         );
       }
     } catch (error) {
