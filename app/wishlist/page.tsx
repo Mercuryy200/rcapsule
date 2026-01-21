@@ -2,20 +2,14 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
-import { Button, Spinner, ButtonGroup } from "@heroui/react";
-import {
-  FunnelIcon,
-  PlusIcon,
-  HeartIcon,
-  Squares2X2Icon,
-  ViewColumnsIcon,
-} from "@heroicons/react/24/outline";
+import { Button } from "@heroui/react";
 import { motion } from "framer-motion";
 import ClothingCard from "@/components/closet/ClothingCard";
 import ClothesFilter, {
   FilterOptions,
 } from "@/components/closet/ClothesFilter";
-import * as Sentry from "@sentry/nextjs";
+import WardrobeHeader, { useSearchHistory } from "@/components/WardrobeHeader";
+import { ClothingCardSkeleton } from "@/components/closet/ClothingCardSkeleton";
 
 interface ClothingItem {
   id: string;
@@ -32,14 +26,24 @@ interface ClothingItem {
   status?: string;
   condition?: string;
   style?: string;
+  tags?: string[];
+  timesworn?: number;
+  createdAt?: string;
 }
 
 export default function WishlistPage() {
   const { status } = useSession();
   const router = useRouter();
 
+  // --- State ---
   const [viewMode, setViewMode] = useState<"grid" | "gallery">("grid");
+  const [sortBy, setSortBy] = useState("recent");
 
+  // Search State
+  const [searchQuery, setSearchQuery] = useState("");
+  const { history, addSearch, clearHistory } = useSearchHistory();
+
+  // Data State
   const [clothes, setClothes] = useState<ClothingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -48,7 +52,7 @@ export default function WishlistPage() {
     colors: [],
     seasons: [],
     placesToWear: [],
-    priceRange: [0, 5000],
+    priceRange: [0, 5000], // Higher cap for wishlist
     brands: [],
     styles: [],
     conditions: [],
@@ -61,6 +65,7 @@ export default function WishlistPage() {
 
   const fetchClothes = async () => {
     try {
+      // API Filter: Fetch only wishlist items
       const response = await fetch("/api/clothes?status=wishlist");
       if (response.ok) {
         const data = await response.json();
@@ -72,6 +77,8 @@ export default function WishlistPage() {
       setLoading(false);
     }
   };
+
+  // --- Logic ---
 
   const availableBrands = useMemo(() => {
     const brands = clothes
@@ -97,7 +104,6 @@ export default function WishlistPage() {
     if (activeFilterGroups.length === 0 && !isPriceFiltered) return clothes;
 
     return clothes.filter((item) => {
-      // Hard filters (must match if specified)
       if (
         filters.categories.length > 0 &&
         !filters.categories.includes(item.category)
@@ -122,7 +128,6 @@ export default function WishlistPage() {
       )
         return false;
 
-      // Soft filters (at least one must match if any are specified)
       let matchedAtLeastOneFilter = false;
       if (
         filters.colors.length > 0 &&
@@ -163,108 +168,109 @@ export default function WishlistPage() {
     });
   }, [clothes, filters]);
 
+  const searchedClothes = useMemo(() => {
+    if (!searchQuery) return filteredClothes;
+    const lowerQuery = searchQuery.toLowerCase();
+
+    return filteredClothes.filter((item) => {
+      if (item.name.toLowerCase().includes(lowerQuery)) return true;
+      if (item.brand?.toLowerCase().includes(lowerQuery)) return true;
+      if (item.category.toLowerCase().includes(lowerQuery)) return true;
+      if (item.tags?.some((tag) => tag.toLowerCase().includes(lowerQuery)))
+        return true;
+      return false;
+    });
+  }, [filteredClothes, searchQuery]);
+
+  const sortedClothes = useMemo(() => {
+    const sorted = [...searchedClothes];
+    switch (sortBy) {
+      case "name":
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case "price":
+        return sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+      case "worn":
+        return sorted.sort((a, b) => (b.timesworn || 0) - (a.timesworn || 0));
+      case "recent":
+      default:
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.createdAt || 0).getTime() -
+            new Date(a.createdAt || 0).getTime(),
+        );
+    }
+  }, [searchedClothes, sortBy]);
+
+  const suggestions = useMemo(() => {
+    if (!searchQuery) return [];
+    const lowerQuery = searchQuery.toLowerCase();
+    const terms = new Set<string>();
+    filteredClothes.forEach((item) => {
+      if (item.name.toLowerCase().includes(lowerQuery)) terms.add(item.name);
+      if (item.brand?.toLowerCase().includes(lowerQuery)) terms.add(item.brand);
+    });
+    return Array.from(terms).slice(0, 5);
+  }, [filteredClothes, searchQuery]);
+
   const clothesByCategory = useMemo(() => {
     const groups: Record<string, ClothingItem[]> = {};
-
-    filteredClothes.forEach((item) => {
+    sortedClothes.forEach((item) => {
       const cat = item.category || "Uncategorized";
-      if (!groups[cat]) {
-        groups[cat] = [];
-      }
+      if (!groups[cat]) groups[cat] = [];
       groups[cat].push(item);
     });
-
-    return Object.entries(groups).sort(([, itemsA], [, itemsB]) => {
-      return itemsB.length - itemsA.length;
-    });
-  }, [filteredClothes]);
+    return Object.entries(groups).sort(
+      ([, itemsA], [, itemsB]) => itemsB.length - itemsA.length,
+    );
+  }, [sortedClothes]);
 
   const handleItemClick = (itemId: string) => {
-    Sentry.addBreadcrumb({
-      category: "navigation",
-      message: "Navigated to item detail",
-      level: "info",
-      data: { itemId },
-    });
-
     router.push(`/closet/${itemId}`);
   };
-  const handleAddNew = () => router.push("/closet/new");
+
+  const handleSearchSubmit = (term: string) => {
+    setSearchQuery(term);
+    addSearch(term);
+  };
 
   if (status === "loading" || loading) {
     return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <Spinner size="lg" color="default" />
+      <div className="wardrobe-page-container">
+        <div className="wardrobe-grid">
+          {[...Array(8)].map((_, i) => (
+            <ClothingCardSkeleton key={i} />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="wardrobe-page-container">
-      <header className="wardrobe-page-header">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="wardrobe-page-title">Wishlist</h1>
-            <HeartIcon className="w-8 h-8 text-danger" />
-          </div>
-          <p className="wardrobe-page-subtitle">
-            {filteredClothes.length} Items / Future Buys
-          </p>
-        </div>
-
-        <div className="flex gap-3 items-center">
-          <ButtonGroup variant="flat" className="mr-2">
-            <Button
-              isIconOnly
-              radius="none"
-              className={
-                viewMode === "grid"
-                  ? "bg-default-200 text-black"
-                  : "bg-transparent text-default-400"
-              }
-              onPress={() => setViewMode("grid")}
-            >
-              <Squares2X2Icon className="w-5 h-5" />
-            </Button>
-            <Button
-              isIconOnly
-              radius="none"
-              className={
-                viewMode === "gallery"
-                  ? "bg-default-200 text-black"
-                  : "bg-transparent text-default-400"
-              }
-              onPress={() => setViewMode("gallery")}
-            >
-              <ViewColumnsIcon className="w-5 h-5" />
-            </Button>
-          </ButtonGroup>
-
-          <Button
-            variant="bordered"
-            radius="none"
-            className="border-default-200 font-medium uppercase text-xs tracking-wider"
-            startContent={<FunnelIcon className="w-4 h-4" />}
-            onPress={() => setShowFilters(!showFilters)}
-          >
-            {showFilters ? "Hide" : "Filter"}
-          </Button>
-          <Button
-            color="danger"
-            radius="none"
-            className="font-bold uppercase text-xs tracking-wider shadow-lg shadow-danger/20"
-            startContent={<PlusIcon className="w-4 h-4" />}
-            onPress={handleAddNew}
-          >
-            Add Wish
-          </Button>
-        </div>
-      </header>
+    <div className="wardrobe-page-container min-h-screen">
+      {/* Reusable Header with Search/Sort/Filter */}
+      <WardrobeHeader
+        title="Wishlist"
+        subtitle={<>{sortedClothes.length} Items &bull; Future Buys</>}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onSearchSubmit={handleSearchSubmit}
+        suggestions={suggestions}
+        history={history}
+        onClearHistory={clearHistory}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        showFilters={showFilters}
+        setShowFilters={setShowFilters}
+        onAddNew={() => router.push("/closet/new")}
+        actionLabel="Add Wish"
+      />
 
       <div className="flex gap-8 relative">
         {showFilters && (
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             className="wardrobe-filters-sidebar"
           >
@@ -277,23 +283,37 @@ export default function WishlistPage() {
         )}
 
         <div className="flex-1 min-w-0">
-          {filteredClothes.length === 0 ? (
+          {sortedClothes.length === 0 ? (
             <div className="wardrobe-empty-state">
-              <HeartIcon className="w-12 h-12 text-default-300 mb-4" />
-              <p className="text-lg font-light text-default-500 mb-4">
+              <p className="text-xl font-light italic text-default-400 mb-6">
                 {clothes.length === 0
                   ? "Your wishlist is empty."
-                  : "No items match your filter."}
+                  : "No wishes found."}
               </p>
-              <Button variant="flat" onPress={handleAddNew}>
-                Start wishing
+              {searchQuery && (
+                <Button
+                  variant="light"
+                  radius="none"
+                  className="uppercase tracking-widest text-xs mb-4"
+                  onPress={() => setSearchQuery("")}
+                >
+                  Clear Search
+                </Button>
+              )}
+              <Button
+                variant="flat"
+                radius="none"
+                className="uppercase tracking-widest text-xs"
+                onPress={() => router.push("/closet/new")}
+              >
+                Make a Wish
               </Button>
             </div>
           ) : (
             <>
               {viewMode === "grid" && (
                 <div className="wardrobe-grid">
-                  {filteredClothes.map((item) => (
+                  {sortedClothes.map((item) => (
                     <ClothingCard
                       key={item.id}
                       item={item}
@@ -304,9 +324,9 @@ export default function WishlistPage() {
               )}
 
               {viewMode === "gallery" && (
-                <div className="space-y-12 pb-20">
+                <div className="space-y-16 pb-20">
                   {clothesByCategory.map(([category, items]) => (
-                    <div key={category} className="space-y-3">
+                    <div key={category} className="space-y-4">
                       <div className="wardrobe-category-header">
                         <h2 className="wardrobe-category-title">{category}</h2>
                         <div className="h-[1px] flex-1 bg-default-200"></div>
@@ -314,16 +334,13 @@ export default function WishlistPage() {
                           {items.length}
                         </span>
                       </div>
-
                       <div className="wardrobe-gallery-row">
                         {items.map((item) => (
                           <div key={item.id} className="wardrobe-gallery-item">
-                            <div className="h-full w-full">
-                              <ClothingCard
-                                item={item}
-                                onClick={handleItemClick}
-                              />
-                            </div>
+                            <ClothingCard
+                              item={item}
+                              onClick={handleItemClick}
+                            />
                           </div>
                         ))}
                       </div>
