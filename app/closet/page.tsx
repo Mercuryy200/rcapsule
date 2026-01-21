@@ -15,6 +15,7 @@ import ClothesFilter, {
   FilterOptions,
 } from "@/components/closet/ClothesFilter";
 import * as Sentry from "@sentry/nextjs";
+import { ClothingCardSkeleton } from "@/components/closet/ClothingCardSkeleton";
 
 interface ClothingItem {
   id: string;
@@ -192,8 +193,10 @@ export default function ClosetPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <Spinner size="lg" color="default" />
+      <div className="wardrobe-grid">
+        {[...Array(8)].map((_, i) => (
+          <ClothingCardSkeleton key={i} />
+        ))}
       </div>
     );
   }

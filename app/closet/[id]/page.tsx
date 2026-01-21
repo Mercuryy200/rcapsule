@@ -239,6 +239,7 @@ export default function ItemPage() {
 
   const handleDelete = async () => {
     if (!confirm("Remove this piece from your collection?")) return;
+
     try {
       const response = await fetch(`/api/clothes/${itemId}`, {
         method: "DELETE",
