@@ -431,7 +431,7 @@ export default function ClosetPage() {
                         {history.map((term, i) => (
                           <button
                             key={`hist-${i}`}
-                            className="w-full text-left px-2 py-2 text-sm font-light text-default-600 hover:bg-default-100 dark:hover:bg-default-800 transition-colors flex items-center gap-2"
+                            className="w-full text-left px-2 py-2 text-sm font-light text-default-600 hover:bg-default-100 dark:hover:bg-default-200 transition-colors flex items-center gap-2"
                             onClick={() => handleSearchSubmit(term)}
                           >
                             <ClockIcon className="w-3 h-3 text-default-400" />
