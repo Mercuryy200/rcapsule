@@ -62,6 +62,13 @@ The application is deployed on Vercel with automatic CI/CD:
 - Lighthouse score: 95+
 - Fast page loads and smooth interactions
 
+## Error Monitoring & Performance
+
+- Sentry Integration: Comprehensive error tracking with user context
+- Performance Monitoring: Database query optimization and API response tracking
+- Breadcrumbs: User action tracking for better debugging
+- Production-Ready: Proper error boundaries and graceful degradation
+
 ## Contact
 
 Rima Nafougui - [@Mercuryy200](https://github.com/Mercuryy200)
