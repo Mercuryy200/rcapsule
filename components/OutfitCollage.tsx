@@ -1,4 +1,3 @@
-// components/OutfitCollage.tsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -102,7 +101,7 @@ export function OutfitCollage({
 
       // Load all images
       const images = await Promise.all(
-        clothingItems.map((item) => loadImage(item.url))
+        clothingItems.map((item) => loadImage(item.url)),
       );
 
       // Calculate layout
@@ -136,7 +135,7 @@ export function OutfitCollage({
         const availableHeight = cellHeight - padding * 2;
         const scale = Math.min(
           availableWidth / img.width,
-          availableHeight / img.height
+          availableHeight / img.height,
         );
 
         const scaledWidth = img.width * scale;
@@ -211,12 +210,12 @@ export function OutfitCollage({
           }
         },
         "image/png",
-        0.95
+        0.95,
       );
     } catch (error) {
       console.error("Error generating collage:", error);
       alert(
-        error instanceof Error ? error.message : "Failed to generate collage"
+        error instanceof Error ? error.message : "Failed to generate collage",
       );
     } finally {
       setGenerating(false);

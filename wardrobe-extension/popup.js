@@ -24,6 +24,7 @@ const CATEGORIES = [
   "hoodie",
   "sweatshirt",
   "jeans",
+  "pant",
   "pants",
   "trousers",
   "skirt",
@@ -67,6 +68,8 @@ const CATEGORIES = [
   "watch",
   "bracelet",
   "ring",
+  "bra",
+  "socks",
 ];
 
 const ACCESSORIES = [
@@ -97,19 +100,26 @@ const UNSUPPORTED_SITES = [
   "x.com",
   "twitch.com",
   "pinterest.com",
+  "netflix.com",
 ];
 
 // ============================================================================
 // STORAGE MANAGER (Inline version)
 // ============================================================================
+// ============================================================================
+// STORAGE MANAGER (Updated)
+// ============================================================================
 
 const StorageManager = {
+  // Storage keys
   KEYS: {
     RECENT_SCANS: "recent_scans",
     RATE_LIMIT: "rate_limit_data",
+    SETTINGS: "user_settings",
     OFFLINE_QUEUE: "offline_queue",
   },
 
+  // Configuration
   CONFIG: {
     MAX_RECENT_SCANS: 10,
     RATE_LIMIT_WINDOW: 60000,
@@ -140,10 +150,19 @@ const StorageManager = {
     }
   },
 
-  async getCachedScan(url) {
+  async getRecentScans() {
     try {
       const result = await chrome.storage.local.get(this.KEYS.RECENT_SCANS);
-      const recentScans = result[this.KEYS.RECENT_SCANS] || [];
+      return result[this.KEYS.RECENT_SCANS] || [];
+    } catch (error) {
+      console.error("Error getting recent scans:", error);
+      return [];
+    }
+  },
+
+  async getCachedScan(url) {
+    try {
+      const recentScans = await this.getRecentScans();
       const cached = recentScans.find((scan) => scan.url === url);
 
       if (cached) {
@@ -156,6 +175,18 @@ const StorageManager = {
     } catch (error) {
       console.error("Error getting cached scan:", error);
       return null;
+    }
+  },
+
+  // THIS IS THE MISSING FUNCTION YOU NEED
+  async clearRecentScans() {
+    try {
+      await chrome.storage.local.remove(this.KEYS.RECENT_SCANS);
+      console.log("Cache cleared successfully");
+      return true;
+    } catch (error) {
+      console.error("Error clearing recent scans:", error);
+      return false;
     }
   },
 
@@ -293,6 +324,7 @@ function sanitizeProductData(data) {
     link: String(data.link || "").trim(),
     imageUrl: String(data.imageUrl || "").trim(),
     category: String(data.category || "Uncategorized"),
+    materials: String(data.materials || "").trim(),
   };
 }
 
@@ -340,6 +372,7 @@ function populateForm(data) {
     inputLink: data.link,
     inputCategory: data.category,
     inputImgUrl: data.imageUrl,
+    inputMaterials: data.materials,
   };
 
   Object.entries(fields).forEach(([id, value]) => {
@@ -374,6 +407,7 @@ function getFormData() {
       document.getElementById("inputCategory")?.value || "Uncategorized",
     status: isWishlist ? "wishlist" : "owned",
     purchaseDate: isWishlist ? null : new Date().toISOString().split("T")[0],
+    materials: document.getElementById("inputMaterials")?.value || "",
   };
 }
 
@@ -409,7 +443,7 @@ async function scanPage() {
 
         populateForm(sanitized);
         switchView("formView");
-        setStatus("✓ Loaded from cache", "success");
+        setStatus("Loaded from cache", "success");
         setTimeout(() => setStatus(""), 2000);
         return;
       }
@@ -540,6 +574,15 @@ function cancelForm() {
   setStatus("");
 }
 
+document.getElementById("clearCacheBtn").addEventListener("click", async () => {
+  const success = await StorageManager.clearRecentScans();
+  if (success) {
+    // Optional: specific UI feedback
+    const btn = document.getElementById("clearCacheBtn");
+    btn.textContent = "Cleared!";
+    setTimeout(() => (btn.textContent = "Clear Cache"), 2000);
+  }
+});
 // ============================================================================
 // OFFLINE QUEUE PROCESSOR
 // ============================================================================
@@ -603,8 +646,7 @@ function setupKeyboardShortcuts() {
 // ============================================================================
 // CONTENT SCRIPT (injected into page)
 // ============================================================================
-
-function extractProductData() {
+async function extractProductData() {
   const data = {
     name: "",
     brand: "",
@@ -612,7 +654,11 @@ function extractProductData() {
     imageUrl: "",
     link: window.location.href,
     size: "",
+    materials: "", // Initialize this
   };
+
+  // Helper function to pause execution
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   // ========== JSON-LD EXTRACTION ==========
   const jsonLdScripts = document.querySelectorAll(
@@ -730,6 +776,50 @@ function extractProductData() {
     }
   }
 
+  // Aritzia
+  if (hostname.includes("aritzia")) {
+    const detailsButton = document.querySelector(
+      'button[data-testid="details-link"]',
+    );
+
+    if (detailsButton) {
+      detailsButton.click();
+
+      await wait(500);
+
+      const materialsList = document.querySelector(
+        'ul[data-testid="materials-and-care-copy"]',
+      );
+
+      if (materialsList) {
+        const textNode = materialsList.querySelector("li:first-child p");
+        if (textNode) {
+          data.materials = textNode.textContent.trim();
+        }
+      }
+    }
+    const selectedButton = document.querySelector(
+      'div[data-testid="size-palette"] button[aria-checked="true"]',
+    );
+
+    if (selectedButton) {
+      data.size = selectedButton.textContent.trim();
+    }
+
+    // STRATEGY 2: Fallback to the text message (if button fails)
+    else {
+      const sizeMsg = document.querySelector(
+        '[data-testid="siv-select-size-msg"]',
+      );
+      if (sizeMsg) {
+        data.size = sizeMsg.textContent
+          .replace(/^Size\s*/i, "") // Remove "Size"
+          .split(/[—–-]/)[0] // Split at Em-dash, En-dash, or Hyphen
+          .trim();
+      }
+    }
+  }
+
   // ========== GENERIC FALLBACKS ==========
 
   if (!data.brand) {
@@ -775,18 +865,6 @@ function extractProductData() {
         text = text.includes("=") ? text.split("=")[1].trim() : text;
         data.size = text.split(" -")[0].trim();
       }
-    }
-  }
-
-  if (!data.size) {
-    const aritziaSize = document.querySelector(
-      '[data-testid="siv-select-size-msg"]',
-    );
-    if (aritziaSize) {
-      data.size = aritziaSize.textContent
-        .replace(/^Size\s*/i, "")
-        .split(/â€"|−|-/)[0]
-        .trim();
     }
   }
 
@@ -892,6 +970,7 @@ function extractProductData() {
       data.imageUrl = data.imageUrl.split(" ")[0];
   }
 
+  // IMPORTANT: This now returns ONLY after the Aritzia wait logic is finished
   return data;
 }
 
