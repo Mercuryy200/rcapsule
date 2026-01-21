@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import CollageBuilder from "@/components/outfit/CollageBuilder";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -20,15 +19,22 @@ import {
   useDisclosure,
   Tabs,
   Tab,
+  Chip,
+  Tooltip,
 } from "@heroui/react";
 import {
   ArrowLeftIcon,
   PlusIcon,
   XMarkIcon,
   SparklesIcon,
-  CameraIcon,
+  MagnifyingGlassIcon,
+  ClockIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 import { ImageUpload } from "@/components/closet/ImageUpload";
+import CollageBuilder from "@/components/outfit/CollageBuilder";
 
 interface ClothingItem {
   id: string;
@@ -37,14 +43,22 @@ interface ClothingItem {
   brand?: string;
   imageUrl?: string;
   colors: string[];
+  price?: number;
+  lastWornAt?: string;
 }
+
 interface Wardrobe {
   id: string;
   title: string;
   coverImage?: string;
 }
 
-// Define accessory categories that can have multiple items
+interface ExistingOutfit {
+  id: string;
+  name: string;
+  clothesIds: string[];
+}
+
 const ACCESSORY_CATEGORIES = [
   "Bag",
   "Belt",
@@ -64,23 +78,45 @@ const ACCESSORY_CATEGORIES = [
   "Ring",
 ];
 
+const SEASONS = ["Spring", "Summer", "Fall", "Winter", "All Season"];
+const OCCASIONS = [
+  "Casual",
+  "Work",
+  "Formal",
+  "Date Night",
+  "Athletic",
+  "Lounge",
+  "Party",
+  "Travel",
+  "Wedding",
+  "Interview",
+];
+
 export default function CreateOutfitPage() {
   const { status } = useSession();
   const router = useRouter();
+
+  // Loading states
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [showCollageBuilder, setShowCollageBuilder] = useState(false);
 
+  // Data state
   const [availableClothes, setAvailableClothes] = useState<ClothingItem[]>([]);
   const [availableWardrobes, setAvailableWardrobes] = useState<Wardrobe[]>([]);
+  const [existingOutfits, setExistingOutfits] = useState<ExistingOutfit[]>([]);
+  const [recentlyUsed, setRecentlyUsed] = useState<ClothingItem[]>([]);
+
+  // Selection state
   const [selectedClothes, setSelectedClothes] = useState<ClothingItem[]>([]);
   const [selectedWardrobes, setSelectedWardrobes] = useState<Set<string>>(
     new Set(),
   );
 
-  const [imageMethod, setImageMethod] = useState<
-    "auto" | "upload" | "url" | "builder"
-  >("auto");
+  // Form state
+  const [showCollageBuilder, setShowCollageBuilder] = useState(false);
+  const [imageMethod, setImageMethod] = useState<"builder" | "upload" | "url">(
+    "builder",
+  );
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -90,7 +126,40 @@ export default function CreateOutfitPage() {
     isFavorite: false,
   });
 
+  // UX state
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  // Modals
   const addClothesModal = useDisclosure();
+  const confirmLeaveModal = useDisclosure();
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(
+    null,
+  );
+
+  // Track unsaved changes
+  useEffect(() => {
+    const hasChanges =
+      formData.name.trim() !== "" ||
+      formData.description.trim() !== "" ||
+      selectedClothes.length > 0 ||
+      selectedWardrobes.size > 0;
+    setHasUnsavedChanges(hasChanges);
+  }, [formData, selectedClothes, selectedWardrobes]);
+
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -99,18 +168,93 @@ export default function CreateOutfitPage() {
 
   const fetchData = async () => {
     try {
-      const [clothesRes, wardrobesRes] = await Promise.all([
+      const [clothesRes, wardrobesRes, outfitsRes] = await Promise.all([
         fetch("/api/clothes?status=owned"),
         fetch("/api/wardrobes"),
+        fetch("/api/outfits"),
       ]);
-      if (clothesRes.ok) setAvailableClothes(await clothesRes.json());
-      if (wardrobesRes.ok) setAvailableWardrobes(await wardrobesRes.json());
+
+      if (clothesRes.ok) {
+        const clothes = await clothesRes.json();
+        setAvailableClothes(clothes);
+
+        // Get recently worn items (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const recent = clothes
+          .filter(
+            (c: ClothingItem) =>
+              c.lastWornAt && new Date(c.lastWornAt) > thirtyDaysAgo,
+          )
+          .sort(
+            (a: ClothingItem, b: ClothingItem) =>
+              new Date(b.lastWornAt!).getTime() -
+              new Date(a.lastWornAt!).getTime(),
+          )
+          .slice(0, 8);
+        setRecentlyUsed(recent);
+      }
+
+      if (wardrobesRes.ok) {
+        setAvailableWardrobes(await wardrobesRes.json());
+      }
+
+      if (outfitsRes.ok) {
+        const outfits = await outfitsRes.json();
+        setExistingOutfits(
+          outfits.map((o: any) => ({
+            id: o.id,
+            name: o.name,
+            clothesIds: o.clothes?.map((c: any) => c.id) || [],
+          })),
+        );
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Check for duplicate outfits when selection changes
+  useEffect(() => {
+    if (selectedClothes.length < 2) {
+      setDuplicateWarning(null);
+      return;
+    }
+
+    const selectedIds = new Set(selectedClothes.map((c) => c.id));
+
+    const duplicate = existingOutfits.find((outfit) => {
+      if (outfit.clothesIds.length !== selectedIds.size) return false;
+      return outfit.clothesIds.every((id) => selectedIds.has(id));
+    });
+
+    if (duplicate) {
+      setDuplicateWarning(
+        `This exact combination already exists as "${duplicate.name}"`,
+      );
+    } else {
+      // Check for similar outfits (80%+ overlap)
+      const similar = existingOutfits.find((outfit) => {
+        if (outfit.clothesIds.length === 0) return false;
+        const overlap = outfit.clothesIds.filter((id) =>
+          selectedIds.has(id),
+        ).length;
+        const similarity =
+          overlap / Math.max(outfit.clothesIds.length, selectedIds.size);
+        return similarity >= 0.8;
+      });
+
+      if (similar) {
+        setDuplicateWarning(
+          `Very similar to existing outfit "${similar.name}"`,
+        );
+      } else {
+        setDuplicateWarning(null);
+      }
+    }
+  }, [selectedClothes, existingOutfits]);
 
   const handleCollageSave = async (file: File) => {
     try {
@@ -125,8 +269,8 @@ export default function CreateOutfitPage() {
 
       if (res.ok) {
         const data = await res.json();
-        setFormData({ ...formData, imageUrl: data.url });
-        setShowCollageBuilder(false); // Close builder
+        setFormData((prev) => ({ ...prev, imageUrl: data.url }));
+        setShowCollageBuilder(false);
       } else {
         alert("Upload failed");
       }
@@ -136,19 +280,16 @@ export default function CreateOutfitPage() {
   };
 
   const handleAddClothes = (item: ClothingItem) => {
-    // Check if item is already selected
     if (selectedClothes.find((c) => c.id === item.id)) return;
 
     const isAccessory = ACCESSORY_CATEGORIES.includes(item.category);
 
     if (!isAccessory) {
-      // For non-accessories, remove any existing item from the same category
       const filtered = selectedClothes.filter(
         (c) => c.category !== item.category,
       );
       setSelectedClothes([...filtered, item]);
     } else {
-      // For accessories, just add it
       setSelectedClothes([...selectedClothes, item]);
     }
   };
@@ -157,44 +298,55 @@ export default function CreateOutfitPage() {
     setSelectedClothes(selectedClothes.filter((c) => c.id !== itemId));
   };
 
-  // Helper function to check if an item can be selected
-  const canSelectItem = (item: ClothingItem): boolean => {
-    const isAccessory = ACCESSORY_CATEGORIES.includes(item.category);
-    if (isAccessory) return true;
-
-    // For non-accessories, check if there's already an item from this category
-    return !selectedClothes.some((c) => c.category === item.category);
-  };
-
-  // Get the selected item for a non-accessory category
   const getSelectedInCategory = (
     category: string,
   ): ClothingItem | undefined => {
     return selectedClothes.find((c) => c.category === category);
   };
 
+  // Calculate total outfit cost
+  const totalCost = selectedClothes.reduce(
+    (sum, item) => sum + (item.price || 0),
+    0,
+  );
+
+  const handleNavigateAway = (path: string) => {
+    if (hasUnsavedChanges) {
+      setPendingNavigation(path);
+      confirmLeaveModal.onOpen();
+    } else {
+      router.push(path);
+    }
+  };
+
+  const confirmNavigation = () => {
+    if (pendingNavigation) {
+      router.push(pendingNavigation);
+    }
+    confirmLeaveModal.onClose();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim() || selectedClothes.length === 0) {
-      alert("Name and items required.");
+
+    if (!formData.name.trim()) {
+      alert("Please enter a name for your outfit");
       return;
     }
+
+    if (selectedClothes.length === 0) {
+      alert("Please select at least one clothing item");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      let finalImageUrl = formData.imageUrl;
-      if (imageMethod === "auto" && !finalImageUrl) {
-        // Mock call to your collage function
-        // const generatedUrl = await generateCollage();
-        // if (generatedUrl) finalImageUrl = generatedUrl;
-      }
-
       const response = await fetch("/api/outfits", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          imageUrl: finalImageUrl,
           clothesIds: selectedClothes.map((c) => c.id),
           wardrobeIds: Array.from(selectedWardrobes),
         }),
@@ -202,28 +354,44 @@ export default function CreateOutfitPage() {
 
       if (response.ok) {
         const outfit = await response.json();
+        setHasUnsavedChanges(false);
         router.push(`/outfits/${outfit.id}`);
+      } else {
+        const error = await response.json();
+        alert(error.error || "Failed to create outfit");
       }
     } catch (error) {
       console.error(error);
+      alert("An error occurred");
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="h-screen flex items-center justify-center">
         <Spinner size="lg" />
       </div>
     );
+  }
 
   const unselectedClothes = availableClothes.filter(
     (item) => !selectedClothes.find((s) => s.id === item.id),
   );
 
-  // Group clothes by category
-  const groupedClothes = unselectedClothes.reduce(
+  // Filter by search and category
+  const filteredClothes = unselectedClothes.filter((item) => {
+    const matchesSearch =
+      searchQuery === "" ||
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.brand?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = !activeCategory || item.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Group by category
+  const groupedClothes = filteredClothes.reduce(
     (acc, item) => {
       if (!acc[item.category]) acc[item.category] = [];
       acc[item.category].push(item);
@@ -232,39 +400,60 @@ export default function CreateOutfitPage() {
     {} as Record<string, ClothingItem[]>,
   );
 
+  // Get unique categories
+  const allCategories = [
+    ...new Set(availableClothes.map((c) => c.category)),
+  ].sort();
+
   return (
     <div className="w-full max-w-7xl mx-auto px-6 py-8">
       {/* HEADER */}
-      <div className="flex items-center gap-4 mb-12">
-        <Button
-          isIconOnly
-          variant="light"
-          radius="full"
-          onPress={() => router.back()}
-        >
-          <ArrowLeftIcon className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-black uppercase tracking-tighter italic">
-            The Studio
-          </h1>
-          <p className="text-xs uppercase tracking-widest text-default-500">
-            Curate & Assemble
-          </p>
+      <div className="flex items-center justify-between gap-4 mb-12">
+        <div className="flex items-center gap-4">
+          <Button
+            isIconOnly
+            variant="light"
+            radius="full"
+            onPress={() => handleNavigateAway("/outfits")}
+          >
+            <ArrowLeftIcon className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-black uppercase tracking-tighter italic">
+              The Studio
+            </h1>
+            <p className="text-xs uppercase tracking-widest text-default-500">
+              Curate & Assemble
+            </p>
+          </div>
         </div>
+
+        {hasUnsavedChanges && (
+          <Chip
+            size="sm"
+            variant="flat"
+            color="warning"
+            startContent={<ExclamationTriangleIcon className="w-3 h-3" />}
+          >
+            Unsaved Changes
+          </Chip>
+        )}
       </div>
 
       <form
         onSubmit={handleSubmit}
         className="grid grid-cols-1 lg:grid-cols-12 gap-12"
       >
+        {/* LEFT COLUMN: Preview */}
         <div className="lg:col-span-5 h-fit lg:sticky lg:top-24 space-y-6">
+          {/* Image Preview */}
           <div className="aspect-[3/4] bg-content2 border border-dashed border-default-300 flex flex-col items-center justify-center relative overflow-hidden group">
-            {/* Change Tabs Logic */}
             <div className="absolute top-4 z-10">
               <Tabs
                 selectedKey={imageMethod}
-                onSelectionChange={(k) => setImageMethod(k as any)}
+                onSelectionChange={(k) =>
+                  setImageMethod(k as typeof imageMethod)
+                }
                 radius="none"
                 size="sm"
                 classNames={{
@@ -272,15 +461,13 @@ export default function CreateOutfitPage() {
                     "bg-background/80 backdrop-blur border border-default-200",
                 }}
               >
-                <Tab key="builder" title="Collage Builder" />{" "}
-                {/* CHANGED FROM AUTO */}
+                <Tab key="builder" title="Collage" />
                 <Tab key="upload" title="Upload" />
                 <Tab key="url" title="URL" />
               </Tabs>
             </div>
 
             <div className="w-full h-full p-8 flex items-center justify-center">
-              {/* IF IMAGE EXISTS, SHOW IT */}
               {formData.imageUrl ? (
                 <div className="relative w-full h-full group">
                   <Image
@@ -293,55 +480,95 @@ export default function CreateOutfitPage() {
                     color="danger"
                     variant="flat"
                     className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100"
-                    onPress={() => setFormData({ ...formData, imageUrl: "" })}
+                    onPress={() =>
+                      setFormData((prev) => ({ ...prev, imageUrl: "" }))
+                    }
                   >
                     Clear
                   </Button>
                 </div>
               ) : imageMethod === "builder" ? (
-                // BUILDER ENTRY POINT
                 <div className="text-center">
                   <Button
                     variant="flat"
-                    size="sm"
+                    size="lg"
                     radius="none"
-                    startContent={<SparklesIcon className="w-4 h-4" />}
+                    startContent={<SparklesIcon className="w-5 h-5" />}
                     onPress={() => setShowCollageBuilder(true)}
                     isDisabled={selectedClothes.length === 0}
-                    className="uppercase font-bold text-[10px] tracking-widest h-12 px-6"
+                    className="uppercase font-bold text-xs tracking-widest h-14 px-8"
                   >
                     Open Collage Studio
                   </Button>
                   <p className="text-[10px] text-default-400 mt-4 uppercase tracking-wider">
-                    Select clothes first
+                    {selectedClothes.length === 0
+                      ? "Select clothes first"
+                      : `${selectedClothes.length} items ready`}
                   </p>
                 </div>
               ) : imageMethod === "upload" ? (
                 <ImageUpload
                   value={formData.imageUrl}
                   onChange={(url) =>
-                    setFormData({ ...formData, imageUrl: url })
+                    setFormData((prev) => ({ ...prev, imageUrl: url }))
                   }
                   folder="outfits"
                   label="Upload Final Look"
                 />
               ) : (
-                <Input
-                  label="URL"
-                  variant="underlined"
-                  value={formData.imageUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, imageUrl: e.target.value })
-                  }
-                />
+                <div className="w-full max-w-xs">
+                  <Input
+                    label="Image URL"
+                    variant="bordered"
+                    radius="none"
+                    value={formData.imageUrl}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        imageUrl: e.target.value,
+                      }))
+                    }
+                    placeholder="https://..."
+                  />
+                </div>
               )}
             </div>
           </div>
+
+          {/* Stats Card */}
+          {selectedClothes.length > 0 && (
+            <div className="bg-content2 p-4 space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-xs uppercase tracking-widest text-default-500">
+                  Items Selected
+                </span>
+                <span className="text-2xl font-light">
+                  {selectedClothes.length}
+                </span>
+              </div>
+              {totalCost > 0 && (
+                <div className="flex justify-between items-center border-t border-divider pt-3">
+                  <span className="text-xs uppercase tracking-widest text-default-500">
+                    Total Value
+                  </span>
+                  <span className="text-xl font-light">
+                    ${totalCost.toFixed(2)}
+                  </span>
+                </div>
+              )}
+              {duplicateWarning && (
+                <div className="flex items-start gap-2 bg-warning-50 text-warning-700 p-3 text-xs">
+                  <ExclamationTriangleIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>{duplicateWarning}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* RIGHT COLUMN: The Tools */}
+        {/* RIGHT COLUMN: Form */}
         <div className="lg:col-span-7 space-y-12">
-          {/* 1. Metadata */}
+          {/* Details Section */}
           <section className="space-y-6">
             <h3 className="text-xs font-bold uppercase tracking-widest border-b border-divider pb-2">
               Look Details
@@ -354,46 +581,57 @@ export default function CreateOutfitPage() {
               radius="none"
               value={formData.name}
               onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
+                setFormData((prev) => ({ ...prev, name: e.target.value }))
               }
               classNames={{ inputWrapper: "h-12" }}
             />
             <Textarea
               label="Notes"
-              placeholder="Styling notes..."
+              placeholder="Styling notes, inspiration, or when to wear..."
               variant="bordered"
               radius="none"
               value={formData.description}
               onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
               }
+              minRows={2}
             />
             <div className="grid grid-cols-2 gap-4">
               <Select
                 label="Season"
                 variant="bordered"
                 radius="none"
+                selectedKeys={formData.season ? [formData.season] : []}
                 onChange={(e) =>
-                  setFormData({ ...formData, season: e.target.value })
+                  setFormData((prev) => ({ ...prev, season: e.target.value }))
                 }
               >
-                {["Spring", "Summer", "Fall", "Winter"].map((s) => (
+                {SEASONS.map((s) => (
                   <SelectItem key={s}>{s}</SelectItem>
                 ))}
               </Select>
-              <Input
+              <Select
                 label="Occasion"
                 variant="bordered"
                 radius="none"
-                value={formData.occasion}
+                selectedKeys={formData.occasion ? [formData.occasion] : []}
                 onChange={(e) =>
-                  setFormData({ ...formData, occasion: e.target.value })
+                  setFormData((prev) => ({ ...prev, occasion: e.target.value }))
                 }
-              />
+              >
+                {OCCASIONS.map((o) => (
+                  <SelectItem key={o}>{o}</SelectItem>
+                ))}
+              </Select>
             </div>
             <Checkbox
               isSelected={formData.isFavorite}
-              onValueChange={(v) => setFormData({ ...formData, isFavorite: v })}
+              onValueChange={(v) =>
+                setFormData((prev) => ({ ...prev, isFavorite: v }))
+              }
             >
               <span className="text-sm uppercase tracking-wide">
                 Add to Favorites
@@ -401,7 +639,36 @@ export default function CreateOutfitPage() {
             </Checkbox>
           </section>
 
-          {/* 2. Clothes Selector */}
+          {/* Quick Add: Recently Worn */}
+          {recentlyUsed.length > 0 && selectedClothes.length === 0 && (
+            <section className="space-y-4">
+              <div className="flex items-center gap-2 border-b border-divider pb-2">
+                <ClockIcon className="w-4 h-4 text-default-400" />
+                <h3 className="text-xs font-bold uppercase tracking-widest">
+                  Recently Worn
+                </h3>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {recentlyUsed.map((item) => (
+                  <Tooltip key={item.id} content={item.name}>
+                    <button
+                      type="button"
+                      onClick={() => handleAddClothes(item)}
+                      className="flex-shrink-0 w-16 h-16 border border-default-200 hover:border-primary transition-colors overflow-hidden"
+                    >
+                      <Image
+                        src={item.imageUrl || ""}
+                        radius="none"
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  </Tooltip>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Pieces Section */}
           <section className="space-y-6">
             <div className="flex justify-between items-end border-b border-divider pb-2">
               <h3 className="text-xs font-bold uppercase tracking-widest">
@@ -420,13 +687,22 @@ export default function CreateOutfitPage() {
             </div>
 
             {selectedClothes.length === 0 ? (
-              <div className="py-8 text-center text-default-400 text-sm italic">
-                No items selected. Click "Add Items" to start building your
-                look.
+              <div className="py-12 text-center border border-dashed border-default-300">
+                <p className="text-default-400 text-sm italic mb-4">
+                  No items selected yet
+                </p>
+                <Button
+                  variant="flat"
+                  radius="none"
+                  size="sm"
+                  onPress={addClothesModal.onOpen}
+                  startContent={<PlusIcon className="w-4 h-4" />}
+                >
+                  Browse Closet
+                </Button>
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Group selected items by category */}
                 {Object.entries(
                   selectedClothes.reduce(
                     (acc, item) => {
@@ -473,39 +749,46 @@ export default function CreateOutfitPage() {
             )}
           </section>
 
-          {/* 3. Wardrobe Selection */}
-          <section className="space-y-6">
-            <h3 className="text-xs font-bold uppercase tracking-widest border-b border-divider pb-2">
-              Collections
-            </h3>
-            <div className="flex flex-wrap gap-3">
-              {availableWardrobes.map((w) => {
-                const isSelected = selectedWardrobes.has(w.id);
-                return (
-                  <div
-                    key={w.id}
-                    onClick={() => {
-                      const s = new Set(selectedWardrobes);
-                      s.has(w.id) ? s.delete(w.id) : s.add(w.id);
-                      setSelectedWardrobes(s);
-                    }}
-                    className={`cursor-pointer px-4 py-2 border text-xs uppercase tracking-wide transition-all ${isSelected ? "border-primary bg-primary text-white" : "border-default-200 hover:border-default-400"}`}
-                  >
-                    {w.title}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
+          {/* Collections Section */}
+          {availableWardrobes.length > 0 && (
+            <section className="space-y-6">
+              <h3 className="text-xs font-bold uppercase tracking-widest border-b border-divider pb-2">
+                Add to Collections
+              </h3>
+              <div className="flex flex-wrap gap-3">
+                {availableWardrobes.map((w) => {
+                  const isSelected = selectedWardrobes.has(w.id);
+                  return (
+                    <button
+                      key={w.id}
+                      type="button"
+                      onClick={() => {
+                        const s = new Set(selectedWardrobes);
+                        s.has(w.id) ? s.delete(w.id) : s.add(w.id);
+                        setSelectedWardrobes(s);
+                      }}
+                      className={`px-4 py-2 border text-xs uppercase tracking-wide transition-all ${
+                        isSelected
+                          ? "border-primary bg-primary text-white"
+                          : "border-default-200 hover:border-default-400"
+                      }`}
+                    >
+                      {w.title}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
-          {/* ACTION */}
+          {/* Actions */}
           <div className="pt-8 flex gap-4">
             <Button
               fullWidth
               variant="bordered"
               radius="none"
               className="h-12 uppercase tracking-widest"
-              onPress={() => router.back()}
+              onPress={() => handleNavigateAway("/outfits")}
             >
               Cancel
             </Button>
@@ -516,36 +799,15 @@ export default function CreateOutfitPage() {
               className="h-12 uppercase tracking-widest font-bold"
               type="submit"
               isLoading={submitting}
+              isDisabled={!formData.name.trim() || selectedClothes.length === 0}
             >
-              Save Look
+              {submitting ? "Saving..." : "Save Look"}
             </Button>
           </div>
-          <Modal
-            isOpen={showCollageBuilder}
-            onClose={() => setShowCollageBuilder(false)}
-            size="5xl"
-            radius="none"
-            classNames={{
-              body: "p-0",
-              header: "border-b border-default-200",
-            }}
-          >
-            <ModalContent className="h-[80vh]">
-              <ModalHeader className="uppercase tracking-widest font-bold">
-                Collage Studio
-              </ModalHeader>
-              <ModalBody className="overflow-hidden">
-                <CollageBuilder
-                  items={selectedClothes}
-                  onSave={handleCollageSave}
-                />
-              </ModalBody>
-            </ModalContent>
-          </Modal>
         </div>
       </form>
 
-      {/* MODAL */}
+      {/* Add Clothes Modal */}
       <Modal
         isOpen={addClothesModal.isOpen}
         onClose={addClothesModal.onClose}
@@ -554,102 +816,206 @@ export default function CreateOutfitPage() {
         radius="none"
       >
         <ModalContent>
-          <ModalHeader className="uppercase tracking-widest font-bold flex justify-between items-center">
-            <span>Select Pieces</span>
-            <span className="text-xs text-default-400 font-normal">
-              One per category (unlimited accessories)
-            </span>
+          <ModalHeader className="flex-col gap-4">
+            <div className="flex justify-between items-center w-full">
+              <span className="uppercase tracking-widest font-bold">
+                Select Pieces
+              </span>
+              <span className="text-xs text-default-400 font-normal">
+                {selectedClothes.length} selected
+              </span>
+            </div>
+
+            {/* Search and Filter */}
+            <div className="flex gap-3 w-full">
+              <Input
+                placeholder="Search items..."
+                variant="bordered"
+                radius="none"
+                size="sm"
+                startContent={
+                  <MagnifyingGlassIcon className="w-4 h-4 text-default-400" />
+                }
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1"
+                isClearable
+                onClear={() => setSearchQuery("")}
+              />
+              <Select
+                placeholder="All Categories"
+                variant="bordered"
+                radius="none"
+                size="sm"
+                className="w-48"
+                selectedKeys={activeCategory ? [activeCategory] : []}
+                onChange={(e) => setActiveCategory(e.target.value || null)}
+              >
+                {allCategories.map((cat) => (
+                  <SelectItem key={cat}>{cat}</SelectItem>
+                ))}
+              </Select>
+            </div>
           </ModalHeader>
+
           <ModalBody className="pb-6">
-            {Object.entries(groupedClothes)
-              .sort(([catA], [catB]) => catA.localeCompare(catB))
-              .map(([category, items]) => {
-                const isAccessory = ACCESSORY_CATEGORIES.includes(category);
-                const selectedInCategory = getSelectedInCategory(category);
+            {Object.keys(groupedClothes).length === 0 ? (
+              <div className="py-12 text-center text-default-400">
+                No items found matching your search
+              </div>
+            ) : (
+              Object.entries(groupedClothes)
+                .sort(([catA], [catB]) => catA.localeCompare(catB))
+                .map(([category, items]) => {
+                  const isAccessory = ACCESSORY_CATEGORIES.includes(category);
+                  const selectedInCategory = getSelectedInCategory(category);
 
-                return (
-                  <div key={category} className="mb-8">
-                    <div className="flex items-center gap-3 mb-4 pb-2 border-b border-default-200">
-                      <h4 className="text-xs font-bold uppercase tracking-widest">
-                        {category}
-                      </h4>
-                      <span className="text-[10px] text-default-400 uppercase tracking-wider">
-                        {isAccessory ? "Accessories" : "Pick One"}
-                      </span>
-                      {!isAccessory && selectedInCategory && (
-                        <span className="text-[10px] text-success-600 uppercase tracking-wider ml-auto">
-                          ✓ Selected: {selectedInCategory.name}
-                        </span>
-                      )}
-                    </div>
+                  return (
+                    <div key={category} className="mb-8">
+                      <div className="flex items-center gap-3 mb-4 pb-2 border-b border-default-200">
+                        <h4 className="text-xs font-bold uppercase tracking-widest">
+                          {category}
+                        </h4>
+                        <Chip size="sm" variant="flat" className="text-[10px]">
+                          {isAccessory ? "Multiple OK" : "Pick One"}
+                        </Chip>
+                        {!isAccessory && selectedInCategory && (
+                          <span className="text-[10px] text-success-600 uppercase tracking-wider ml-auto flex items-center gap-1">
+                            <CheckCircleIcon className="w-3 h-3" />
+                            {selectedInCategory.name}
+                          </span>
+                        )}
+                      </div>
 
-                    <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                      {items.map((item) => {
-                        const isSelected = selectedClothes.some(
-                          (c) => c.id === item.id,
-                        );
-                        const isDisabled =
-                          !isAccessory &&
-                          selectedInCategory &&
-                          selectedInCategory.id !== item.id;
+                      <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                        {items.map((item) => {
+                          const isSelected = selectedClothes.some(
+                            (c) => c.id === item.id,
+                          );
+                          const wouldReplace =
+                            !isAccessory && selectedInCategory && !isSelected;
 
-                        return (
-                          <div
-                            key={item.id}
-                            className={`aspect-[3/4] cursor-pointer group relative border-2 transition-all ${
-                              isSelected
-                                ? "border-primary shadow-lg"
-                                : isDisabled
-                                  ? "border-default-100 opacity-40 cursor-not-allowed"
-                                  : "border-transparent hover:border-default-300"
-                            }`}
-                            onClick={() => {
-                              if (!isDisabled) {
-                                handleAddClothes(item);
+                          return (
+                            <Tooltip
+                              key={item.id}
+                              content={
+                                wouldReplace
+                                  ? `Replace ${selectedInCategory.name}`
+                                  : item.name
                               }
-                            }}
-                          >
-                            <Image
-                              src={item.imageUrl || ""}
-                              radius="none"
-                              className={`w-full h-full object-cover ${!isDisabled && "group-hover:opacity-80"}`}
-                            />
-                            <div
-                              className={`absolute bottom-0 w-full p-1 text-[9px] uppercase truncate text-center ${
-                                isSelected
-                                  ? "bg-primary text-white"
-                                  : "bg-white/90 text-foreground"
-                              }`}
                             >
-                              {item.name}
-                            </div>
-                            {isSelected && (
-                              <div className="absolute top-1 right-1 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                                ✓
+                              <div
+                                className={`aspect-[3/4] cursor-pointer group relative border-2 transition-all ${
+                                  isSelected
+                                    ? "border-primary shadow-lg"
+                                    : wouldReplace
+                                      ? "border-warning-300 hover:border-warning"
+                                      : "border-transparent hover:border-default-300"
+                                }`}
+                                onClick={() => handleAddClothes(item)}
+                              >
+                                <Image
+                                  src={item.imageUrl || ""}
+                                  radius="none"
+                                  className="w-full h-full object-cover group-hover:opacity-90"
+                                />
+                                <div
+                                  className={`absolute bottom-0 w-full p-1 text-[9px] uppercase truncate text-center ${
+                                    isSelected
+                                      ? "bg-primary text-white"
+                                      : "bg-white/90 text-foreground"
+                                  }`}
+                                >
+                                  {item.name}
+                                </div>
+                                {isSelected && (
+                                  <div className="absolute top-1 right-1 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                                    ✓
+                                  </div>
+                                )}
+                                {wouldReplace && (
+                                  <div className="absolute top-1 right-1">
+                                    <ArrowPathIcon className="w-4 h-4 text-warning" />
+                                  </div>
+                                )}
                               </div>
-                            )}
-                            {isDisabled && (
-                              <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                                <span className="text-[10px] text-danger font-bold uppercase">
-                                  Replace {selectedInCategory?.name}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                            </Tooltip>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+            )}
+          </ModalBody>
+
+          <ModalFooter className="border-t border-divider">
+            <div className="flex justify-between items-center w-full">
+              <span className="text-xs text-default-500">
+                {selectedClothes.length} items selected
+                {totalCost > 0 && ` • $${totalCost.toFixed(2)} total`}
+              </span>
+              <Button
+                radius="none"
+                color="primary"
+                onPress={addClothesModal.onClose}
+              >
+                Done
+              </Button>
+            </div>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Collage Builder Modal */}
+      <Modal
+        isOpen={showCollageBuilder}
+        onClose={() => setShowCollageBuilder(false)}
+        size="5xl"
+        radius="none"
+        classNames={{ body: "p-0", header: "border-b border-default-200" }}
+      >
+        <ModalContent className="h-[85vh]">
+          <ModalHeader className="uppercase tracking-widest font-bold">
+            Collage Studio
+          </ModalHeader>
+          <ModalBody className="overflow-hidden">
+            <CollageBuilder
+              items={selectedClothes}
+              onSave={handleCollageSave}
+            />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      {/* Confirm Leave Modal */}
+      <Modal
+        isOpen={confirmLeaveModal.isOpen}
+        onClose={confirmLeaveModal.onClose}
+        radius="none"
+        size="sm"
+      >
+        <ModalContent>
+          <ModalHeader className="flex items-center gap-2">
+            <ExclamationTriangleIcon className="w-5 h-5 text-warning" />
+            Unsaved Changes
+          </ModalHeader>
+          <ModalBody>
+            <p className="text-default-600">
+              You have unsaved changes. Are you sure you want to leave? Your
+              progress will be lost.
+            </p>
           </ModalBody>
           <ModalFooter>
             <Button
-              radius="none"
               variant="light"
-              onPress={addClothesModal.onClose}
+              radius="none"
+              onPress={confirmLeaveModal.onClose}
             >
-              Done
+              Stay
+            </Button>
+            <Button color="danger" radius="none" onPress={confirmNavigation}>
+              Leave
             </Button>
           </ModalFooter>
         </ModalContent>
