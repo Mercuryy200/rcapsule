@@ -48,3 +48,6 @@ bun.lockb
 # sentry
 .sentryclirc
 
+
+# Sentry Config File
+.env.sentry-build-plugin
