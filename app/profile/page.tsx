@@ -26,13 +26,17 @@ import { useUser } from "@/contexts/UserContext";
 
 // Import Visualization Components
 import { ColorPalette } from "@/components/closet/ColorPalette";
-import { StatsCard } from "@/components/closet/StatsCard";
+import { StatsCard } from "@/components/analytics/StatsCard";
 import CalendarTracker from "@/components/calendar/CalendarTracker";
-
-// Import New Components (Adjust paths as needed)
 import OutfitRecommendation from "@/components/OutfitRecommendation";
 import LocationSettings from "@/components/LocationSettings";
-import WeatherWidget from "@/components/WeatherWidget"; // Optional if you have it
+import WeatherWidget from "@/components/WeatherWidget";
+//analytics
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { OverviewDashboard } from "@/components/analytics/OverviewDashboard";
+import { CategoryBreakdown } from "@/components/analytics/CategoryBreakdown";
+import { InsightsCard } from "@/components/analytics/InsightsCard";
+import { ValueLeaders } from "@/components/analytics/ValueLeaders";
 
 interface ExtendedWardrobe extends Wardrobe {
   clothesCount?: number;
@@ -56,6 +60,7 @@ export default function ProfilePage() {
     onOpen: onLocOpen,
     onOpenChange: onLocChange,
   } = useDisclosure();
+  const { analytics, isLoading } = useAnalytics();
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -292,6 +297,24 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+        </Tab>
+        {/* Analytics */}
+        <Tab key="analytics" title="Analytics">
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Spinner size="lg" />
+            </div>
+          ) : (
+            <div className="space-y-8">
+              <OverviewDashboard analytics={analytics} />
+              <InsightsCard insights={analytics.insights} />
+              <ValueLeaders
+                bestValue={analytics.value.bestValueItems}
+                worstValue={analytics.value.worstValueItems}
+              />
+              <CategoryBreakdown categories={analytics.categories} />
+            </div>
+          )}
         </Tab>
         {/* The Edit*/}
         <Tab key="stylist" title="The Edit">
