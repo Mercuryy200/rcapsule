@@ -10,6 +10,7 @@ import {
   ScrollShadow,
 } from "@heroui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import * as Sentry from "@sentry/nextjs";
 
 import {
   colors,
@@ -53,6 +54,21 @@ export default function ClothesFilter({
   const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
 
   const handleApplyFilters = () => {
+    Sentry.addBreadcrumb({
+      category: "user-action",
+      message: "User applied filters",
+      level: "info",
+      data: {
+        filters: {
+          categories: selectedCategories,
+          colors: selectedColors,
+          seasons: selectedSeasons,
+          styles: selectedStyles,
+          conditions: selectedConditions,
+        },
+      },
+    });
+
     onFilterChange({
       categories: selectedCategories,
       colors: selectedColors,

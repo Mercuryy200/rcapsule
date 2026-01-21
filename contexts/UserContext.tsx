@@ -1,7 +1,7 @@
-// contexts/UserContext.tsx
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import * as Sentry from "@sentry/nextjs";
 
 interface UserContextType {
   user: any;
@@ -23,6 +23,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const fetchUser = async () => {
     if (status !== "authenticated" || !session?.user?.id) {
       setUser(null);
+      Sentry.setUser(null);
       setLoading(false);
       return;
     }
@@ -32,6 +33,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (response.ok) {
         const data = await response.json();
         setUser(data);
+        Sentry.setUser({
+          id: data.id,
+          email: data.email,
+          username: data.name,
+        });
       } else {
         setUser(session.user);
       }
@@ -47,7 +53,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     fetchUser();
   }, [status, session?.user?.id]);
 
-  // Listen for custom refresh event
   useEffect(() => {
     const handleRefresh = () => {
       fetchUser();

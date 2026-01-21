@@ -1,86 +1,115 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(req: Request) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const userId = session.user.id;
-    const { searchParams } = new URL(req.url);
-    const wardrobeId = searchParams.get("wardrobeId");
-    const statusFilter = searchParams.get("status");
-    const supabase = getSupabaseServer();
-
-    if (wardrobeId) {
-      const { data: wardrobeClothes, error } = await supabase
-        .from("WardrobeClothes")
-        .select(
-          `
-          addedAt,
-          notes,
-          clothes:Clothes(*)
-        `,
-        )
-        .eq("wardrobeId", wardrobeId)
-        .order("addedAt", { ascending: false });
-
-      if (error) throw error;
-
-      const clothes =
-        wardrobeClothes?.map((wc: any) => ({
-          ...wc.clothes,
-          addedToWardrobeAt: wc.addedAt,
-          wardrobeNotes: wc.notes,
-        })) || [];
-
-      return NextResponse.json(clothes);
-    } else {
-      // 2. FETCHING ALL CLOTHES (Main Closet / Wishlist)
-      let query = supabase
-        .from("Clothes")
-        .select(
-          `
-          *,
-          wardrobes:WardrobeClothes(
-            wardrobeId,
-            addedAt,
-            wardrobe:Wardrobe(id, title)
-          )
-        `,
-        )
-        .eq("userId", userId)
-        .order("createdAt", { ascending: false });
-
-      // --- NEW FILTERING LOGIC ---
-      if (statusFilter) {
-        if (statusFilter === "owned") {
-          // owned: Includes explicit 'owned' AND legacy items (null)
-          query = query.or("status.eq.owned,status.is.null");
-        } else {
-          // wishlist: Strict equality
-          query = query.eq("status", statusFilter);
+  return await Sentry.startSpan(
+    {
+      op: "db.query",
+      name: "Fetch User Clothes",
+    },
+    async (span) => {
+      try {
+        const session = await auth();
+        if (!session?.user?.id) {
+          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+        const userId = session.user.id;
+        const { searchParams } = new URL(req.url);
+        const wardrobeId = searchParams.get("wardrobeId");
+        const statusFilter = searchParams.get("status");
+        const supabase = getSupabaseServer();
+
+        if (wardrobeId) {
+          const { data: wardrobeClothes, error } = await supabase
+            .from("WardrobeClothes")
+            .select(
+              `
+              addedAt,
+              notes,
+              clothes:Clothes(*)
+            `,
+            )
+            .eq("wardrobeId", wardrobeId)
+            .order("addedAt", { ascending: false });
+
+          if (error) throw error;
+
+          const clothes =
+            wardrobeClothes?.map((wc: any) => ({
+              ...wc.clothes,
+              addedToWardrobeAt: wc.addedAt,
+              wardrobeNotes: wc.notes,
+            })) || [];
+
+          span?.setAttribute("result_count", clothes.length);
+          span?.setAttribute("query_type", "wardrobe");
+          span?.setAttribute("wardrobe_id", wardrobeId);
+
+          return NextResponse.json(clothes);
+        } else {
+          // 2. FETCHING ALL CLOTHES (Main Closet / Wishlist)
+          let query = supabase
+            .from("Clothes")
+            .select(
+              `
+              *,
+              wardrobes:WardrobeClothes(
+                wardrobeId,
+                addedAt,
+                wardrobe:Wardrobe(id, title)
+              )
+            `,
+            )
+            .eq("userId", userId)
+            .order("createdAt", { ascending: false });
+
+          // --- NEW FILTERING LOGIC ---
+          if (statusFilter) {
+            if (statusFilter === "owned") {
+              // owned: Includes explicit 'owned' AND legacy items (null)
+              query = query.or("status.eq.owned,status.is.null");
+            } else {
+              // wishlist: Strict equality
+              query = query.eq("status", statusFilter);
+            }
+          }
+          // ---------------------------
+
+          const { data: clothes, error } = await query;
+
+          if (error) throw error;
+
+          span?.setAttribute("result_count", clothes?.length || 0);
+          span?.setAttribute("query_type", "all_clothes");
+          span?.setAttribute("status_filter", statusFilter || "all");
+
+          return NextResponse.json(clothes || []);
+        }
+      } catch (error) {
+        console.error("Error fetching clothes:", error);
+        const session = await auth();
+        const { searchParams } = new URL(req.url);
+        const wardrobeId = searchParams.get("wardrobeId");
+        const statusFilter = searchParams.get("status");
+
+        Sentry.captureException(error, {
+          tags: { api_route: "/api/clothes", method: "GET" },
+          extra: {
+            userId: session?.user?.id,
+            wardrobeId: wardrobeId,
+            statusFilter: statusFilter,
+          },
+        });
+        return NextResponse.json(
+          { error: "Failed to fetch clothes" },
+          { status: 500 },
+        );
       }
-      // ---------------------------
-
-      const { data: clothes, error } = await query;
-
-      if (error) throw error;
-
-      return NextResponse.json(clothes || []);
-    }
-  } catch (error) {
-    console.error("Error fetching clothes:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch clothes" },
-      { status: 500 },
-    );
-  }
+    },
+  );
 }
-
 export async function POST(req: Request) {
   try {
     const session = await auth();
@@ -101,7 +130,6 @@ export async function POST(req: Request) {
 
     const supabase = getSupabaseServer();
 
-    // Validate Wardrobes if present
     if (data.wardrobeIds?.length > 0) {
       const { data: wardrobes, error } = await supabase
         .from("Wardrobe")
@@ -127,15 +155,12 @@ export async function POST(req: Request) {
       }
     }
 
-    // Prepare Payload
     const clothingPayload = {
       userId: userId,
       name: data.name,
       brand: data.brand || null,
       category: data.category,
       price: data.price ? parseFloat(data.price) : null,
-
-      // Handle Status & Date Logic
       status: data.status || "owned", // Default to owned
       purchaseDate:
         data.status === "wishlist" ? null : data.purchaseDate || null,
@@ -192,6 +217,14 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Error creating clothing:", error);
+    const session = await auth();
+
+    Sentry.captureException(error, {
+      tags: { api_route: "/api/clothes", method: "POST" },
+      extra: {
+        userId: session?.user?.id,
+      },
+    });
     return NextResponse.json(
       { error: "Failed to create clothing" },
       { status: 500 },

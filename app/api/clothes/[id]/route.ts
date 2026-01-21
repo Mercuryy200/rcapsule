@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(
   req: Request,

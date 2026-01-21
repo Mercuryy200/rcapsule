@@ -15,6 +15,7 @@ import ClothingCard from "@/components/closet/ClothingCard";
 import ClothesFilter, {
   FilterOptions,
 } from "@/components/closet/ClothesFilter";
+import * as Sentry from "@sentry/nextjs";
 
 interface ClothingItem {
   id: string;
@@ -178,7 +179,16 @@ export default function WishlistPage() {
     });
   }, [filteredClothes]);
 
-  const handleItemClick = (itemId: string) => router.push(`/closet/${itemId}`);
+  const handleItemClick = (itemId: string) => {
+    Sentry.addBreadcrumb({
+      category: "navigation",
+      message: "Navigated to item detail",
+      level: "info",
+      data: { itemId },
+    });
+
+    router.push(`/closet/${itemId}`);
+  };
   const handleAddNew = () => router.push("/closet/new");
 
   if (status === "loading" || loading) {

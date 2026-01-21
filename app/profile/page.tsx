@@ -160,75 +160,6 @@ export default function ProfilePage() {
             "group-data-[selected=true]:text-foreground text-default-500 uppercase tracking-widest font-bold text-xs",
         }}
       >
-        {/* --- NEW TAB: THE EDIT (Stylist) --- */}
-        <Tab key="stylist" title="The Edit">
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header / Utility Bar */}
-            <div className="flex justify-between items-end">
-              <div>
-                <h2 className="text-2xl font-black uppercase italic tracking-tighter">
-                  Daily Curator
-                </h2>
-                <p className="text-xs text-default-400 uppercase tracking-widest mt-1">
-                  AI-Powered Personal Styling
-                </p>
-              </div>
-              <Button
-                variant="light"
-                size="sm"
-                startContent={<MapPinIcon className="w-4 h-4" />}
-                onPress={onLocOpen}
-                className="uppercase font-bold text-[10px] tracking-widest text-default-500"
-              >
-                Location Settings
-              </Button>
-            </div>
-
-            {/* The Trigger Area */}
-            {!showRecommendation ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Weather Context - Left Side */}
-                <div className="md:col-span-1">
-                  <WeatherWidget onLocationNotSet={onLocOpen} compact={false} />
-                </div>
-
-                <div className="md:col-span-2 h-64 border border-default-200 bg-content1 flex flex-col items-center justify-center gap-6 relative overflow-hidden group">
-                  {/* Decorative Background Element */}
-
-                  <div className="z-10 text-center space-y-2">
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-default-400">
-                      Ready to dress?
-                    </p>
-                    <Button
-                      size="lg"
-                      radius="none"
-                      color="primary"
-                      className="uppercase font-bold tracking-widest px-12 py-6 shadow-xl"
-                      startContent={<SparklesIcon className="w-5 h-5" />}
-                      onPress={() => setShowRecommendation(true)}
-                    >
-                      Curate Today's Look
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="relative">
-                {/* When showing recommendation, use compact weather */}
-                <div className="flex items-center justify-between mb-4">
-                  <button
-                    onClick={() => setShowRecommendation(false)}
-                    className="text-[10px] uppercase font-bold tracking-widest text-default-400 hover:text-danger flex items-center gap-1 transition-colors"
-                  >
-                    <XMarkIcon className="w-3 h-3" /> Close Curator
-                  </button>
-                </div>
-                <OutfitRecommendation onLocationNotSet={onLocOpen} />
-              </div>
-            )}
-          </div>
-        </Tab>
-
         <Tab key="overview" title="Overview">
           <div className="space-y-12">
             {/* 1. FINANCIAL SUMMARY ROW */}
@@ -362,6 +293,75 @@ export default function ProfilePage() {
             </div>
           </div>
         </Tab>
+        {/* The Edit*/}
+        <Tab key="stylist" title="The Edit">
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Header / Utility Bar */}
+            <div className="flex justify-between items-end">
+              <div>
+                <h2 className="text-2xl font-black uppercase italic tracking-tighter">
+                  Daily Curator
+                </h2>
+                <p className="text-xs text-default-400 uppercase tracking-widest mt-1">
+                  AI-Powered Personal Styling
+                </p>
+              </div>
+              <Button
+                variant="light"
+                size="sm"
+                startContent={<MapPinIcon className="w-4 h-4" />}
+                onPress={onLocOpen}
+                className="uppercase font-bold text-[10px] tracking-widest text-default-500"
+              >
+                Location Settings
+              </Button>
+            </div>
+
+            {/* The Trigger Area */}
+            {!showRecommendation ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Weather Context - Left Side */}
+                <div className="md:col-span-1">
+                  <WeatherWidget onLocationNotSet={onLocOpen} compact={false} />
+                </div>
+
+                <div className="md:col-span-2 h-64 border border-default-200 bg-content1 flex flex-col items-center justify-center gap-6 relative overflow-hidden group">
+                  {/* Decorative Background Element */}
+
+                  <div className="z-10 text-center space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-default-400">
+                      Ready to dress?
+                    </p>
+                    <Button
+                      size="lg"
+                      radius="none"
+                      color="primary"
+                      className="uppercase font-bold tracking-widest px-12 py-6 shadow-xl"
+                      startContent={<SparklesIcon className="w-5 h-5" />}
+                      onPress={() => setShowRecommendation(true)}
+                    >
+                      Curate Today's Look
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="relative">
+                {/* When showing recommendation, use compact weather */}
+                <div className="flex items-center justify-between mb-4">
+                  <button
+                    onClick={() => setShowRecommendation(false)}
+                    className="text-[10px] uppercase font-bold tracking-widest text-default-400 hover:text-danger flex items-center gap-1 transition-colors"
+                  >
+                    <XMarkIcon className="w-3 h-3" /> Close Curator
+                  </button>
+                </div>
+                <OutfitRecommendation onLocationNotSet={onLocOpen} />
+              </div>
+            )}
+          </div>
+        </Tab>
+
         <Tab key="wardrobes" title="Wardrobes">
           <div className="py-8">
             <WardrobeTab wardrobes={wardrobes} refreshData={fetchProfileData} />
