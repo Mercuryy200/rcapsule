@@ -11,7 +11,15 @@ import {
 } from "@heroui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
-import { colors, occasions, seasons, categories, colorMap } from "@/lib/data";
+import {
+  colors,
+  occasions,
+  seasons,
+  categories,
+  colorMap,
+  styles,
+  conditions,
+} from "@/lib/data";
 
 export interface FilterOptions {
   categories: string[];
@@ -20,23 +28,29 @@ export interface FilterOptions {
   placesToWear: string[];
   priceRange: [number, number];
   brands: string[];
+  styles: string[];
+  conditions: string[];
 }
 
 interface ClothesFilterProps {
   onFilterChange: (filters: FilterOptions) => void;
   availableBrands?: string[];
+  maxPrice?: number;
 }
 
 export default function ClothesFilter({
   onFilterChange,
   availableBrands = [],
+  maxPrice = 500,
 }: ClothesFilterProps) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedSeasons, setSelectedSeasons] = useState<string[]>([]);
   const [selectedOccasions, setSelectedOccasions] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
+  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
+  const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
 
   const handleApplyFilters = () => {
     onFilterChange({
@@ -46,6 +60,8 @@ export default function ClothesFilter({
       placesToWear: selectedOccasions,
       priceRange: priceRange,
       brands: selectedBrands,
+      styles: selectedStyles,
+      conditions: selectedConditions,
     });
   };
 
@@ -55,14 +71,18 @@ export default function ClothesFilter({
     setSelectedSeasons([]);
     setSelectedOccasions([]);
     setSelectedBrands([]);
-    setPriceRange([0, 500]);
+    setSelectedStyles([]);
+    setSelectedConditions([]);
+    setPriceRange([0, maxPrice]);
     onFilterChange({
       categories: [],
       colors: [],
       seasons: [],
       placesToWear: [],
-      priceRange: [0, 500],
+      priceRange: [0, maxPrice],
       brands: [],
+      styles: [],
+      conditions: [],
     });
   };
 
@@ -123,7 +143,7 @@ export default function ClothesFilter({
             <div className="px-2 pt-2">
               <Slider
                 step={10}
-                maxValue={500}
+                maxValue={maxPrice}
                 minValue={0}
                 value={priceRange}
                 formatOptions={{ style: "currency", currency: "USD" }}
@@ -193,6 +213,54 @@ export default function ClothesFilter({
               </CheckboxGroup>
             </AccordionItem>
           ) : null}
+
+          <AccordionItem key="style" aria-label="Style" title="Style">
+            <CheckboxGroup
+              value={selectedStyles}
+              onValueChange={setSelectedStyles}
+              classNames={{ wrapper: "gap-3" }}
+            >
+              {styles.map((style) => (
+                <Checkbox
+                  key={style}
+                  value={style}
+                  size="sm"
+                  radius="none"
+                  classNames={{
+                    label: "text-sm text-default-500 capitalize ml-1",
+                  }}
+                >
+                  {style}
+                </Checkbox>
+              ))}
+            </CheckboxGroup>
+          </AccordionItem>
+
+          <AccordionItem
+            key="condition"
+            aria-label="Condition"
+            title="Condition"
+          >
+            <CheckboxGroup
+              value={selectedConditions}
+              onValueChange={setSelectedConditions}
+              classNames={{ wrapper: "gap-3" }}
+            >
+              {conditions.map((condition) => (
+                <Checkbox
+                  key={condition}
+                  value={condition}
+                  size="sm"
+                  radius="none"
+                  classNames={{
+                    label: "text-sm text-default-500 capitalize ml-1",
+                  }}
+                >
+                  {condition}
+                </Checkbox>
+              ))}
+            </CheckboxGroup>
+          </AccordionItem>
 
           <AccordionItem key="occasion" aria-label="Occasion" title="Occasion">
             <CheckboxGroup

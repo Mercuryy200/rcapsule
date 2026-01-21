@@ -29,6 +29,8 @@ interface ClothingItem {
   imageUrl?: string;
   placesToWear: string[];
   status?: string;
+  condition?: string;
+  style?: string;
 }
 
 export default function WishlistPage() {
@@ -47,6 +49,8 @@ export default function WishlistPage() {
     placesToWear: [],
     priceRange: [0, 5000],
     brands: [],
+    styles: [],
+    conditions: [],
   });
 
   useEffect(() => {
@@ -83,6 +87,8 @@ export default function WishlistPage() {
     if (filters.placesToWear.length > 0)
       activeFilterGroups.push("placesToWear");
     if (filters.brands.length > 0) activeFilterGroups.push("brand");
+    if (filters.styles.length > 0) activeFilterGroups.push("style");
+    if (filters.conditions.length > 0) activeFilterGroups.push("condition");
 
     const isPriceFiltered =
       filters.priceRange[0] > 0 || filters.priceRange[1] < 5000;
@@ -90,6 +96,7 @@ export default function WishlistPage() {
     if (activeFilterGroups.length === 0 && !isPriceFiltered) return clothes;
 
     return clothes.filter((item) => {
+      // Hard filters (must match if specified)
       if (
         filters.categories.length > 0 &&
         !filters.categories.includes(item.category)
@@ -101,21 +108,37 @@ export default function WishlistPage() {
         !filters.brands.includes(item.brand)
       )
         return false;
+      if (
+        filters.styles.length > 0 &&
+        item.style &&
+        !filters.styles.includes(item.style)
+      )
+        return false;
+      if (
+        filters.conditions.length > 0 &&
+        item.condition &&
+        !filters.conditions.includes(item.condition)
+      )
+        return false;
 
+      // Soft filters (at least one must match if any are specified)
       let matchedAtLeastOneFilter = false;
       if (
         filters.colors.length > 0 &&
+        item.colors &&
         item.colors.some((c) => filters.colors.includes(c))
       )
         matchedAtLeastOneFilter = true;
       if (
         filters.seasons.length > 0 &&
         item.season &&
-        filters.seasons.includes(item.season)
+        Array.isArray(item.season) &&
+        item.season.some((s) => filters.seasons.includes(s))
       )
         matchedAtLeastOneFilter = true;
       if (
         filters.placesToWear.length > 0 &&
+        item.placesToWear &&
         item.placesToWear.some((p) => filters.placesToWear.includes(p))
       )
         matchedAtLeastOneFilter = true;
@@ -238,6 +261,7 @@ export default function WishlistPage() {
             <ClothesFilter
               onFilterChange={setFilters}
               availableBrands={availableBrands}
+              maxPrice={5000}
             />
           </motion.div>
         )}
