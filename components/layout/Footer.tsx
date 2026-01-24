@@ -12,7 +12,7 @@ export default function Footer() {
       title: "Product",
       links: [
         { name: "Features", href: "/features" },
-        { name: "Pricing", href: "#" },
+        { name: "Pricing", href: "/pricing" },
         { name: "Download App", href: "#" },
       ],
     },
