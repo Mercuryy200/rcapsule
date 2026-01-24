@@ -16,6 +16,7 @@ export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
     "yearly",
   );
+  const [isLoading, setIsLoading] = useState(false);
 
   const monthlyPrice = 6.99;
   const yearlyPrice = 59.0;
@@ -23,17 +24,46 @@ export default function PricingPage() {
     ((monthlyPrice * 12 - yearlyPrice) / (monthlyPrice * 12)) * 100,
   );
 
-  const handleSubscribe = (plan: "free" | "premium") => {
+  const handleSubscribe = async (plan: "free" | "premium") => {
     if (plan === "free") {
       router.push("/closet");
-    } else {
-      console.log(`Checkout: ${plan} - ${billingCycle}`);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          billingCycle,
+          // Include userId if you have authentication
+          // userId: user?.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else {
+        console.error("No checkout URL returned:", data.error);
+        // TODO: Show error toast to user
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      // TODO: Show error toast to user
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="wardrobe-page-container min-h-screen">
-      {/* Header */}
       <header className="text-center mb-16 pt-8">
         <h1 className="text-5xl md:text-6xl font-black uppercase tracking-tighter italic mb-4">
           The Membership
@@ -43,7 +73,6 @@ export default function PricingPage() {
         </div>
       </header>
 
-      {/* Billing Toggle */}
       <div className="flex justify-center items-center gap-6 mb-16">
         <span
           className={`text-xs uppercase tracking-widest cursor-pointer transition-colors ${
@@ -93,9 +122,7 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {/* Cards Grid */}
       <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto relative items-start">
-        {/* FREE TIER */}
         <div className="border border-default-200 p-10 relative hover:border-default-400 transition-colors bg-background">
           <div className="mb-10 text-center md:text-left">
             <span className="font-bold uppercase tracking-widest text-xs mb-2 block text-default-500">
@@ -137,7 +164,6 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* PREMIUM TIER */}
         <div className="border border-foreground p-10 relative bg-foreground text-background md:-translate-y-4 shadow-xl">
           <div className="absolute top-0 right-0 p-6">
             <SparklesIcon className="w-5 h-5 animate-pulse" />
@@ -170,6 +196,11 @@ export default function PricingPage() {
             <span className="opacity-40 text-xs ml-3 uppercase tracking-widest">
               / month
             </span>
+            {billingCycle === "yearly" && (
+              <span className="opacity-40 text-xs ml-2 uppercase tracking-widest">
+                (billed annually)
+              </span>
+            )}
           </div>
 
           <Button
@@ -177,8 +208,10 @@ export default function PricingPage() {
             variant="solid"
             radius="none"
             onPress={() => handleSubscribe("premium")}
+            isLoading={isLoading}
+            isDisabled={isLoading}
           >
-            Upgrade Membership
+            {isLoading ? "Redirecting to Checkout..." : "Upgrade Membership"}
           </Button>
 
           <div className="space-y-5">
@@ -241,7 +274,6 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {/* FAQ Section */}
       <div className="max-w-2xl mx-auto mt-24 text-center pb-20">
         <p className="font-serif italic text-2xl mb-6">
           "It's like having a stylist in your pocket."
@@ -268,10 +300,27 @@ export default function PricingPage() {
           <AccordionItem
             key="2"
             aria-label="cancel"
+            title="Can I cancel anytime?"
+          >
+            Yes! You can cancel your subscription at any time. You'll continue
+            to have access to premium features until the end of your billing
+            period.
+          </AccordionItem>
+          <AccordionItem
+            key="3"
+            aria-label="export"
             title="Can I export my data?"
           >
             Yes. You own your data. You can export your entire wardrobe catalog
-            and usage logs at any time.
+            and usage logs at any time from your account settings.
+          </AccordionItem>
+          <AccordionItem
+            key="4"
+            aria-label="refund"
+            title="What's your refund policy?"
+          >
+            We offer a 7-day money-back guarantee. If you're not satisfied with
+            premium features, contact us within 7 days for a full refund.
           </AccordionItem>
         </Accordion>
       </div>
