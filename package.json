@@ -54,6 +54,7 @@
     "@react-aria/ssr": "3.9.10",
     "@react-aria/visually-hidden": "3.8.28",
     "@sentry/nextjs": "^10",
+    "@stripe/stripe-js": "^8.6.4",
     "@supabase/supabase-js": "^2.77.0",
     "@vercel/analytics": "^1.6.1",
     "axios": "^1.13.2",
@@ -80,6 +81,7 @@
     "react-server-dom-webpack": "^19.2.3",
     "require-in-the-middle": "^8.0.1",
     "sonner": "^2.0.7",
+    "stripe": "^20.2.0",
     "styled-components": "^6.1.19",
     "swr": "^2.3.8"
   },

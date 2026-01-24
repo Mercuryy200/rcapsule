@@ -50,9 +50,13 @@ function buildPrompt(
     category: item.category,
     colors: item.colors?.join(", ") || "unknown",
     seasons: item.season?.join(", ") || "all-season",
-    occasions: item.placesToWear?.join(", ") || "any",
+    occasions: Array.isArray(item.placesToWear)
+      ? item.placesToWear.join(", ")
+      : item.placesToWear || "any",
     style: item.style || "casual",
-    materials: item.materials?.join(", ") || "unknown",
+    materials: Array.isArray(item.materials)
+      ? item.materials.join(", ")
+      : item.materials || "unknown",
   }));
 
   // Build weather description

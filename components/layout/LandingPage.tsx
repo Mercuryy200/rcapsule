@@ -102,7 +102,7 @@ export default function LandingPage() {
             </a>
 
             <a
-              href="https://chrome.google.com/webstore/..."
+              href="https://chromewebstore.google.com/detail/hcakhbfdhndjcihacgbfiflkmlffknbp?utm_source=item-share-cb"
               target="_blank"
               className="border-2 border-black bg-white text-black font-bold uppercase tracking-widest px-8 md:px-10 h-12 md:h-14 w-full sm:w-auto text-sm md:text-base inline-flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
             >
@@ -396,7 +396,7 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center pt-4">
               <a
-                href="https://chrome.google.com/webstore/..."
+                href="https://chromewebstore.google.com/detail/hcakhbfdhndjcihacgbfiflkmlffknbp?utm_source=item-share-cb"
                 target="_blank"
                 className="bg-gray-900 text-white font-bold uppercase tracking-widest px-8 md:px-10 h-12 md:h-14 w-full sm:w-auto text-sm md:text-base inline-flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
               >
