@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
   const protectedRoutes = [
     "/profile",
     "/closet",
@@ -11,22 +12,30 @@ export function proxy(req: NextRequest) {
     "/wishlist",
     "/calendar",
   ];
-  const isProtected = protectedRoutes.some((route) =>
-    pathname.startsWith(route),
-  );
 
-  if (isProtected) {
-    const sessionToken =
-      req.cookies.get("authjs.session-token")?.value ||
-      req.cookies.get("__Secure-authjs.session-token")?.value;
+  const guestRoutes = [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/update-password",
+  ];
 
-    if (!sessionToken) {
-      const loginUrl = new URL("/login", req.url);
+  const sessionToken =
+    req.cookies.get("authjs.session-token")?.value ||
+    req.cookies.get("__Secure-authjs.session-token")?.value;
 
-      loginUrl.searchParams.set("callbackUrl", pathname);
+  const isLoggedIn = !!sessionToken;
 
-      return NextResponse.redirect(loginUrl);
-    }
+  if (isLoggedIn && guestRoutes.some((route) => pathname.startsWith(route))) {
+    return NextResponse.redirect(new URL("/closet", req.url));
+  }
+  if (
+    !isLoggedIn &&
+    protectedRoutes.some((route) => pathname.startsWith(route))
+  ) {
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
@@ -38,5 +47,12 @@ export const config = {
     "/closet/:path*",
     "/settings/:path*",
     "/outfits/:path*",
+    "/wishlist/:path*",
+    "/calendar/:path*",
+
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/update-password",
   ],
 };

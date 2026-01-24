@@ -30,7 +30,6 @@ function LoginFormContent() {
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-
     try {
       const result = await signIn("credentials", {
         email,
@@ -39,6 +38,8 @@ function LoginFormContent() {
       });
 
       if (result?.error) {
+        setIsLoading(false);
+
         if (result.code === "EmailNotVerified") {
           setError(
             "Please check your email to verify your account before logging in.",
@@ -117,20 +118,26 @@ function LoginFormContent() {
           }
           type={isVisible ? "text" : "password"}
         />
-
+        <div className="flex justify-end w-full px-1">
+          <Link
+            href="/forgot-password"
+            size="sm"
+            className="text-default-500 hover:text-primary transition-colors"
+          >
+            Forgot password?
+          </Link>
+        </div>
         {error && (
           <p className="text-danger text-xs text-center font-medium">{error}</p>
         )}
-
         <Button
           className="w-full h-12 font-bold text-md mt-2 shadow-lg shadow-primary/20"
           color="primary"
           isLoading={isLoading}
           type="submit"
         >
-          Sign In to Capsule
+          Sign In
         </Button>
-
         <div className="flex items-center w-full gap-4 my-2">
           <Divider className="flex-1" />
           <span className="text-xs text-default-400 uppercase tracking-widest">
@@ -138,12 +145,10 @@ function LoginFormContent() {
           </span>
           <Divider className="flex-1" />
         </div>
-
         <div className="grid grid-cols-2 w-full gap-3">
           <SignInButtonGoogle />
           <SignInButtonGithub />
         </div>
-
         <p className="text-center w-full text-sm text-default-500 pt-4">
           Don&apos;t have an account?{" "}
           <Link
