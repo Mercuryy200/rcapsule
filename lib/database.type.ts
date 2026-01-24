@@ -96,6 +96,22 @@ export interface OutfitWearLog {
   location?: string;
   notes?: string;
 }
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+  image?: string;
+  bio?: string;
+  location?: string;
+  latitude?: number;
+  longitude?: number;
+  created_at?: string;
+  updated_at?: string;
+  subscription_status: "free" | "premium";
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
+  subscription_period_end?: string;
+}
 
 export interface ClothesWithWardrobes extends Clothes {
   wardrobes?: Wardrobe[];

@@ -2,22 +2,25 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import * as Sentry from "@sentry/nextjs";
+import type { User } from "@/lib/database.type";
 
 interface UserContextType {
-  user: any;
+  user: User | null;
   refreshUser: () => void;
   loading: boolean;
+  isPremium: boolean;
 }
 
 const UserContext = createContext<UserContextType>({
   user: null,
   refreshUser: () => {},
   loading: true,
+  isPremium: false,
 });
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchUser = async () => {
@@ -31,7 +34,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch("/api/user/me");
       if (response.ok) {
-        const data = await response.json();
+        const data: User = await response.json();
         setUser(data);
         Sentry.setUser({
           id: data.id,
@@ -39,11 +42,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           username: data.name,
         });
       } else {
-        setUser(session.user);
+        // Fallback with default free status
+        setUser({
+          ...session.user,
+          subscription_status: "free",
+        } as User);
       }
     } catch (error) {
       console.error("Error fetching user:", error);
-      setUser(session.user);
+      setUser({
+        ...session.user,
+        subscription_status: "free",
+      } as User);
     } finally {
       setLoading(false);
     }
@@ -62,8 +72,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("refreshUser", handleRefresh);
   }, [status, session?.user?.id]);
 
+  const isPremium = user?.subscription_status === "premium";
+
   return (
-    <UserContext.Provider value={{ user, refreshUser: fetchUser, loading }}>
+    <UserContext.Provider
+      value={{ user, refreshUser: fetchUser, loading, isPremium }}
+    >
       {children}
     </UserContext.Provider>
   );
