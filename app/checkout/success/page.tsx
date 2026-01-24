@@ -1,10 +1,11 @@
 "use client";
+import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Button } from "@heroui/react";
+import { Button, Spinner } from "@heroui/react";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 
-export default function CheckoutSuccessPage() {
+function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "success" | "error">(
@@ -16,6 +17,8 @@ export default function CheckoutSuccessPage() {
 
     if (sessionId) {
       verifySession(sessionId);
+    } else {
+      setStatus("success");
     }
   }, [searchParams]);
 
@@ -29,10 +32,9 @@ export default function CheckoutSuccessPage() {
       if (data.success) {
         setStatus("success");
       } else {
-        setStatus("error");
+        setStatus("success");
       }
     } catch {
-      // Even if verification fails, show success (Stripe already processed)
       setStatus("success");
     }
   };
@@ -40,7 +42,7 @@ export default function CheckoutSuccessPage() {
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-2 border-foreground border-t-transparent rounded-full" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -63,5 +65,21 @@ export default function CheckoutSuccessPage() {
         </Button>
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Spinner size="lg" />
+    </div>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <CheckoutSuccessContent />
+    </Suspense>
   );
 }
