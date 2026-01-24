@@ -35,7 +35,7 @@ export default function WishlistPage() {
   const { status } = useSession();
   const router = useRouter();
 
-  // --- State ---
+  // UI State
   const [viewMode, setViewMode] = useState<"grid" | "gallery">("grid");
   const [sortBy, setSortBy] = useState("recent");
 
@@ -52,7 +52,7 @@ export default function WishlistPage() {
     colors: [],
     seasons: [],
     placesToWear: [],
-    priceRange: [0, 5000], // Higher cap for wishlist
+    priceRange: [0, 5000],
     brands: [],
     styles: [],
     conditions: [],
@@ -65,7 +65,6 @@ export default function WishlistPage() {
 
   const fetchClothes = async () => {
     try {
-      // API Filter: Fetch only wishlist items
       const response = await fetch("/api/clothes?status=wishlist");
       if (response.ok) {
         const data = await response.json();
@@ -77,8 +76,6 @@ export default function WishlistPage() {
       setLoading(false);
     }
   };
-
-  // --- Logic ---
 
   const availableBrands = useMemo(() => {
     const brands = clothes
@@ -233,24 +230,19 @@ export default function WishlistPage() {
     addSearch(term);
   };
 
-  if (status === "loading" || loading) {
-    return (
-      <div className="wardrobe-page-container">
-        <div className="wardrobe-grid">
-          {[...Array(8)].map((_, i) => (
-            <ClothingCardSkeleton key={i} />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const isLoading = status === "loading" || loading;
 
   return (
     <div className="wardrobe-page-container min-h-screen">
-      {/* Reusable Header with Search/Sort/Filter */}
       <WardrobeHeader
         title="Wishlist"
-        subtitle={<>{sortedClothes.length} Items &bull; Future Buys</>}
+        subtitle={
+          isLoading ? (
+            <div className="h-5 w-32 bg-default-200 animate-pulse rounded" />
+          ) : (
+            <>{sortedClothes.length} Items &bull; Future Buys</>
+          )
+        }
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         onSearchSubmit={handleSearchSubmit}
@@ -283,7 +275,13 @@ export default function WishlistPage() {
         )}
 
         <div className="flex-1 min-w-0">
-          {sortedClothes.length === 0 ? (
+          {isLoading ? (
+            <div className="wardrobe-grid">
+              {[...Array(8)].map((_, i) => (
+                <ClothingCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : sortedClothes.length === 0 ? (
             <div className="wardrobe-empty-state">
               <p className="text-xl font-light italic text-default-400 mb-6">
                 {clothes.length === 0

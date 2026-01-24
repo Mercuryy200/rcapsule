@@ -36,15 +36,15 @@ export default function ClosetPage() {
   const { status } = useSession();
   const router = useRouter();
 
-  // --- UI State ---
+  // UI State
   const [viewMode, setViewMode] = useState<"grid" | "gallery">("grid");
   const [sortBy, setSortBy] = useState("recent");
 
-  // --- Search State ---
+  // Search State
   const [searchQuery, setSearchQuery] = useState("");
   const { history, addSearch, clearHistory } = useSearchHistory();
 
-  // --- Data State ---
+  // Data State
   const [clothes, setClothes] = useState<ClothingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -66,7 +66,6 @@ export default function ClosetPage() {
 
   const fetchClothes = async () => {
     try {
-      // API Filter: Fetch only owned items
       const response = await fetch("/api/clothes?status=owned");
       if (response.ok) {
         const data = await response.json();
@@ -80,7 +79,6 @@ export default function ClosetPage() {
   };
 
   // --- Logic: Derived Data ---
-
   const availableBrands = useMemo(() => {
     const brands = clothes
       .map((item) => item.brand)
@@ -88,7 +86,6 @@ export default function ClosetPage() {
     return [...new Set(brands)].sort();
   }, [clothes]);
 
-  // 1. Apply Filters
   const filteredClothes = useMemo(() => {
     const activeFilterGroups = [];
     if (filters.categories.length > 0) activeFilterGroups.push("category");
@@ -106,7 +103,6 @@ export default function ClosetPage() {
     if (activeFilterGroups.length === 0 && !isPriceFiltered) return clothes;
 
     return clothes.filter((item) => {
-      // Precise matches
       if (
         filters.categories.length > 0 &&
         !filters.categories.includes(item.category)
@@ -131,7 +127,6 @@ export default function ClosetPage() {
       )
         return false;
 
-      // Soft matches (OR logic)
       let matchedAtLeastOneFilter = false;
       if (
         filters.colors.length > 0 &&
@@ -172,7 +167,6 @@ export default function ClosetPage() {
     });
   }, [clothes, filters]);
 
-  // 2. Apply Search
   const searchedClothes = useMemo(() => {
     if (!searchQuery) return filteredClothes;
     const lowerQuery = searchQuery.toLowerCase();
@@ -187,7 +181,6 @@ export default function ClosetPage() {
     });
   }, [filteredClothes, searchQuery]);
 
-  // 3. Apply Sorting
   const sortedClothes = useMemo(() => {
     const sorted = [...searchedClothes];
     switch (sortBy) {
@@ -207,7 +200,6 @@ export default function ClosetPage() {
     }
   }, [searchedClothes, sortBy]);
 
-  // 4. Generate Autocomplete Suggestions
   const suggestions = useMemo(() => {
     if (!searchQuery) return [];
     const lowerQuery = searchQuery.toLowerCase();
@@ -221,7 +213,6 @@ export default function ClosetPage() {
     return Array.from(terms).slice(0, 5);
   }, [filteredClothes, searchQuery]);
 
-  // 5. Group for Gallery View
   const clothesByCategory = useMemo(() => {
     const groups: Record<string, ClothingItem[]> = {};
     sortedClothes.forEach((item) => {
@@ -249,24 +240,19 @@ export default function ClosetPage() {
     addSearch(term);
   };
 
-  if (status === "loading" || loading) {
-    return (
-      <div className="wardrobe-page-container">
-        <div className="wardrobe-grid">
-          {[...Array(8)].map((_, i) => (
-            <ClothingCardSkeleton key={i} />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const isLoading = status === "loading" || loading;
 
   return (
     <div className="wardrobe-page-container min-h-screen">
-      {/* Reusable Header */}
       <WardrobeHeader
         title="Collection"
-        subtitle={<>{sortedClothes.length} Items &bull; S/S 2026</>}
+        subtitle={
+          isLoading ? (
+            <div className="h-5 w-32 bg-default-200 animate-pulse rounded" />
+          ) : (
+            <>{sortedClothes.length} Items &bull; S/S 2026</>
+          )
+        }
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         onSearchSubmit={handleSearchSubmit}
@@ -284,7 +270,6 @@ export default function ClosetPage() {
       />
 
       <div className="flex gap-8 relative">
-        {/* Filters Sidebar */}
         {showFilters && (
           <motion.div
             initial={{ opacity: 0, x: -10 }}
@@ -300,7 +285,13 @@ export default function ClosetPage() {
         )}
 
         <div className="flex-1 min-w-0">
-          {sortedClothes.length === 0 ? (
+          {isLoading ? (
+            <div className="wardrobe-grid">
+              {[...Array(8)].map((_, i) => (
+                <ClothingCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : sortedClothes.length === 0 ? (
             <div className="wardrobe-empty-state">
               <p className="text-xl font-light italic text-default-400 mb-6">
                 {clothes.length === 0
