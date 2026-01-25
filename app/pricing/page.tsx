@@ -62,7 +62,7 @@ export default function PricingPage() {
   return (
     <div className="wardrobe-page-container min-h-screen">
       <header className="text-center mb-16 pt-8">
-        <h1 className="text-5xl md:text-6xl font-black uppercase tracking-tighter italic mb-4">
+        <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic mb-2">
           The Membership
         </h1>
         <div className="text-xs uppercase tracking-widest text-default-500">

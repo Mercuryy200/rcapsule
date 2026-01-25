@@ -339,7 +339,7 @@ function ViewMode({
             {item.brand}
           </h2>
         )}
-        <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter italic leading-none mb-4 break-words">
+        <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic mb-2 leading-none break-words">
           {item.name}
         </h1>
 

@@ -48,7 +48,7 @@ export default function FeaturesPage() {
   return (
     <div className="w-full max-w-7xl mx-auto px-6 py-16">
       <div className="text-center max-w-2xl mx-auto mb-16">
-        <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic mb-4">
+        <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic mb-2">
           The Operating System <br /> For Your Closet
         </h1>
         <p className="text-default-500 uppercase tracking-widest text-sm">

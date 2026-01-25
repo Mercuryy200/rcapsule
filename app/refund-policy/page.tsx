@@ -10,7 +10,7 @@ export default function RefundPolicyPage() {
   return (
     <div className="max-w-3xl mx-auto px-6 py-16">
       <header className="mb-12">
-        <h1 className="text-4xl font-black uppercase tracking-tighter italic mb-4">
+        <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic mb-2">
           Refund Policy
         </h1>
         <p className="text-default-500 text-sm">

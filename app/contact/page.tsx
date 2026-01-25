@@ -40,7 +40,7 @@ export default function ContactPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Left Side: Contact Info */}
         <div>
-          <h1 className="text-4xl font-black uppercase tracking-tighter italic mb-6">
+          <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic mb-2">
             Get in Touch
           </h1>
           <p className="text-default-500 mb-8 text-lg">

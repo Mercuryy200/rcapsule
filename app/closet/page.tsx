@@ -245,7 +245,7 @@ export default function ClosetPage() {
   return (
     <div className="wardrobe-page-container min-h-screen">
       <WardrobeHeader
-        title="Collection"
+        title="Capsule"
         subtitle={
           isLoading ? (
             <div className="h-5 w-32 bg-default-200 animate-pulse rounded" />

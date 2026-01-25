@@ -87,7 +87,7 @@ export default function OutfitsPage() {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 border-b border-divider pb-6">
         <div>
-          <h1 className="text-6xl font-black italic uppercase tracking-tighter mb-2">
+          <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic mb-2">
             Lookbook
           </h1>
           <div className="flex gap-6">

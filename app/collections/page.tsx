@@ -127,7 +127,7 @@ export default function CollectionsPage() {
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-12">
       {/* Header */}
       <header className="mb-12">
-        <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic mb-2">
+        <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic mb-2">
           Collections
         </h1>
         <p className="text-default-500 text-sm uppercase tracking-widest">
