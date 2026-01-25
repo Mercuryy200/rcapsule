@@ -6,7 +6,7 @@ import { Logo } from "@/components/logo";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-  //Mimic a production Level footer
+
   const footerLinks = [
     {
       title: "Product",
@@ -28,6 +28,7 @@ export default function Footer() {
       links: [
         { name: "Privacy Policy", href: "/privacy" },
         { name: "Terms of Service", href: "/terms" },
+        { name: "Refund Policy", href: "/refund-policy" },
       ],
     },
   ];
@@ -88,9 +89,18 @@ export default function Footer() {
         <Divider className="my-8" />
 
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-default-400">
-            © {currentYear} Capsule Inc. All rights reserved.
-          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+            <p className="text-xs text-default-400">
+              © {currentYear} rcapsule. All rights reserved.
+            </p>
+            <span className="hidden sm:inline text-default-300">·</span>
+            <Link
+              href="mailto:nafouguirima@gmail.com"
+              className="text-xs text-default-400 hover:text-foreground transition-colors"
+            >
+              nafouguirima@gmail.com
+            </Link>
+          </div>
 
           <div className="flex gap-6">
             <Link

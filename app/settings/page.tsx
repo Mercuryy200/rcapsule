@@ -12,6 +12,7 @@ import {
   SelectItem,
   RadioGroup,
   Radio,
+  Chip,
 } from "@heroui/react";
 import {
   UserCircleIcon,
@@ -19,6 +20,9 @@ import {
   EyeIcon,
   ArrowLeftIcon,
   AdjustmentsHorizontalIcon,
+  CreditCardIcon,
+  SparklesIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useUser } from "@/contexts/UserContext";
 import { ImageUpload } from "@/components/closet/ImageUpload";
@@ -42,10 +46,11 @@ const SUSTAINABILITY_OPTIONS = [
 
 export default function SettingsPage() {
   const { data: session, status } = useSession();
-  const { user, refreshUser } = useUser();
+  const { user, refreshUser, isPremium } = useUser();
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -124,6 +129,24 @@ export default function SettingsPage() {
       console.error("Failed to fetch preferences", error);
     } finally {
       setPrefLoading(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const response = await fetch("/api/billing/portal", { method: "POST" });
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setMessage({ text: "Failed to open billing portal.", type: "error" });
+      }
+    } catch (error) {
+      setMessage({ text: "An error occurred.", type: "error" });
+    } finally {
+      setPortalLoading(false);
     }
   };
 
@@ -255,6 +278,16 @@ export default function SettingsPage() {
     }));
   };
 
+  // Format subscription end date
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return null;
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   if (status === "loading") return null;
 
   return (
@@ -292,7 +325,13 @@ export default function SettingsPage() {
         {/* SIDEBAR TABS */}
         <div className="lg:col-span-3">
           <div className="flex flex-col gap-2 sticky top-24">
-            {["profile", "security", "privacy", "preferences"].map((tab) => (
+            {[
+              "profile",
+              "subscription",
+              "security",
+              "privacy",
+              "preferences",
+            ].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -377,6 +416,196 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* SUBSCRIPTION SECTION */}
+          {activeTab === "subscription" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div>
+                <h2 className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
+                  <CreditCardIcon className="w-6 h-6" /> Subscription
+                </h2>
+                <Divider className="my-4" />
+              </div>
+
+              {isPremium ? (
+                // Premium User View
+                <div className="space-y-6">
+                  {/* Status Card */}
+                  <div className="border border-foreground bg-foreground text-background p-8">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <SparklesIcon className="w-5 h-5" />
+                          <span className="text-xs font-bold uppercase tracking-widest opacity-60">
+                            Current Plan
+                          </span>
+                        </div>
+                        <h3 className="text-3xl font-black uppercase italic tracking-tighter">
+                          Premium
+                        </h3>
+                      </div>
+                      <Chip
+                        classNames={{
+                          base: "bg-background text-foreground rounded-none",
+                          content:
+                            "font-bold text-xs uppercase tracking-widest",
+                        }}
+                      >
+                        Active
+                      </Chip>
+                    </div>
+
+                    {user?.subscription_period_end && (
+                      <p className="mt-4 text-sm opacity-60">
+                        Your subscription renews on{" "}
+                        <span className="font-bold">
+                          {formatDate(user.subscription_period_end)}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Features List */}
+                  <div className="border border-default-200 p-6 space-y-4">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-default-500">
+                      Your Premium Features
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {[
+                        "AI Outfit Generator",
+                        "Magic Background Removal",
+                        "Weather-Smart Suggestions",
+                        "Unlimited Collections",
+                        "Cost-Per-Wear Analytics",
+                        "Priority Support",
+                      ].map((feature) => (
+                        <div
+                          key={feature}
+                          className="flex items-center gap-2 text-sm"
+                        >
+                          <CheckCircleIcon className="w-4 h-4 text-success" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Manage Button */}
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Button
+                      variant="bordered"
+                      radius="none"
+                      className="uppercase font-bold tracking-widest"
+                      isLoading={portalLoading}
+                      onPress={handleManageSubscription}
+                    >
+                      Manage Subscription
+                    </Button>
+                    <p className="text-xs text-default-400 self-center">
+                      Update payment method, view invoices, or cancel
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                // Free User View
+                <div className="space-y-6">
+                  {/* Status Card */}
+                  <div className="border border-default-200 p-8">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <span className="text-xs font-bold uppercase tracking-widest text-default-500">
+                          Current Plan
+                        </span>
+                        <h3 className="text-3xl font-black uppercase italic tracking-tighter">
+                          Free
+                        </h3>
+                      </div>
+                      <Chip
+                        variant="flat"
+                        classNames={{
+                          base: "bg-default-100 rounded-none",
+                          content:
+                            "font-bold text-xs uppercase tracking-widest text-default-500",
+                        }}
+                      >
+                        Basic
+                      </Chip>
+                    </div>
+                  </div>
+
+                  {/* Upgrade Prompt */}
+                  <div className="border border-dashed border-default-300 p-8 text-center space-y-6">
+                    <div className="w-16 h-16 rounded-full bg-default-100 flex items-center justify-center mx-auto">
+                      <SparklesIcon className="w-8 h-8 text-default-400" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="text-xl font-bold">
+                        Unlock Premium Features
+                      </h4>
+                      <p className="text-default-500 text-sm max-w-md mx-auto">
+                        Get AI-powered outfit recommendations, magic background
+                        removal, weather-smart styling, and more.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-2">
+                      <Button
+                        color="primary"
+                        radius="none"
+                        size="lg"
+                        className="uppercase font-bold tracking-widest px-12"
+                        onPress={() => router.push("/pricing")}
+                      >
+                        Upgrade to Premium
+                      </Button>
+                      <span className="text-xs text-default-400">
+                        Starting at $4.92/month billed annually
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Feature Comparison */}
+                  <div className="border border-default-200 p-6">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-default-500 mb-4">
+                      What You're Missing
+                    </h4>
+                    <div className="space-y-3">
+                      {[
+                        {
+                          feature: "AI Outfit Generator",
+                          desc: "Daily looks curated for your weather & events",
+                        },
+                        {
+                          feature: "Magic Background Removal",
+                          desc: "One-click clean, professional item photos",
+                        },
+                        {
+                          feature: "Weather Intelligence",
+                          desc: "Never be too cold or too hot again",
+                        },
+                      ].map((item) => (
+                        <div
+                          key={item.feature}
+                          className="flex items-start gap-3 p-3 bg-default-50"
+                        >
+                          <SparklesIcon className="w-4 h-4 text-default-400 mt-0.5" />
+                          <div>
+                            <span className="font-bold text-sm">
+                              {item.feature}
+                            </span>
+                            <p className="text-xs text-default-500">
+                              {item.desc}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

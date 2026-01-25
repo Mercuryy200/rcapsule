@@ -28,6 +28,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  console.log("📥 Webhook received:", event.type);
+
   try {
     switch (event.type) {
       case "checkout.session.completed": {
@@ -37,40 +39,25 @@ export async function POST(request: NextRequest) {
         const customerId = session.customer as string;
         const subscriptionId = session.subscription as string;
 
-        if (userId && subscriptionId) {
-          const subscription =
-            await stripe.subscriptions.retrieve(subscriptionId);
+        // 🔍 DEBUG: Log all the values
+        console.log("🔍 DEBUG checkout.session.completed:");
+        console.log("   userId:", userId);
+        console.log("   customerId:", customerId);
+        console.log("   subscriptionId:", subscriptionId);
+        console.log("   metadata:", session.metadata);
 
-          const periodEnd = (subscription as any).current_period_end
-            ? new Date(
-                (subscription as any).current_period_end * 1000,
-              ).toISOString()
-            : null;
-
-          const { error } = await supabase
-            .from("profiles")
-            .update({
-              subscription_status: "premium",
-              stripe_customer_id: customerId,
-              stripe_subscription_id: subscriptionId,
-              subscription_period_end: periodEnd,
-            })
-            .eq("id", userId);
-
-          if (error) {
-            console.error("Failed to update user subscription:", error);
-          } else {
-            console.log(`✅ User ${userId} upgraded to premium`);
-          }
+        if (!userId) {
+          console.error("❌ No userId in metadata!");
+          break;
         }
-        break;
-      }
 
-      case "customer.subscription.updated": {
-        const subscription = event.data.object as Stripe.Subscription;
-        const customerId = subscription.customer as string;
+        if (!subscriptionId) {
+          console.error("❌ No subscriptionId!");
+          break;
+        }
 
-        const status = subscription.status === "active" ? "premium" : "free";
+        const subscription =
+          await stripe.subscriptions.retrieve(subscriptionId);
 
         const periodEnd = (subscription as any).current_period_end
           ? new Date(
@@ -78,52 +65,47 @@ export async function POST(request: NextRequest) {
             ).toISOString()
           : null;
 
-        const { error } = await supabase
-          .from("user")
+        console.log("   periodEnd:", periodEnd);
+
+        // 🔍 DEBUG: Check if user exists first
+        const { data: existingUser, error: fetchError } = await supabase
+          .from("User")
+          .select("id, email, subscription_status")
+          .eq("id", userId)
+          .single();
+
+        console.log("   existingUser:", existingUser);
+        console.log("   fetchError:", fetchError);
+
+        if (fetchError) {
+          console.error("❌ User not found in database:", fetchError);
+          break;
+        }
+
+        // 🔍 DEBUG: Now try the update
+        const { data: updateData, error: updateError } = await supabase
+          .from("User")
           .update({
-            subscription_status: status,
+            subscription_status: "premium",
+            stripe_customer_id: customerId,
+            stripe_subscription_id: subscriptionId,
             subscription_period_end: periodEnd,
           })
-          .eq("stripe_customer_id", customerId);
+          .eq("id", userId)
+          .select();
 
-        if (error) {
-          console.error("Failed to update subscription:", error);
+        console.log("   updateData:", updateData);
+        console.log("   updateError:", updateError);
+
+        if (updateError) {
+          console.error("❌ Failed to update user subscription:", updateError);
         } else {
-          console.log(
-            `🔄 Subscription updated for customer ${customerId}: ${status}`,
-          );
+          console.log(`✅ User ${userId} upgraded to premium`);
         }
         break;
       }
 
-      case "customer.subscription.deleted": {
-        const subscription = event.data.object as Stripe.Subscription;
-        const customerId = subscription.customer as string;
-
-        const { error } = await supabase
-          .from("profiles")
-          .update({
-            subscription_status: "free",
-            stripe_subscription_id: null,
-            subscription_period_end: null,
-          })
-          .eq("stripe_customer_id", customerId);
-
-        if (error) {
-          console.error("Failed to downgrade user:", error);
-        } else {
-          console.log(`❌ User downgraded to free (customer: ${customerId})`);
-        }
-        break;
-      }
-
-      case "invoice.payment_failed": {
-        const invoice = event.data.object as Stripe.Invoice;
-        const customerId = invoice.customer as string;
-
-        console.log(`⚠️ Payment failed for customer ${customerId}`);
-        break;
-      }
+      // ... rest of your cases
     }
   } catch (err) {
     console.error("Error processing webhook:", err);

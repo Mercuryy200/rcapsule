@@ -1,6 +1,8 @@
 "use client";
-import { Avatar, Button } from "@heroui/react";
-import { Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { Avatar, Button, Chip } from "@heroui/react";
+import { Cog6ToothIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { useUser } from "@/contexts/UserContext";
+import Link from "next/link";
 
 interface ProfileHeaderProps {
   user: {
@@ -22,9 +24,10 @@ export default function ProfileHeader({
   stats,
   onEdit,
 }: ProfileHeaderProps) {
+  const { isPremium } = useUser();
+
   return (
     <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 mb-8 md:mb-12 border-b border-divider pb-8">
-      {/* Avatar: Smaller on mobile, Larger on desktop */}
       <Avatar
         src={user.image || undefined}
         className="w-24 h-24 md:w-32 md:h-32 text-large shrink-0"
@@ -34,12 +37,41 @@ export default function ProfileHeader({
       />
 
       <div className="flex-1 w-full">
-        {/* Name & Settings Row */}
         <div className="flex flex-row justify-between items-start w-full relative">
           <div className="text-center md:text-left w-full md:w-auto pr-10 md:pr-0">
-            <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic break-words">
-              {user.name}
-            </h1>
+            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
+              <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic break-words">
+                {user.name}
+              </h1>
+
+              {isPremium ? (
+                <Chip
+                  startContent={<SparklesIcon className="w-3 h-3" />}
+                  size="sm"
+                  classNames={{
+                    base: "bg-foreground text-background rounded-none gap-1",
+                    content: "font-bold text-[10px] uppercase tracking-widest",
+                  }}
+                >
+                  Premium
+                </Chip>
+              ) : (
+                <Link href="/pricing">
+                  <Chip
+                    startContent={<SparklesIcon className="w-3 h-3" />}
+                    size="sm"
+                    classNames={{
+                      base: "bg-default-100 hover:bg-default-200 text-foreground rounded-none gap-1 cursor-pointer transition-colors",
+                      content:
+                        "font-bold text-[10px] uppercase tracking-widest",
+                    }}
+                  >
+                    Upgrade
+                  </Chip>
+                </Link>
+              )}
+            </div>
+
             <p className="text-xs md:text-sm text-default-400 uppercase tracking-widest mt-1 break-all">
               {user.email}
             </p>

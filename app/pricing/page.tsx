@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/contexts/UserContext";
 
 export default function PricingPage() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function PricingPage() {
   const savingsPercent = Math.round(
     ((monthlyPrice * 12 - yearlyPrice) / (monthlyPrice * 12)) * 100,
   );
+  const { user } = useUser();
 
   const handleSubscribe = async (plan: "free" | "premium") => {
     if (plan === "free") {
@@ -40,28 +42,23 @@ export default function PricingPage() {
         },
         body: JSON.stringify({
           billingCycle,
-          // Include userId if you have authentication
-          // userId: user?.id,
+          userId: user?.id,
         }),
       });
 
       const data = await response.json();
 
       if (data.url) {
-        // Redirect to Stripe Checkout
         window.location.href = data.url;
       } else {
         console.error("No checkout URL returned:", data.error);
-        // TODO: Show error toast to user
       }
     } catch (error) {
       console.error("Checkout error:", error);
-      // TODO: Show error toast to user
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="wardrobe-page-container min-h-screen">
       <header className="text-center mb-16 pt-8">
