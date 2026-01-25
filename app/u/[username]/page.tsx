@@ -149,8 +149,6 @@ export default function PublicProfilePage() {
     setFollowLoading(true);
     const previousState = isFollowing;
     const previousCount = profile?.followerCount || 0;
-
-    // Optimistic Update
     setIsFollowing(!isFollowing);
     if (profile) {
       setProfile({
@@ -248,14 +246,14 @@ export default function PublicProfilePage() {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-r from-default-100 to-default-200" />
+          <div className="w-full h-full bg-gradient-to-r from-default-100 to-default-200 z-10" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/100 via-background/20 to-transparent z-10" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* 2. PROFILE HEADER */}
-        <div className="relative -mt-20 md:-mt-24 pb-8 mb-8 border-b border-divider">
+        <div className="relative z-10 -mt-20 md:-mt-24 pb-8 mb-8 border-b border-divider">
           <div className="flex flex-col md:flex-row gap-6 md:gap-10">
             {/* Avatar */}
             <div className="shrink-0 flex justify-center md:block">

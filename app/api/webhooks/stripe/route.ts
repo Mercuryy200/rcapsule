@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  console.log("📥 Webhook received:", event.type);
+  console.log("Webhook received:", event.type);
 
   try {
     switch (event.type) {
@@ -39,20 +39,19 @@ export async function POST(request: NextRequest) {
         const customerId = session.customer as string;
         const subscriptionId = session.subscription as string;
 
-        // 🔍 DEBUG: Log all the values
-        console.log("🔍 DEBUG checkout.session.completed:");
+        console.log("DEBUG checkout.session.completed:");
         console.log("   userId:", userId);
         console.log("   customerId:", customerId);
         console.log("   subscriptionId:", subscriptionId);
         console.log("   metadata:", session.metadata);
 
         if (!userId) {
-          console.error("❌ No userId in metadata!");
+          console.error("No userId in metadata!");
           break;
         }
 
         if (!subscriptionId) {
-          console.error("❌ No subscriptionId!");
+          console.error("No subscriptionId!");
           break;
         }
 
@@ -67,7 +66,6 @@ export async function POST(request: NextRequest) {
 
         console.log("   periodEnd:", periodEnd);
 
-        // 🔍 DEBUG: Check if user exists first
         const { data: existingUser, error: fetchError } = await supabase
           .from("User")
           .select("id, email, subscription_status")
@@ -78,11 +76,10 @@ export async function POST(request: NextRequest) {
         console.log("   fetchError:", fetchError);
 
         if (fetchError) {
-          console.error("❌ User not found in database:", fetchError);
+          console.error("User not found in database:", fetchError);
           break;
         }
 
-        // 🔍 DEBUG: Now try the update
         const { data: updateData, error: updateError } = await supabase
           .from("User")
           .update({
@@ -98,14 +95,12 @@ export async function POST(request: NextRequest) {
         console.log("   updateError:", updateError);
 
         if (updateError) {
-          console.error("❌ Failed to update user subscription:", updateError);
+          console.error("Failed to update user subscription:", updateError);
         } else {
-          console.log(`✅ User ${userId} upgraded to premium`);
+          console.log(`User ${userId} upgraded to premium`);
         }
         break;
       }
-
-      // ... rest of your cases
     }
   } catch (err) {
     console.error("Error processing webhook:", err);

@@ -5,7 +5,6 @@ import {
   SparklesIcon,
   MapPinIcon,
   LinkIcon,
-  UserGroupIcon,
 } from "@heroicons/react/24/outline";
 import { useUser } from "@/contexts/UserContext";
 

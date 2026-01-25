@@ -1,7 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@heroui/react";
 import { motion } from "framer-motion";
 import ClothingCard from "@/components/closet/ClothingCard";
@@ -11,6 +11,7 @@ import ClothesFilter, {
 import WardrobeHeader, { useSearchHistory } from "@/components/WardrobeHeader";
 import * as Sentry from "@sentry/nextjs";
 import { ClothingCardSkeleton } from "@/components/closet/ClothingCardSkeleton";
+import useSWR from "swr";
 
 interface ClothingItem {
   id: string;
@@ -32,6 +33,9 @@ interface ClothingItem {
   createdAt?: string;
 }
 
+// 1. Fetcher function for SWR
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export default function ClosetPage() {
   const { status } = useSession();
   const router = useRouter();
@@ -44,9 +48,7 @@ export default function ClosetPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const { history, addSearch, clearHistory } = useSearchHistory();
 
-  // Data State
-  const [clothes, setClothes] = useState<ClothingItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Filters State
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterOptions>({
     categories: [],
@@ -59,24 +61,23 @@ export default function ClosetPage() {
     conditions: [],
   });
 
-  useEffect(() => {
-    if (status === "unauthenticated") router.push("/login");
-    if (status === "authenticated") fetchClothes();
-  }, [status, router]);
+  // 2. Data State via SWR
+  // This replaces the manual useEffect and useState for 'clothes' and 'loading'
+  const { data: clothes = [], isLoading: swrLoading } = useSWR<ClothingItem[]>(
+    status === "authenticated" ? "/api/clothes?status=owned" : null,
+    fetcher,
+    {
+      revalidateOnFocus: true, // This enables the auto-refresh on window focus
+    },
+  );
 
-  const fetchClothes = async () => {
-    try {
-      const response = await fetch("/api/clothes?status=owned");
-      if (response.ok) {
-        const data = await response.json();
-        setClothes(data);
-      }
-    } catch (error) {
-      console.error("Error fetching clothes:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Combine session loading and data loading
+  const isLoading = status === "loading" || swrLoading;
+
+  if (status === "unauthenticated") {
+    router.push("/login");
+    return null; // Prevent flash of content
+  }
 
   // --- Logic: Derived Data ---
   const availableBrands = useMemo(() => {
@@ -239,8 +240,6 @@ export default function ClosetPage() {
     setSearchQuery(term);
     addSearch(term);
   };
-
-  const isLoading = status === "loading" || loading;
 
   return (
     <div className="wardrobe-page-container min-h-screen">

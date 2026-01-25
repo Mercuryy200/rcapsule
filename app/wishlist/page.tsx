@@ -1,7 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@heroui/react";
 import { motion } from "framer-motion";
 import ClothingCard from "@/components/closet/ClothingCard";
@@ -10,6 +10,7 @@ import ClothesFilter, {
 } from "@/components/closet/ClothesFilter";
 import WardrobeHeader, { useSearchHistory } from "@/components/WardrobeHeader";
 import { ClothingCardSkeleton } from "@/components/closet/ClothingCardSkeleton";
+import useSWR from "swr";
 
 interface ClothingItem {
   id: string;
@@ -31,6 +32,9 @@ interface ClothingItem {
   createdAt?: string;
 }
 
+// 1. Fetcher function
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export default function WishlistPage() {
   const { status } = useSession();
   const router = useRouter();
@@ -43,40 +47,36 @@ export default function WishlistPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const { history, addSearch, clearHistory } = useSearchHistory();
 
-  // Data State
-  const [clothes, setClothes] = useState<ClothingItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Filter State
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterOptions>({
     categories: [],
     colors: [],
     seasons: [],
     placesToWear: [],
-    priceRange: [0, 5000],
+    priceRange: [0, 5000], // Kept higher for wishlist items
     brands: [],
     styles: [],
     conditions: [],
   });
 
-  useEffect(() => {
-    if (status === "unauthenticated") router.push("/login");
-    if (status === "authenticated") fetchClothes();
-  }, [status, router]);
+  // 2. Data State via SWR
+  const { data: clothes = [], isLoading: swrLoading } = useSWR<ClothingItem[]>(
+    status === "authenticated" ? "/api/clothes?status=wishlist" : null,
+    fetcher,
+    {
+      revalidateOnFocus: true, // Auto-refresh when tab is focused
+    },
+  );
 
-  const fetchClothes = async () => {
-    try {
-      const response = await fetch("/api/clothes?status=wishlist");
-      if (response.ok) {
-        const data = await response.json();
-        setClothes(data);
-      }
-    } catch (error) {
-      console.error("Error fetching clothes:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const isLoading = status === "loading" || swrLoading;
 
+  if (status === "unauthenticated") {
+    router.push("/login");
+    return null;
+  }
+
+  // --- Logic: Derived Data ---
   const availableBrands = useMemo(() => {
     const brands = clothes
       .map((item) => item.brand)
@@ -229,8 +229,6 @@ export default function WishlistPage() {
     setSearchQuery(term);
     addSearch(term);
   };
-
-  const isLoading = status === "loading" || loading;
 
   return (
     <div className="wardrobe-page-container min-h-screen">

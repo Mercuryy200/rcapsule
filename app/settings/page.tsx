@@ -11,10 +11,6 @@ import {
   Select,
   SelectItem,
   Textarea,
-  Tab,
-  Tabs,
-  Card,
-  CardBody,
 } from "@heroui/react";
 import {
   UserCircleIcon,
@@ -144,7 +140,6 @@ export default function SettingsPage() {
     setMessage({ text: "", type: "" });
 
     try {
-      // Convert Set to Array for API
       const payload = {
         ...formData,
         styleTags: Array.from(formData.styleTags),
@@ -170,6 +165,7 @@ export default function SettingsPage() {
       setMessage({ text: "An error occurred.", type: "error" });
     } finally {
       setLoading(false);
+      router.push("/profile");
     }
   };
 
