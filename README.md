@@ -2,7 +2,7 @@
 
 A full-stack wardrobe management application that helps you catalog, organize, and create outfit combinations from your clothing collection.
 
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://closetwardrobe.vercel.app)
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://rcapsule.com)
 [![GitHub](https://img.shields.io/badge/github-repo-blue)](https://github.com/Mercuryy200/ClosetOrganizer)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -37,7 +37,7 @@ A full-stack wardrobe management application that helps you catalog, organize, a
 
 ## Live Demo
 
-Visit the live application at [capsulewardrobe.vercel.app](https://capsulewardrobe.vercel.app) to see Capsule in action.
+Visit the live application at [rcapsule.com](https://rcapsule.com) to see Capsule in action.
 
 ## Database Schema
 

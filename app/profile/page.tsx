@@ -22,7 +22,6 @@ import {
 
 import type { Clothes, Wardrobe, Outfit } from "@/lib/database.type";
 import ProfileHeader from "@/components/profile/ProfileHeader";
-import WardrobeTab from "@/components/profile/WardrobeTab";
 import { useUser } from "@/contexts/UserContext";
 
 // Import Visualization Components
@@ -447,11 +446,7 @@ export default function ProfilePage() {
             </div>
           )}
         </Tab>
-        <Tab key="wardrobes" title="Wardrobes">
-          <div className="py-8">
-            <WardrobeTab wardrobes={wardrobes} refreshData={fetchProfileData} />
-          </div>
-        </Tab>
+
         <Tab key="calendar" title="Calendar">
           <div className="py-8">
             <CalendarTracker clothes={clothes} outfits={outfits} />

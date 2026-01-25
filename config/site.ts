@@ -18,6 +18,10 @@ export const siteConfig = {
       label: "Wishlist",
       href: "/wishlist",
     },
+    {
+      label: "Collections",
+      href: "/collections",
+    },
   ],
   navMenuItems: [
     {

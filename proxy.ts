@@ -11,6 +11,7 @@ export function proxy(req: NextRequest) {
     "/outfits",
     "/wishlist",
     "/calendar",
+    "/collections",
   ];
 
   const guestRoutes = [
