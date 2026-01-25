@@ -2,7 +2,13 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { Button } from "@heroui/react";
+import { Button, Tooltip } from "@heroui/react";
+import {
+  SparklesIcon,
+  XMarkIcon,
+  CloudArrowUpIcon,
+} from "@heroicons/react/24/outline";
+import { useUser } from "@/contexts/UserContext";
 
 interface ImageUploadProps {
   value?: string;
@@ -10,6 +16,7 @@ interface ImageUploadProps {
   folder?: "clothes" | "outfits" | "profile";
   label?: string;
   maxSize?: number;
+  showRemoveBackground?: boolean;
 }
 
 export function ImageUpload({
@@ -18,9 +25,13 @@ export function ImageUpload({
   folder = "clothes",
   label = "Upload Image",
   maxSize = 5,
+  showRemoveBackground = true,
 }: ImageUploadProps) {
+  const { isPremium } = useUser();
   const [uploading, setUploading] = useState(false);
+  const [removingBg, setRemovingBg] = useState(false);
   const [preview, setPreview] = useState<string | undefined>(value);
+  const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [error, setError] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,12 +59,20 @@ export function ImageUpload({
       return;
     }
 
+    // Show preview immediately
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreview(reader.result as string);
     };
     reader.readAsDataURL(file);
 
+    setCurrentFile(file);
+
+    // Upload the file
+    await uploadFile(file);
+  };
+
+  const uploadFile = async (file: File) => {
     setUploading(true);
     try {
       const formData = new FormData();
@@ -80,9 +99,94 @@ export function ImageUpload({
     }
   };
 
+  const handleRemoveBackground = async () => {
+    if (!currentFile && !preview) return;
+
+    setRemovingBg(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+
+      if (currentFile) {
+        // Convert file to proper blob with correct type
+        const arrayBuffer = await currentFile.arrayBuffer();
+
+        // Determine content type
+        let contentType = currentFile.type;
+        if (!contentType || contentType === "application/octet-stream") {
+          const nameLower = currentFile.name.toLowerCase();
+          if (nameLower.endsWith(".png")) {
+            contentType = "image/png";
+          } else if (nameLower.endsWith(".webp")) {
+            contentType = "image/webp";
+          } else {
+            contentType = "image/jpeg";
+          }
+        }
+
+        const blob = new Blob([arrayBuffer], { type: contentType });
+        const extension = contentType.split("/")[1] || "jpg";
+        formData.append("file", blob, `image.${extension}`);
+      } else if (preview) {
+        // If preview is a URL (not base64)
+        if (!preview.startsWith("data:")) {
+          formData.append("imageUrl", preview);
+        } else {
+          // Convert base64 to blob
+          const response = await fetch(preview);
+          const blob = await response.blob();
+
+          // Ensure correct content type
+          const contentType = blob.type || "image/png";
+          const extension = contentType.split("/")[1] || "png";
+          const properBlob = new Blob([await blob.arrayBuffer()], {
+            type: contentType,
+          });
+          formData.append("file", properBlob, `image.${extension}`);
+        }
+      }
+
+      const response = await fetch("/api/remove-background", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Background removal failed");
+      }
+
+      const data = await response.json();
+
+      // Update preview with processed image
+      setPreview(data.image);
+
+      // Convert base64 to file and upload
+      const base64Response = await fetch(data.image);
+      const blob = await base64Response.blob();
+      const processedFile = new File([blob], "image-no-bg.png", {
+        type: "image/png",
+      });
+
+      setCurrentFile(processedFile);
+
+      // Upload the processed image
+      await uploadFile(processedFile);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Background removal failed",
+      );
+    } finally {
+      setRemovingBg(false);
+    }
+  };
+
   const handleRemove = () => {
     setPreview(undefined);
+    setCurrentFile(null);
     onChange("");
+    setError("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -95,7 +199,7 @@ export function ImageUpload({
       </label>
 
       {preview ? (
-        <div className="relative w-full h-64 rounded-lg overflow-hidden border-2 border-default-200 bg-default-50">
+        <div className="relative w-full h-64 overflow-hidden border-2 border-default-200 bg-[url('/images/transparent-grid.png')] bg-repeat">
           <Image
             src={preview}
             alt="Preview"
@@ -103,64 +207,120 @@ export function ImageUpload({
             className="object-contain"
             unoptimized
           />
-          <Button
-            isIconOnly
-            color="danger"
-            size="sm"
-            className="absolute top-2 right-2 z-10"
-            onPress={handleRemove}
-            isDisabled={uploading}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+
+          {/* Action Buttons */}
+          <div className="absolute top-2 right-2 z-10 flex gap-2">
+            {/* Remove Background Button */}
+            {showRemoveBackground && folder === "clothes" && (
+              <Tooltip
+                content={
+                  isPremium
+                    ? "Remove background"
+                    : "Upgrade to Premium for Magic Edit"
+                }
+                placement="bottom"
+              >
+                <span>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="flat"
+                    radius="none"
+                    className={`bg-background/90 backdrop-blur-sm ${
+                      !isPremium ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                    onPress={isPremium ? handleRemoveBackground : undefined}
+                    isDisabled={!isPremium || uploading || removingBg}
+                    isLoading={removingBg}
+                  >
+                    <SparklesIcon className="w-4 h-4" />
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
+
+            {/* Remove Image Button */}
+            <Button
+              isIconOnly
+              color="danger"
+              size="sm"
+              radius="none"
+              className="bg-background/90 backdrop-blur-sm"
+              onPress={handleRemove}
+              isDisabled={uploading || removingBg}
             >
-              <path
-                fillRule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </Button>
+              <XMarkIcon className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Premium Badge for non-premium users */}
+          {showRemoveBackground && folder === "clothes" && !isPremium && (
+            <div className="absolute bottom-2 left-2 z-10">
+              <Tooltip content="Upgrade to remove backgrounds">
+                <Button
+                  size="sm"
+                  radius="none"
+                  variant="flat"
+                  className="bg-background/90 backdrop-blur-sm text-[10px] uppercase tracking-widest font-bold"
+                  startContent={<SparklesIcon className="w-3 h-3" />}
+                  onPress={() => (window.location.href = "/pricing")}
+                >
+                  Magic Edit
+                </Button>
+              </Tooltip>
+            </div>
+          )}
+
+          {/* Loading Overlay */}
+          {(uploading || removingBg) && (
+            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-3" />
+                <p className="text-xs text-default-600 uppercase tracking-widest font-bold">
+                  {removingBg ? "Removing Background..." : "Uploading..."}
+                </p>
+                {removingBg && (
+                  <p className="text-[10px] text-default-400 mt-1">
+                    This may take a few seconds
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div
           onClick={() => !uploading && fileInputRef.current?.click()}
-          className={`w-full h-64 border-2 border-dashed rounded-lg flex flex-col items-center justify-center transition-colors ${
+          className={`w-full h-64 border-2 border-dashed flex flex-col items-center justify-center transition-all ${
             uploading
               ? "border-default-300 bg-default-100 cursor-not-allowed"
-              : "border-default-300 bg-default-50 cursor-pointer hover:border-primary hover:bg-default-100"
+              : "border-default-300 bg-default-50 cursor-pointer hover:border-foreground hover:bg-default-100"
           }`}
         >
           {uploading ? (
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-2"></div>
-              <p className="text-sm text-default-600">Uploading...</p>
+              <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent mx-auto mb-3" />
+              <p className="text-sm text-default-600 font-medium">
+                Uploading...
+              </p>
             </div>
           ) : (
             <>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-12 w-12 text-default-400 mb-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
-              <p className="text-sm text-default-600 font-medium">
-                Click to upload an image
+              <CloudArrowUpIcon className="w-12 h-12 text-default-400 mb-3" />
+              <p className="text-sm text-default-600 font-bold uppercase tracking-widest">
+                Click to upload
               </p>
-              <p className="text-xs text-default-500 mt-1">
+              <p className="text-xs text-default-400 mt-2">
                 PNG, JPG, WEBP, GIF up to {maxSize}MB
               </p>
+              {isPremium && folder === "clothes" && (
+                <div className="flex items-center gap-1 mt-3 text-[10px] text-default-500">
+                  <SparklesIcon className="w-3 h-3" />
+                  <span className="uppercase tracking-widest">
+                    Magic Edit available
+                  </span>
+                </div>
+              )}
             </>
           )}
         </div>
