@@ -2,21 +2,25 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { Button, Tooltip } from "@heroui/react";
+import { Button, Tooltip, Input, Tabs, Tab } from "@heroui/react";
 import {
   SparklesIcon,
   XMarkIcon,
   CloudArrowUpIcon,
+  LinkIcon,
+  PhotoIcon,
+  ArrowUpTrayIcon,
 } from "@heroicons/react/24/outline";
 import { useUser } from "@/contexts/UserContext";
 
 interface ImageUploadProps {
   value?: string;
   onChange: (url: string) => void;
-  folder?: "clothes" | "outfits" | "profile";
+  folder?: "clothes" | "outfits" | "profile" | "profile_covers";
   label?: string;
   maxSize?: number;
   showRemoveBackground?: boolean;
+  className?: string;
 }
 
 export function ImageUpload({
@@ -26,6 +30,7 @@ export function ImageUpload({
   label = "Upload Image",
   maxSize = 5,
   showRemoveBackground = true,
+  className = "h-64",
 }: ImageUploadProps) {
   const { isPremium } = useUser();
   const [uploading, setUploading] = useState(false);
@@ -33,6 +38,9 @@ export function ImageUpload({
   const [preview, setPreview] = useState<string | undefined>(value);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [error, setError] = useState<string>("");
+  const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
+  const [urlInput, setUrlInput] = useState("");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,7 +67,6 @@ export function ImageUpload({
       return;
     }
 
-    // Show preview immediately
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreview(reader.result as string);
@@ -67,9 +74,22 @@ export function ImageUpload({
     reader.readAsDataURL(file);
 
     setCurrentFile(file);
-
-    // Upload the file
     await uploadFile(file);
+  };
+
+  const handleUrlSubmit = () => {
+    if (!urlInput.trim()) return;
+
+    // Basic image URL validation
+    if (!urlInput.match(/^https?:\/\/.+/)) {
+      setError("Please enter a valid URL (http/https)");
+      return;
+    }
+
+    setError("");
+    setPreview(urlInput);
+    onChange(urlInput);
+    setUrlInput(""); // Clear input after setting
   };
 
   const uploadFile = async (file: File) => {
@@ -109,20 +129,15 @@ export function ImageUpload({
       const formData = new FormData();
 
       if (currentFile) {
-        // Convert file to proper blob with correct type
         const arrayBuffer = await currentFile.arrayBuffer();
-
-        // Determine content type
         let contentType = currentFile.type;
+
+        // Fallback content type detection
         if (!contentType || contentType === "application/octet-stream") {
           const nameLower = currentFile.name.toLowerCase();
-          if (nameLower.endsWith(".png")) {
-            contentType = "image/png";
-          } else if (nameLower.endsWith(".webp")) {
-            contentType = "image/webp";
-          } else {
-            contentType = "image/jpeg";
-          }
+          if (nameLower.endsWith(".png")) contentType = "image/png";
+          else if (nameLower.endsWith(".webp")) contentType = "image/webp";
+          else contentType = "image/jpeg";
         }
 
         const blob = new Blob([arrayBuffer], { type: contentType });
@@ -136,8 +151,6 @@ export function ImageUpload({
           // Convert base64 to blob
           const response = await fetch(preview);
           const blob = await response.blob();
-
-          // Ensure correct content type
           const contentType = blob.type || "image/png";
           const extension = contentType.split("/")[1] || "png";
           const properBlob = new Blob([await blob.arrayBuffer()], {
@@ -158,11 +171,8 @@ export function ImageUpload({
       }
 
       const data = await response.json();
-
-      // Update preview with processed image
       setPreview(data.image);
 
-      // Convert base64 to file and upload
       const base64Response = await fetch(data.image);
       const blob = await base64Response.blob();
       const processedFile = new File([blob], "image-no-bg.png", {
@@ -170,8 +180,6 @@ export function ImageUpload({
       });
 
       setCurrentFile(processedFile);
-
-      // Upload the processed image
       await uploadFile(processedFile);
     } catch (err) {
       setError(
@@ -187,19 +195,43 @@ export function ImageUpload({
     setCurrentFile(null);
     onChange("");
     setError("");
+    setUrlInput("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-foreground">
-        {label}
-      </label>
+    <div
+      className={`space-y-3 ${className.includes("h-full") ? "h-full flex flex-col" : ""}`}
+    >
+      <div className="flex justify-between items-center">
+        <label className="text-sm font-medium text-foreground">{label}</label>
+        {/* Toggle Mode only visible if no image selected */}
+        {!preview && (
+          <div className="flex bg-default-100 rounded-lg p-1 gap-1">
+            <button
+              onClick={() => setUploadMode("file")}
+              className={`p-1.5 rounded-md transition-all ${uploadMode === "file" ? "bg-background shadow-sm text-foreground" : "text-default-400 hover:text-default-600"}`}
+              title="Upload File"
+            >
+              <ArrowUpTrayIcon className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setUploadMode("url")}
+              className={`p-1.5 rounded-md transition-all ${uploadMode === "url" ? "bg-background shadow-sm text-foreground" : "text-default-400 hover:text-default-600"}`}
+              title="Paste URL"
+            >
+              <LinkIcon className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
 
       {preview ? (
-        <div className="relative w-full h-64 overflow-hidden border-2 border-default-200 bg-[url('/images/transparent-grid.png')] bg-repeat">
+        <div
+          className={`relative w-full ${className} overflow-hidden border-2 border-default-200 bg-[url('/images/transparent-grid.png')] bg-repeat rounded-lg group`}
+        >
           <Image
             src={preview}
             alt="Preview"
@@ -209,15 +241,11 @@ export function ImageUpload({
           />
 
           {/* Action Buttons */}
-          <div className="absolute top-2 right-2 z-10 flex gap-2">
+          <div className="absolute top-2 right-2 z-10 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             {/* Remove Background Button */}
             {showRemoveBackground && folder === "clothes" && (
               <Tooltip
-                content={
-                  isPremium
-                    ? "Remove background"
-                    : "Upgrade to Premium for Magic Edit"
-                }
+                content={isPremium ? "Remove background" : "Upgrade to Premium"}
                 placement="bottom"
               >
                 <span>
@@ -225,10 +253,7 @@ export function ImageUpload({
                     isIconOnly
                     size="sm"
                     variant="flat"
-                    radius="none"
-                    className={`bg-background/90 backdrop-blur-sm ${
-                      !isPremium ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
+                    className={`bg-background/90 backdrop-blur-sm ${!isPremium ? "opacity-50 cursor-not-allowed" : ""}`}
                     onPress={isPremium ? handleRemoveBackground : undefined}
                     isDisabled={!isPremium || uploading || removingBg}
                     isLoading={removingBg}
@@ -244,7 +269,7 @@ export function ImageUpload({
               isIconOnly
               color="danger"
               size="sm"
-              radius="none"
+              variant="flat"
               className="bg-background/90 backdrop-blur-sm"
               onPress={handleRemove}
               isDisabled={uploading || removingBg}
@@ -259,7 +284,6 @@ export function ImageUpload({
               <Tooltip content="Upgrade to remove backgrounds">
                 <Button
                   size="sm"
-                  radius="none"
                   variant="flat"
                   className="bg-background/90 backdrop-blur-sm text-[10px] uppercase tracking-widest font-bold"
                   startContent={<SparklesIcon className="w-3 h-3" />}
@@ -279,49 +303,83 @@ export function ImageUpload({
                 <p className="text-xs text-default-600 uppercase tracking-widest font-bold">
                   {removingBg ? "Removing Background..." : "Uploading..."}
                 </p>
-                {removingBg && (
-                  <p className="text-[10px] text-default-400 mt-1">
-                    This may take a few seconds
-                  </p>
-                )}
               </div>
             </div>
           )}
         </div>
       ) : (
+        // EMPTY STATE CONTAINER
         <div
-          onClick={() => !uploading && fileInputRef.current?.click()}
-          className={`w-full h-64 border-2 border-dashed flex flex-col items-center justify-center transition-all ${
-            uploading
-              ? "border-default-300 bg-default-100 cursor-not-allowed"
-              : "border-default-300 bg-default-50 cursor-pointer hover:border-foreground hover:bg-default-100"
+          className={`w-full ${className}border-2 border-dashed rounded-lg transition-all overflow-hidden ${
+            uploadMode === "file"
+              ? "hover:border-foreground hover:bg-default-50 cursor-pointer border-default-300"
+              : "border-default-300 bg-background"
           }`}
         >
-          {uploading ? (
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent mx-auto mb-3" />
-              <p className="text-sm text-default-600 font-medium">
-                Uploading...
-              </p>
-            </div>
-          ) : (
-            <>
-              <CloudArrowUpIcon className="w-12 h-12 text-default-400 mb-3" />
-              <p className="text-sm text-default-600 font-bold uppercase tracking-widest">
-                Click to upload
-              </p>
-              <p className="text-xs text-default-400 mt-2">
-                PNG, JPG, WEBP, GIF up to {maxSize}MB
-              </p>
-              {isPremium && folder === "clothes" && (
-                <div className="flex items-center gap-1 mt-3 text-[10px] text-default-500">
-                  <SparklesIcon className="w-3 h-3" />
-                  <span className="uppercase tracking-widest">
-                    Magic Edit available
-                  </span>
+          {/* MODE 1: FILE UPLOAD */}
+          {uploadMode === "file" && (
+            <div
+              className="w-full h-full flex flex-col items-center justify-center"
+              onClick={() => !uploading && fileInputRef.current?.click()}
+            >
+              {uploading ? (
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent mx-auto mb-3" />
+                  <p className="text-sm text-default-600 font-medium">
+                    Uploading...
+                  </p>
                 </div>
+              ) : (
+                <>
+                  <CloudArrowUpIcon className="w-12 h-12 text-default-400 mb-3" />
+                  <p className="text-sm text-default-600 font-bold uppercase tracking-widest">
+                    Click to upload
+                  </p>
+                  <p className="text-xs text-default-400 mt-2">
+                    PNG, JPG, WEBP, GIF up to {maxSize}MB
+                  </p>
+                </>
               )}
-            </>
+            </div>
+          )}
+
+          {/* MODE 2: URL INPUT */}
+          {uploadMode === "url" && (
+            <div className="w-full h-full flex flex-col items-center justify-center p-6 space-y-4">
+              <div className="text-center space-y-2 w-full max-w-xs">
+                <div className="bg-default-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <LinkIcon className="w-6 h-6 text-default-500" />
+                </div>
+                <p className="text-sm font-bold uppercase tracking-wide text-default-600">
+                  Add from URL
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    size="sm"
+                    placeholder="https://example.com/image.png"
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleUrlSubmit()}
+                    variant="bordered"
+                    radius="none"
+                    classNames={{ inputWrapper: "bg-background" }}
+                  />
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    radius="none"
+                    color="primary"
+                    onPress={handleUrlSubmit}
+                    isDisabled={!urlInput}
+                  >
+                    <ArrowUpTrayIcon className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-[10px] text-default-400">
+                  Paste a direct link to an image file.
+                </p>
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -334,7 +392,9 @@ export function ImageUpload({
         className="hidden"
       />
 
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && (
+        <p className="text-xs font-medium text-danger animate-pulse">{error}</p>
+      )}
     </div>
   );
 }

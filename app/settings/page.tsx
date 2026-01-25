@@ -10,24 +10,31 @@ import {
   Divider,
   Select,
   SelectItem,
-  RadioGroup,
-  Radio,
-  Chip,
+  Textarea,
+  Tab,
+  Tabs,
+  Card,
+  CardBody,
 } from "@heroui/react";
 import {
   UserCircleIcon,
   ShieldCheckIcon,
-  EyeIcon,
+  PhotoIcon,
   ArrowLeftIcon,
   AdjustmentsHorizontalIcon,
   CreditCardIcon,
   SparklesIcon,
+  GlobeAltIcon,
+  ChatBubbleLeftRightIcon,
+  CurrencyDollarIcon,
+  EyeSlashIcon,
+  AtSymbolIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useUser } from "@/contexts/UserContext";
 import { ImageUpload } from "@/components/closet/ImageUpload";
 
-const STYLE_OPTIONS = [
+const STYLE_TAGS = [
   { label: "Minimalist", value: "minimalist" },
   { label: "Streetwear", value: "streetwear" },
   { label: "Vintage", value: "vintage" },
@@ -35,13 +42,8 @@ const STYLE_OPTIONS = [
   { label: "Casual", value: "casual" },
   { label: "Athleisure", value: "athleisure" },
   { label: "Bohemian", value: "bohemian" },
-];
-
-const SUSTAINABILITY_OPTIONS = [
-  { label: "Eco-friendly Materials", key: "eco_materials" },
-  { label: "Second-hand / Thrifting", key: "second_hand" },
-  { label: "Fair Trade", key: "fair_trade" },
-  { label: "Local Production", key: "local" },
+  { label: "Y2K", value: "y2k" },
+  { label: "Dark Academia", value: "dark_academia" },
 ];
 
 export default function SettingsPage() {
@@ -54,81 +56,120 @@ export default function SettingsPage() {
   const [message, setMessage] = useState({ text: "", type: "" });
   const [activeTab, setActiveTab] = useState("profile");
 
-  const [profileData, setProfileData] = useState({ name: "", image: "" });
+  // Consolidated Form Data based on User Schema
+  const [formData, setFormData] = useState({
+    name: "",
+    username: "",
+    bio: "",
+    location: "",
+    website: "",
+    image: "",
+    coverImage: "",
+    instagramHandle: "",
+    tiktokHandle: "",
+    pinterestHandle: "",
+    styleTags: new Set<string>([]),
+    profilePublic: false,
+    showClosetValue: false,
+    showItemPrices: false,
+    allowMessages: true,
+  });
+
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
-  const [isPublic, setIsPublic] = useState(false);
 
-  const [prefLoading, setPrefLoading] = useState(false);
-  const [prefData, setPrefData] = useState({
-    budgetGoal: 0,
-    temperature_unit: "celsius",
-    location_city: "",
-    location_country: "",
-    styleGoals: new Set<string>([]),
-    sustainabilityGoals: {} as Record<string, boolean>,
-    notifications: {
-      email: true,
-      push: false,
-      marketing: false,
-    } as Record<string, boolean>,
-    analyticsPrivacy: "private",
-  });
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch("/api/settings/profile");
+      if (res.ok) {
+        const data = await res.json();
+        setFormData({
+          name: data.name || "",
+          username: data.username || "",
+          bio: data.bio || "",
+          location: data.location || "",
+          website: data.website || "",
+          image: data.image || "",
+          coverImage: data.coverImage || "",
+          instagramHandle: data.instagramHandle || "",
+          tiktokHandle: data.tiktokHandle || "",
+          pinterestHandle: data.pinterestHandle || "",
+          styleTags: new Set(data.styleTags || []),
+          profilePublic: data.profilePublic || false,
+          showClosetValue: data.showClosetValue || false,
+          showItemPrices: data.showItemPrices || false,
+          allowMessages: data.allowMessages ?? true,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load settings", error);
+    }
+  };
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchSettings();
+    }
+  }, [status]);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
     else if (status === "authenticated" && user) {
-      setProfileData({ name: user.name || "", image: user.image || "" });
-      fetchVisibility();
+      // Initialize form with user data
+      setFormData({
+        name: user.name || "",
+        username: user.username || "",
+        bio: user.bio || "",
+        location: user.location || "",
+        website: user.website || "",
+        image: user.image || "",
+        coverImage: user.coverImage || "",
+        instagramHandle: user.instagramHandle || "",
+        tiktokHandle: user.tiktokHandle || "",
+        pinterestHandle: user.pinterestHandle || "",
+        styleTags: new Set(user.styleTags || []),
+        profilePublic: user.profilePublic || false,
+        showClosetValue: user.showClosetValue || false,
+        showItemPrices: user.showItemPrices || false,
+        allowMessages: user.allowMessages ?? true, // Default true if null
+      });
     }
   }, [status, router, user]);
 
-  useEffect(() => {
-    if (activeTab === "preferences" && status === "authenticated") {
-      fetchPreferences();
-    }
-  }, [activeTab, status]);
+  const handleSaveSettings = async () => {
+    setLoading(true);
+    setMessage({ text: "", type: "" });
 
-  const fetchVisibility = async () => {
     try {
-      const res = await fetch("/api/settings/visibility");
-      if (res.ok) {
-        const data = await res.json();
-        setIsPublic(data.profilePublic);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
+      // Convert Set to Array for API
+      const payload = {
+        ...formData,
+        styleTags: Array.from(formData.styleTags),
+      };
 
-  const fetchPreferences = async () => {
-    setPrefLoading(true);
-    try {
-      const res = await fetch("/api/user/preference");
-      if (res.ok) {
-        const data = await res.json();
+      const response = await fetch("/api/settings/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-        setPrefData({
-          ...data,
-          budgetGoal: data.budgetGoal || 0,
-          location_city: data.location_city || "",
-          location_country: data.location_country || "",
-          styleGoals: new Set(data.styleGoals || []),
-          sustainabilityGoals: data.sustainabilityGoals || {},
-          notifications: data.notifications || {
-            email: true,
-            push: false,
-            marketing: false,
-          },
+      if (response.ok) {
+        await refreshUser();
+        setMessage({ text: "Settings saved successfully.", type: "success" });
+      } else {
+        const errorData = await response.json();
+        setMessage({
+          text: errorData.error || "Failed to save settings.",
+          type: "error",
         });
       }
     } catch (error) {
-      console.error("Failed to fetch preferences", error);
+      setMessage({ text: "An error occurred.", type: "error" });
     } finally {
-      setPrefLoading(false);
+      setLoading(false);
     }
   };
 
@@ -137,71 +178,13 @@ export default function SettingsPage() {
     try {
       const response = await fetch("/api/billing/portal", { method: "POST" });
       const data = await response.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
+      if (data.url) window.location.href = data.url;
+      else
         setMessage({ text: "Failed to open billing portal.", type: "error" });
-      }
     } catch (error) {
       setMessage({ text: "An error occurred.", type: "error" });
     } finally {
       setPortalLoading(false);
-    }
-  };
-
-  const handleSavePreferences = async () => {
-    setLoading(true);
-    setMessage({ text: "", type: "" });
-
-    try {
-      const payload = {
-        ...prefData,
-        styleGoals: Array.from(prefData.styleGoals),
-      };
-
-      const response = await fetch("/api/user/preference", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        setMessage({
-          text: "Preferences saved successfully.",
-          type: "success",
-        });
-      } else {
-        setMessage({ text: "Failed to save preferences.", type: "error" });
-      }
-    } catch (error) {
-      setMessage({ text: "An error occurred.", type: "error" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateProfile = async () => {
-    setLoading(true);
-    setMessage({ text: "", type: "" });
-
-    try {
-      const response = await fetch("/api/settings/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profileData),
-      });
-
-      if (response.ok) {
-        await refreshUser();
-        setMessage({ text: "Profile updated successfully.", type: "success" });
-      } else {
-        setMessage({ text: "Failed to update profile.", type: "error" });
-      }
-    } catch (error) {
-      setMessage({ text: "An error occurred.", type: "error" });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -250,32 +233,8 @@ export default function SettingsPage() {
     }
   };
 
-  const handleToggleVisibility = async (value: boolean) => {
-    setIsPublic(value);
-    try {
-      const response = await fetch("/api/settings/visibility", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profilePublic: value }),
-      });
-      if (!response.ok) setIsPublic(!value);
-    } catch (error) {
-      setIsPublic(!value);
-    }
-  };
-
-  const updateJsonField = (
-    field: "sustainabilityGoals" | "notifications",
-    key: string,
-    value: boolean,
-  ) => {
-    setPrefData((prev) => ({
-      ...prev,
-      [field]: {
-        ...prev[field],
-        [key]: value,
-      },
-    }));
+  const updateField = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   // Format subscription end date
@@ -307,7 +266,7 @@ export default function SettingsPage() {
             Settings
           </h1>
           <p className="text-xs uppercase tracking-widest text-default-500">
-            Manage account & privacy
+            Manage account, profile & visibility
           </p>
         </div>
       </div>
@@ -326,18 +285,31 @@ export default function SettingsPage() {
         <div className="lg:col-span-3">
           <div className="flex flex-col gap-2 sticky top-24">
             {[
-              "profile",
-              "subscription",
-              "security",
-              "privacy",
-              "preferences",
+              { id: "profile", label: "Public Profile", icon: UserCircleIcon },
+              { id: "socials", label: "Social Links", icon: AtSymbolIcon },
+              {
+                id: "preferences",
+                label: "App Preferences",
+                icon: AdjustmentsHorizontalIcon,
+              },
+              {
+                id: "subscription",
+                label: "Subscription",
+                icon: CreditCardIcon,
+              },
+              { id: "security", label: "Security", icon: ShieldCheckIcon },
             ].map((tab) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`text-left px-4 py-3 text-xs uppercase tracking-widest font-bold transition-all border-l-2 ${activeTab === tab ? "border-primary text-primary bg-primary/5" : "border-transparent text-default-400 hover:text-foreground"}`}
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-3 text-left px-4 py-3 text-xs uppercase tracking-widest font-bold transition-all border-l-2 ${
+                  activeTab === tab.id
+                    ? "border-primary text-primary bg-primary/5"
+                    : "border-transparent text-default-400 hover:text-foreground"
+                }`}
               >
-                {tab}
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
               </button>
             ))}
           </div>
@@ -350,71 +322,315 @@ export default function SettingsPage() {
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
               <div>
                 <h2 className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
-                  <UserCircleIcon className="w-6 h-6" /> Public Profile
+                  <UserCircleIcon className="w-6 h-6" /> Profile Details
                 </h2>
                 <Divider className="my-4" />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Avatar Upload */}
-                <div className="flex flex-col items-center gap-4">
-                  <div className="relative group">
+              {/* Images Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <span className="text-xs font-bold uppercase tracking-wider text-default-500">
+                    Avatar
+                  </span>
+                  <div className="flex items-center gap-4">
                     <Avatar
-                      src={profileData.image || undefined}
-                      className="w-32 h-32 text-large"
-                      name={profileData.name}
+                      src={formData.image || undefined}
+                      className="w-24 h-24 text-large"
+                      name={formData.name}
                       isBordered
                     />
+                    <div className="flex-1">
+                      <ImageUpload
+                        value={formData.image}
+                        onChange={(url) => updateField("image", url)}
+                        folder="profile"
+                        label="Change Avatar"
+                      />
+                    </div>
                   </div>
+                </div>
 
-                  <div className="w-full max-w-[200px]">
-                    <ImageUpload
-                      value={profileData.image}
-                      onChange={(url) =>
-                        setProfileData({ ...profileData, image: url })
-                      }
-                      folder="profile"
-                      label="Change Photo"
+                <div className="space-y-4">
+                  <span className="text-xs font-bold uppercase tracking-wider text-default-500">
+                    Cover Image
+                  </span>
+                  <div className="flex items-center gap-4">
+                    {formData.coverImage ? (
+                      <div
+                        className="w-24 h-24 rounded-medium bg-cover bg-center border border-default-200"
+                        style={{
+                          backgroundImage: `url(${formData.coverImage})`,
+                        }}
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-medium bg-default-100 flex items-center justify-center border border-default-200">
+                        <PhotoIcon className="w-8 h-8 text-default-300" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <ImageUpload
+                        value={formData.coverImage}
+                        onChange={(url) => updateField("coverImage", url)}
+                        folder="profile_covers"
+                        label="Change Cover"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input
+                  label="Display Name"
+                  variant="bordered"
+                  radius="none"
+                  value={formData.name}
+                  onChange={(e) => updateField("name", e.target.value)}
+                />
+                <Input
+                  label="Username"
+                  variant="bordered"
+                  radius="none"
+                  startContent={<span className="text-default-400">@</span>}
+                  value={formData.username}
+                  onChange={(e) => updateField("username", e.target.value)}
+                />
+                <Input
+                  label="Location"
+                  placeholder="City, Country"
+                  variant="bordered"
+                  radius="none"
+                  className="md:col-span-2"
+                  startContent={
+                    <GlobeAltIcon className="w-4 h-4 text-default-400" />
+                  }
+                  value={formData.location}
+                  onChange={(e) => updateField("location", e.target.value)}
+                />
+                <Textarea
+                  label="Bio"
+                  variant="bordered"
+                  radius="none"
+                  className="md:col-span-2"
+                  placeholder="Tell us a bit about your style..."
+                  value={formData.bio}
+                  onChange={(e) => updateField("bio", e.target.value)}
+                />
+                <Input
+                  label="Website"
+                  variant="bordered"
+                  radius="none"
+                  className="md:col-span-2"
+                  startContent={
+                    <span className="text-default-400 text-xs">https://</span>
+                  }
+                  value={formData.website}
+                  onChange={(e) => updateField("website", e.target.value)}
+                />
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <Button
+                  color="primary"
+                  radius="none"
+                  className="uppercase font-bold tracking-widest px-8"
+                  isLoading={loading}
+                  onPress={handleSaveSettings}
+                >
+                  Save Profile
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* SOCIALS SECTION */}
+          {activeTab === "socials" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div>
+                <h2 className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
+                  <AtSymbolIcon className="w-6 h-6" /> Social Connections
+                </h2>
+                <Divider className="my-4" />
+                <p className="text-sm text-default-500 mb-6">
+                  Link your social media profiles to display them on your public
+                  closet.
+                </p>
+              </div>
+
+              <div className="max-w-xl space-y-6">
+                <Input
+                  label="Instagram"
+                  variant="bordered"
+                  radius="none"
+                  startContent={
+                    <span className="text-default-400 w-20 text-xs">
+                      instagram.com/
+                    </span>
+                  }
+                  value={formData.instagramHandle}
+                  onChange={(e) =>
+                    updateField("instagramHandle", e.target.value)
+                  }
+                />
+                <Input
+                  label="TikTok"
+                  variant="bordered"
+                  radius="none"
+                  startContent={
+                    <span className="text-default-400 w-20 text-xs">
+                      tiktok.com/@
+                    </span>
+                  }
+                  value={formData.tiktokHandle}
+                  onChange={(e) => updateField("tiktokHandle", e.target.value)}
+                />
+                <Input
+                  label="Pinterest"
+                  variant="bordered"
+                  radius="none"
+                  startContent={
+                    <span className="text-default-400 w-20 text-xs">
+                      pinterest.com/
+                    </span>
+                  }
+                  value={formData.pinterestHandle}
+                  onChange={(e) =>
+                    updateField("pinterestHandle", e.target.value)
+                  }
+                />
+
+                <div className="flex justify-end pt-4">
+                  <Button
+                    color="primary"
+                    radius="none"
+                    className="uppercase font-bold tracking-widest px-8"
+                    isLoading={loading}
+                    onPress={handleSaveSettings}
+                  >
+                    Save Links
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* PREFERENCES SECTION */}
+          {activeTab === "preferences" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div>
+                <h2 className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
+                  <AdjustmentsHorizontalIcon className="w-6 h-6" /> App
+                  Preferences
+                </h2>
+                <Divider className="my-4" />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                {/* Privacy Settings */}
+                <div className="space-y-6">
+                  <h3 className="font-semibold text-default-500 uppercase text-xs tracking-wider mb-4">
+                    Privacy & Visibility
+                  </h3>
+
+                  <div className="flex justify-between items-center py-2">
+                    <div className="space-y-1">
+                      <p className="font-bold text-sm">Public Profile</p>
+                      <p className="text-xs text-default-500">
+                        Allow others to find your profile
+                      </p>
+                    </div>
+                    <Switch
+                      isSelected={formData.profilePublic}
+                      onValueChange={(val) => updateField("profilePublic", val)}
                     />
                   </div>
-                  <p className="text-[10px] text-default-400 uppercase tracking-widest text-center">
-                    Max 5MB • JPG, PNG
-                  </p>
-                </div>
+                  <Divider />
 
-                {/* Text Fields */}
-                <div className="md:col-span-2 space-y-6">
-                  <Input
-                    label="Display Name"
-                    variant="bordered"
-                    radius="none"
-                    value={profileData.name}
-                    onChange={(e) =>
-                      setProfileData({ ...profileData, name: e.target.value })
-                    }
-                    classNames={{ inputWrapper: "h-12" }}
-                  />
-                  <Input
-                    label="Email"
-                    variant="bordered"
-                    radius="none"
-                    value={session?.user?.email || ""}
-                    isReadOnly
-                    className="opacity-60"
-                  />
+                  <div className="flex justify-between items-center py-2">
+                    <div className="space-y-1 flex items-center gap-2">
+                      <ChatBubbleLeftRightIcon className="w-4 h-4 text-default-400" />
+                      <p className="font-bold text-sm">Allow Messages</p>
+                    </div>
+                    <Switch
+                      isSelected={formData.allowMessages}
+                      onValueChange={(val) => updateField("allowMessages", val)}
+                    />
+                  </div>
 
-                  <div className="pt-4 flex justify-end">
-                    <Button
-                      color="primary"
-                      radius="none"
-                      className="uppercase font-bold tracking-widest px-8 shadow-lg shadow-primary/20"
-                      isLoading={loading}
-                      onPress={handleUpdateProfile}
-                    >
-                      Save Changes
-                    </Button>
+                  <div className="flex justify-between items-center py-2">
+                    <div className="space-y-1 flex items-center gap-2">
+                      <CurrencyDollarIcon className="w-4 h-4 text-default-400" />
+                      <p className="font-bold text-sm">Show Item Prices</p>
+                    </div>
+                    <Switch
+                      isSelected={formData.showItemPrices}
+                      onValueChange={(val) =>
+                        updateField("showItemPrices", val)
+                      }
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center py-2">
+                    <div className="space-y-1 flex items-center gap-2">
+                      <EyeSlashIcon className="w-4 h-4 text-default-400" />
+                      <p className="font-bold text-sm">
+                        Show Total Closet Value
+                      </p>
+                    </div>
+                    <Switch
+                      isSelected={formData.showClosetValue}
+                      onValueChange={(val) =>
+                        updateField("showClosetValue", val)
+                      }
+                    />
                   </div>
                 </div>
+
+                {/* Style Settings */}
+                <div className="space-y-6">
+                  <h3 className="font-semibold text-default-500 uppercase text-xs tracking-wider mb-4">
+                    Style Profile
+                  </h3>
+                  <Select
+                    label="Style Tags"
+                    placeholder="Identify your aesthetics"
+                    selectionMode="multiple"
+                    variant="bordered"
+                    radius="none"
+                    selectedKeys={formData.styleTags}
+                    onSelectionChange={(keys) =>
+                      updateField(
+                        "styleTags",
+                        new Set(keys as unknown as string[]),
+                      )
+                    }
+                    classNames={{ trigger: "min-h-12" }}
+                  >
+                    {STYLE_TAGS.map((style) => (
+                      <SelectItem key={style.value} textValue={style.value}>
+                        {style.label}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                  <p className="text-xs text-default-400">
+                    These tags help us personalize your recommendations and help
+                    others find your style.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-8">
+                <Button
+                  color="primary"
+                  radius="none"
+                  className="uppercase font-bold tracking-widest px-8 shadow-lg shadow-primary/20"
+                  isLoading={loading}
+                  onPress={handleSaveSettings}
+                >
+                  Save Preferences
+                </Button>
               </div>
             </div>
           )}
@@ -430,9 +646,7 @@ export default function SettingsPage() {
               </div>
 
               {isPremium ? (
-                // Premium User View
                 <div className="space-y-6">
-                  {/* Status Card */}
                   <div className="border border-foreground bg-foreground text-background p-8">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
@@ -446,163 +660,50 @@ export default function SettingsPage() {
                           Premium
                         </h3>
                       </div>
-                      <Chip
-                        classNames={{
-                          base: "bg-background text-foreground rounded-none",
-                          content:
-                            "font-bold text-xs uppercase tracking-widest",
-                        }}
-                      >
-                        Active
-                      </Chip>
                     </div>
-
                     {user?.subscription_period_end && (
                       <p className="mt-4 text-sm opacity-60">
-                        Your subscription renews on{" "}
+                        Renews on{" "}
                         <span className="font-bold">
                           {formatDate(user.subscription_period_end)}
                         </span>
                       </p>
                     )}
                   </div>
-
-                  {/* Features List */}
-                  <div className="border border-default-200 p-6 space-y-4">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-default-500">
-                      Your Premium Features
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {[
-                        "AI Outfit Generator",
-                        "Magic Background Removal",
-                        "Weather-Smart Suggestions",
-                        "Unlimited Collections",
-                        "Cost-Per-Wear Analytics",
-                        "Priority Support",
-                      ].map((feature) => (
-                        <div
-                          key={feature}
-                          className="flex items-center gap-2 text-sm"
-                        >
-                          <CheckCircleIcon className="w-4 h-4 text-success" />
-                          <span>{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Manage Button */}
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Button
-                      variant="bordered"
-                      radius="none"
-                      className="uppercase font-bold tracking-widest"
-                      isLoading={portalLoading}
-                      onPress={handleManageSubscription}
-                    >
-                      Manage Subscription
-                    </Button>
-                    <p className="text-xs text-default-400 self-center">
-                      Update payment method, view invoices, or cancel
-                    </p>
-                  </div>
+                  <Button
+                    variant="bordered"
+                    radius="none"
+                    className="uppercase font-bold tracking-widest"
+                    isLoading={portalLoading}
+                    onPress={handleManageSubscription}
+                  >
+                    Manage Subscription
+                  </Button>
                 </div>
               ) : (
-                // Free User View
                 <div className="space-y-6">
-                  {/* Status Card */}
-                  <div className="border border-default-200 p-8">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <span className="text-xs font-bold uppercase tracking-widest text-default-500">
-                          Current Plan
-                        </span>
-                        <h3 className="text-3xl font-black uppercase italic tracking-tighter">
-                          Free
-                        </h3>
-                      </div>
-                      <Chip
-                        variant="flat"
-                        classNames={{
-                          base: "bg-default-100 rounded-none",
-                          content:
-                            "font-bold text-xs uppercase tracking-widest text-default-500",
-                        }}
-                      >
-                        Basic
-                      </Chip>
-                    </div>
-                  </div>
-
-                  {/* Upgrade Prompt */}
                   <div className="border border-dashed border-default-300 p-8 text-center space-y-6">
                     <div className="w-16 h-16 rounded-full bg-default-100 flex items-center justify-center mx-auto">
                       <SparklesIcon className="w-8 h-8 text-default-400" />
                     </div>
-
                     <div className="space-y-2">
                       <h4 className="text-xl font-bold">
                         Unlock Premium Features
                       </h4>
                       <p className="text-default-500 text-sm max-w-md mx-auto">
                         Get AI-powered outfit recommendations, magic background
-                        removal, weather-smart styling, and more.
+                        removal, and more.
                       </p>
                     </div>
-
-                    <div className="flex flex-col items-center gap-2">
-                      <Button
-                        color="primary"
-                        radius="none"
-                        size="lg"
-                        className="uppercase font-bold tracking-widest px-12"
-                        onPress={() => router.push("/pricing")}
-                      >
-                        Upgrade to Premium
-                      </Button>
-                      <span className="text-xs text-default-400">
-                        Starting at $4.92/month billed annually
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Feature Comparison */}
-                  <div className="border border-default-200 p-6">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-default-500 mb-4">
-                      What You're Missing
-                    </h4>
-                    <div className="space-y-3">
-                      {[
-                        {
-                          feature: "AI Outfit Generator",
-                          desc: "Daily looks curated for your weather & events",
-                        },
-                        {
-                          feature: "Magic Background Removal",
-                          desc: "One-click clean, professional item photos",
-                        },
-                        {
-                          feature: "Weather Intelligence",
-                          desc: "Never be too cold or too hot again",
-                        },
-                      ].map((item) => (
-                        <div
-                          key={item.feature}
-                          className="flex items-start gap-3 p-3 bg-default-50"
-                        >
-                          <SparklesIcon className="w-4 h-4 text-default-400 mt-0.5" />
-                          <div>
-                            <span className="font-bold text-sm">
-                              {item.feature}
-                            </span>
-                            <p className="text-xs text-default-500">
-                              {item.desc}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <Button
+                      color="primary"
+                      radius="none"
+                      size="lg"
+                      className="uppercase font-bold tracking-widest px-12"
+                      onPress={() => router.push("/pricing")}
+                    >
+                      Upgrade
+                    </Button>
                   </div>
                 </div>
               )}
@@ -620,6 +721,18 @@ export default function SettingsPage() {
               </div>
 
               <div className="max-w-md space-y-6">
+                <Input
+                  label="Email"
+                  variant="bordered"
+                  radius="none"
+                  value={session?.user?.email || ""}
+                  isReadOnly
+                  className="opacity-60"
+                  endContent={
+                    <CheckCircleIcon className="w-5 h-5 text-success" />
+                  }
+                />
+                <Divider />
                 <Input
                   type="password"
                   label="Current Password"
@@ -671,227 +784,6 @@ export default function SettingsPage() {
                     Update Password
                   </Button>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* PRIVACY SECTION */}
-          {activeTab === "privacy" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div>
-                <h2 className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
-                  <EyeIcon className="w-6 h-6" /> Privacy Control
-                </h2>
-                <Divider className="my-4" />
-              </div>
-
-              <div className="border border-default-200 p-6 flex items-center justify-between bg-content1">
-                <div>
-                  <p className="font-bold text-lg mb-1">Public Profile</p>
-                  <p className="text-sm text-default-500 max-w-sm">
-                    When enabled, anyone can view your profile and public
-                    collections. Disable to make your account private.
-                  </p>
-                </div>
-                <Switch
-                  isSelected={isPublic}
-                  onValueChange={handleToggleVisibility}
-                  color="success"
-                  classNames={{
-                    wrapper: "group-data-[selected=true]:bg-foreground",
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* USER PREFERENCES SECTION */}
-          {activeTab === "preferences" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div>
-                <h2 className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
-                  <AdjustmentsHorizontalIcon className="w-6 h-6" /> Preferences
-                </h2>
-                <Divider className="my-4" />
-
-                {prefLoading ? (
-                  <div className="w-full h-40 flex items-center justify-center text-default-400">
-                    Loading preferences...
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* LEFT COLUMN: General & Location */}
-                    <div className="space-y-6">
-                      <h3 className="font-semibold text-default-500 uppercase text-xs tracking-wider">
-                        General Settings
-                      </h3>
-
-                      <Input
-                        type="number"
-                        label="Monthly Budget Goal"
-                        placeholder="0.00"
-                        variant="bordered"
-                        radius="none"
-                        value={prefData.budgetGoal.toString()}
-                        onChange={(e) =>
-                          setPrefData({
-                            ...prefData,
-                            budgetGoal: parseFloat(e.target.value) || 0,
-                          })
-                        }
-                        startContent={
-                          <span className="text-default-400 text-small">$</span>
-                        }
-                      />
-
-                      <div className="flex gap-4">
-                        <Input
-                          type="text"
-                          label="City"
-                          variant="bordered"
-                          radius="none"
-                          value={prefData.location_city}
-                          onChange={(e) =>
-                            setPrefData({
-                              ...prefData,
-                              location_city: e.target.value,
-                            })
-                          }
-                        />
-                        <Input
-                          type="text"
-                          label="Country"
-                          variant="bordered"
-                          radius="none"
-                          value={prefData.location_country}
-                          onChange={(e) =>
-                            setPrefData({
-                              ...prefData,
-                              location_country: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-
-                      <div className="pt-2">
-                        <RadioGroup
-                          label="Temperature Unit"
-                          orientation="horizontal"
-                          value={prefData.temperature_unit}
-                          onValueChange={(val) =>
-                            setPrefData({ ...prefData, temperature_unit: val })
-                          }
-                        >
-                          <Radio value="celsius">Celsius (°C)</Radio>
-                          <Radio value="fahrenheit">Fahrenheit (°F)</Radio>
-                        </RadioGroup>
-                      </div>
-
-                      <Divider className="my-2" />
-
-                      <h3 className="font-semibold text-default-500 uppercase text-xs tracking-wider">
-                        Notifications
-                      </h3>
-                      <div className="flex flex-col gap-3">
-                        <Switch
-                          isSelected={prefData.notifications?.email}
-                          onValueChange={(val) =>
-                            updateJsonField("notifications", "email", val)
-                          }
-                        >
-                          Email Alerts
-                        </Switch>
-                        <Switch
-                          isSelected={prefData.notifications?.push}
-                          onValueChange={(val) =>
-                            updateJsonField("notifications", "push", val)
-                          }
-                        >
-                          Push Notifications
-                        </Switch>
-                      </div>
-                    </div>
-
-                    {/* RIGHT COLUMN: Goals & Metadata */}
-                    <div className="space-y-6">
-                      <h3 className="font-semibold text-default-500 uppercase text-xs tracking-wider">
-                        Style & Sustainability
-                      </h3>
-
-                      <Select
-                        label="Style Goals"
-                        placeholder="Select your styles"
-                        selectionMode="multiple"
-                        variant="bordered"
-                        radius="none"
-                        selectedKeys={prefData.styleGoals}
-                        onSelectionChange={(keys) =>
-                          setPrefData({
-                            ...prefData,
-                            styleGoals: new Set(keys as unknown as string[]),
-                          })
-                        }
-                      >
-                        {STYLE_OPTIONS.map((style) => (
-                          <SelectItem key={style.value}>
-                            {style.label}
-                          </SelectItem>
-                        ))}
-                      </Select>
-
-                      <div className="flex flex-col gap-3 p-4 border border-default-200">
-                        <span className="text-small text-default-500">
-                          Sustainability Focus
-                        </span>
-                        {SUSTAINABILITY_OPTIONS.map((opt) => (
-                          <Switch
-                            key={opt.key}
-                            size="sm"
-                            isSelected={!!prefData.sustainabilityGoals[opt.key]}
-                            onValueChange={(val) =>
-                              updateJsonField(
-                                "sustainabilityGoals",
-                                opt.key,
-                                val,
-                              )
-                            }
-                          >
-                            {opt.label}
-                          </Switch>
-                        ))}
-                      </div>
-
-                      <Select
-                        label="Analytics Privacy"
-                        variant="bordered"
-                        radius="none"
-                        selectedKeys={[prefData.analyticsPrivacy]}
-                        onChange={(e) =>
-                          setPrefData({
-                            ...prefData,
-                            analyticsPrivacy: e.target.value,
-                          })
-                        }
-                      >
-                        <SelectItem key="private">Private</SelectItem>
-                        <SelectItem key="shared">Share Anonymously</SelectItem>
-                        <SelectItem key="public">Public</SelectItem>
-                      </Select>
-                    </div>
-
-                    <div className="col-span-1 md:col-span-2 pt-4 flex justify-end">
-                      <Button
-                        color="primary"
-                        radius="none"
-                        className="uppercase font-bold tracking-widest px-8 shadow-lg shadow-primary/20"
-                        isLoading={loading}
-                        onPress={handleSavePreferences}
-                      >
-                        Save Preferences
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           )}

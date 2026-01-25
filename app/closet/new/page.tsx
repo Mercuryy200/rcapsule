@@ -271,85 +271,17 @@ export default function NewItemPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
         {/* Left Column: Image Upload */}
-        <div className="lg:col-span-5 flex flex-col w-full gap-6">
+        <div className="lg:col-span-5 flex flex-col w-full gap-6 h-full">
           <div className="relative w-full top-6">
-            <Tabs
-              fullWidth
-              selectedKey={imageMethod}
-              onSelectionChange={(key) =>
-                setImageMethod(key as "upload" | "url")
-              }
-              radius="sm"
-              size="md"
-              classNames={{
-                base: "w-full mb-4",
-                tabList: "bg-default-100 p-1 gap-2",
-                cursor: "bg-background shadow-sm",
-                tab: "h-9",
-                tabContent:
-                  "group-data-[selected=true]:text-foreground text-default-500 font-medium",
-              }}
-            >
-              <Tab key="upload" title="Upload File" />
-              <Tab key="url" title="External URL" />
-            </Tabs>
-
-            <div className="aspect-[3/4] bg-content2 border border-dashed border-default-300 rounded-lg overflow-hidden relative transition-colors hover:border-default-400">
-              {imageMethod === "upload" ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <ImageUpload
-                    value={formData.imageUrl}
-                    onChange={(url) =>
-                      setFormData({ ...formData, imageUrl: url })
-                    }
-                    folder="clothes"
-                    label="Drop image here"
-                  />
-                </div>
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center p-6">
-                  {formData.imageUrl ? (
-                    <div className="relative w-full h-full group">
-                      <img
-                        src={formData.imageUrl}
-                        alt="Preview"
-                        className="w-full h-full object-cover rounded-md"
-                      />
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        color="danger"
-                        variant="solid"
-                        className="absolute top-2 right-2 shadow-lg z-10"
-                        onPress={() =>
-                          setFormData({ ...formData, imageUrl: "" })
-                        }
-                      >
-                        <XMarkIcon className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="w-full space-y-4">
-                      <Input
-                        label="Image URL"
-                        placeholder="https://"
-                        variant="bordered"
-                        radius="sm"
-                        value={formData.imageUrl}
-                        onChange={(e) =>
-                          setFormData({ ...formData, imageUrl: e.target.value })
-                        }
-                        classNames={{
-                          inputWrapper: "bg-background",
-                        }}
-                      />
-                      <p className="text-xs text-default-400 text-center">
-                        Paste a direct link to an image
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+            <div className="relative w-full h-full min-h-[400px] flex flex-col">
+              <ImageUpload
+                value={formData.imageUrl}
+                onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+                folder="clothes"
+                label="Item Photo"
+                maxSize={10}
+                className="h-full min-h-[400px]"
+              />
             </div>
 
             <p className="mt-4 text-[10px] text-default-400 text-center uppercase tracking-wider">
@@ -357,7 +289,6 @@ export default function NewItemPage() {
             </p>
           </div>
         </div>
-
         {/* Right Column: Form with Tabs */}
         <div className="lg:col-span-7 flex flex-col gap-6">
           {/* Auto Import Section */}
