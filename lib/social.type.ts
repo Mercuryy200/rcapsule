@@ -4,7 +4,7 @@ import { Clothes } from "./database.type";
 // USER PROFILE (Extended)
 // ============================================================================
 
-export interface UserProfile {
+export interface User {
   id: string;
   email: string;
   name?: string;

@@ -1,14 +1,32 @@
 "use client";
-import { Avatar, Button, Chip } from "@heroui/react";
-import { Cog6ToothIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { Avatar, Button, Chip, Link } from "@heroui/react";
+import {
+  Cog6ToothIcon,
+  SparklesIcon,
+  MapPinIcon,
+  LinkIcon,
+  UserGroupIcon,
+} from "@heroicons/react/24/outline";
 import { useUser } from "@/contexts/UserContext";
-import Link from "next/link";
 
+import { SocialIcon } from "../icons";
 interface ProfileHeaderProps {
   user: {
     name?: string | null;
+    username?: string | null;
     email?: string | null;
     image?: string | null;
+    coverImage?: string | null;
+    bio?: string | null;
+    location?: string | null;
+    website?: string | null;
+    instagramHandle?: string | null;
+    tiktokHandle?: string | null;
+    pinterestHandle?: string | null;
+    followerCount?: number;
+    followingCount?: number;
+    profilePublic?: boolean;
+    createdAt?: string;
   };
   stats: {
     items: number;
@@ -26,96 +44,207 @@ export default function ProfileHeader({
 }: ProfileHeaderProps) {
   const { isPremium } = useUser();
 
+  const joinedDate = user.createdAt
+    ? new Date(user.createdAt).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      })
+    : null;
+
   return (
-    <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 mb-8 md:mb-12 border-b border-divider pb-8">
-      <Avatar
-        src={user.image || undefined}
-        className="w-24 h-24 md:w-32 md:h-32 text-large shrink-0"
-        isBordered
-        radius="none"
-        name={user.name || "User"}
-      />
+    <div className="w-full mb-8">
+      {/* 1. COVER IMAGE BANNER */}
+      <div className="relative w-full h-48 md:h-64 bg-default-100 overflow-hidden">
+        {user.coverImage ? (
+          <img
+            src={user.coverImage}
+            alt="Cover"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-default-100 to-default-200 flex items-center justify-center">
+            <SparklesIcon className="w-12 h-12 text-default-300 opacity-20" />
+          </div>
+        )}
 
-      <div className="flex-1 w-full">
-        <div className="flex flex-row justify-between items-start w-full relative">
-          <div className="text-center md:text-left w-full md:w-auto pr-10 md:pr-0">
-            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
-              <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic break-words">
-                {user.name}
-              </h1>
+        {/* Edit Button (Top Right over Banner) */}
+        <Button
+          isIconOnly
+          variant="flat"
+          className="absolute top-4 right-4 bg-black/20 backdrop-blur-md text-white hover:bg-black/40 z-10"
+          onPress={onEdit}
+        >
+          <Cog6ToothIcon className="w-5 h-5" />
+        </Button>
+      </div>
 
-              {isPremium ? (
-                <Chip
-                  startContent={<SparklesIcon className="w-3 h-3" />}
-                  size="sm"
-                  classNames={{
-                    base: "bg-foreground text-background rounded-none gap-1",
-                    content: "font-bold text-[10px] uppercase tracking-widest",
-                  }}
-                >
-                  Premium
-                </Chip>
-              ) : (
-                <Link href="/pricing">
-                  <Chip
-                    startContent={<SparklesIcon className="w-3 h-3" />}
-                    size="sm"
-                    classNames={{
-                      base: "bg-default-100 hover:bg-default-200 text-foreground rounded-none gap-1 cursor-pointer transition-colors",
-                      content:
-                        "font-bold text-[10px] uppercase tracking-widest",
-                    }}
-                  >
-                    Upgrade
-                  </Chip>
-                </Link>
-              )}
+      {/* 2. PROFILE SECTION */}
+      <div className="px-6 md:px-10 max-w-7xl mx-auto">
+        <div className="relative flex flex-col md:flex-row items-start gap-6 -mt-16 md:-mt-20 mb-8">
+          {/* Avatar Area */}
+          <div className="relative shrink-0">
+            <Avatar
+              src={user.image || undefined}
+              className="w-32 h-32 md:w-40 md:h-40 text-large border-4 border-background"
+              isBordered
+              radius="full"
+              name={user.name || "User"}
+            />
+            {isPremium && (
+              <Chip
+                startContent={<SparklesIcon className="w-3 h-3 text-white" />}
+                className="absolute bottom-2 right-2 border-2 border-background bg-gradient-to-r from-gray-400 to-blue-300 text-white font-bold shadow-sm"
+                size="sm"
+              >
+                PREMIUM
+              </Chip>
+            )}
+          </div>
+
+          {/* User Info Area */}
+          <div className="flex-1 w-full pt-4 md:pt-20 space-y-4">
+            {/* Top Row: Name & Handle */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-black uppercase tracking-tighter italic">
+                  {user.name}
+                </h1>
+                <div className="flex items-center gap-2 text-default-500">
+                  <span className="font-medium">
+                    @{user.username || "username"}
+                  </span>
+                  {user.location && (
+                    <>
+                      <span className="text-default-300">•</span>
+                      <div className="flex items-center gap-1 text-xs uppercase tracking-wide">
+                        <MapPinIcon className="w-3 h-3" />
+                        {user.location}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Follower Stats (Visible on Desktop) */}
+              <div className="hidden md:flex gap-6">
+                <div className="text-center">
+                  <p className="font-bold text-lg">{user.followerCount || 0}</p>
+                  <p className="text-[10px] uppercase text-default-500 tracking-wider">
+                    Followers
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-lg">
+                    {user.followingCount || 0}
+                  </p>
+                  <p className="text-[10px] uppercase text-default-500 tracking-wider">
+                    Following
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <p className="text-xs md:text-sm text-default-400 uppercase tracking-widest mt-1 break-all">
-              {user.email}
-            </p>
-          </div>
+            {/* Bio & Links */}
+            <div className="space-y-3 max-w-2xl">
+              {user.bio && (
+                <p className="text-sm leading-relaxed">{user.bio}</p>
+              )}
 
-          {/* Settings Button: Absolute top-right on mobile to save space, relative on desktop */}
-          <Button
-            isIconOnly
-            variant="light"
-            radius="none"
-            onPress={onEdit}
-            className="absolute top-0 right-0 md:relative md:top-auto md:right-auto -mr-2 md:mr-0"
-          >
-            <Cog6ToothIcon className="w-6 h-6" />
-          </Button>
+              <div className="flex flex-wrap items-center gap-4 text-sm text-primary">
+                {user.website && (
+                  <Link
+                    href={
+                      user.website.startsWith("http")
+                        ? user.website
+                        : `https://${user.website}`
+                    }
+                    isExternal
+                    className="flex items-center gap-1 hover:underline"
+                    size="sm"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                    {user.website.replace(/^https?:\/\//, "")}
+                  </Link>
+                )}
+
+                {/* Social Icons Row */}
+                <div className="flex items-center gap-3 text-default-500 pl-2 border-l border-default-200">
+                  {user.instagramHandle && (
+                    <Link
+                      isExternal
+                      href={`https://instagram.com/${user.instagramHandle}`}
+                      className="hover:text-secondary transition-colors"
+                    >
+                      <SocialIcon type="instagram" />
+                    </Link>
+                  )}
+                  {user.tiktokHandle && (
+                    <Link
+                      isExternal
+                      href={`https://tiktok.com/@${user.tiktokHandle}`}
+                      className="hover:text-secondary transition-colors"
+                    >
+                      <SocialIcon type="tiktok" />
+                    </Link>
+                  )}
+                  {user.pinterestHandle && (
+                    <Link
+                      isExternal
+                      href={`https://pinterest.com/${user.pinterestHandle}`}
+                      className="hover:text-secondary transition-colors"
+                    >
+                      <SocialIcon type="pinterest" />
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex md:hidden justify-between py-4 border-y border-default-100">
+              <div className="text-center">
+                <p className="font-bold">{user.followerCount || 0}</p>
+                <p className="text-[10px] uppercase text-default-400">
+                  Followers
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="font-bold">{stats.items}</p>
+                <p className="text-[10px] uppercase text-default-400">Items</p>
+              </div>
+              <div className="text-center">
+                <p className="font-bold">{stats.outfits}</p>
+                <p className="text-[10px] uppercase text-default-400">Looks</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Stats Grid: 2x2 Grid on Mobile -> Single Row on Desktop */}
-        <div className="grid grid-cols-2 md:flex md:flex-row gap-y-6 gap-x-4 md:gap-8 mt-8 w-full">
-          <div className="text-center md:text-left">
-            <p className="text-2xl md:text-3xl font-light">{stats.items}</p>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-default-400">
-              Pieces
+        {/* 3. DESKTOP CLOSET STATS GRID */}
+        {/* Only visible on md+, mobile uses the condensed row above */}
+        <div className="hidden md:grid grid-cols-4 gap-4 py-8 border-t border-default-200">
+          <div className="space-y-1">
+            <p className="text-4xl font-light">{stats.items}</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-default-400">
+              Total Items
             </p>
           </div>
-          <div className="text-center md:text-left">
-            <p className="text-2xl md:text-3xl font-light">{stats.wardrobes}</p>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-default-400">
+          <div className="space-y-1">
+            <p className="text-4xl font-light">{stats.wardrobes}</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-default-400">
               Collections
             </p>
           </div>
-          <div className="text-center md:text-left">
-            <p className="text-2xl md:text-3xl font-light">{stats.outfits}</p>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-default-400">
-              Looks
+          <div className="space-y-1">
+            <p className="text-4xl font-light">{stats.outfits}</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-default-400">
+              Created Looks
             </p>
           </div>
-
-          {/* Value: Visible on mobile now, borders adjusted */}
-          <div className="text-center md:text-left md:border-l md:border-divider md:pl-8">
-            <p className="text-2xl md:text-3xl font-light">
+          <div className="space-y-1 border-l border-default-200 pl-8">
+            <p className="text-4xl font-light">
               ${stats.totalValue.toLocaleString()}
             </p>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-default-400">
+            <p className="text-xs font-bold uppercase tracking-widest text-default-400">
               Closet Value
             </p>
           </div>

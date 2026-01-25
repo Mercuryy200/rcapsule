@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { getSupabaseServer } from "@/lib/supabase-server";
+import { auth } from "@/auth";
 
 export async function GET() {
   try {
@@ -16,14 +16,9 @@ export async function GET() {
       .from("User")
       .select(
         `
-        id, 
-        name, 
-        email, 
-        image, 
-        profilePublic,
+        *,
         subscription_status,
         stripe_customer_id,
-        stripe_subscription_id,
         subscription_period_end
       `,
       )
@@ -31,17 +26,22 @@ export async function GET() {
       .single();
 
     if (error) {
-      throw error;
+      console.error("Supabase error fetching user:", error);
+      return NextResponse.json(
+        { error: "Failed to fetch user data" },
+        { status: 500 },
+      );
     }
 
-    return NextResponse.json({
-      ...user,
-      subscription_status: user.subscription_status || "free",
-    });
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(user);
   } catch (error) {
-    console.error("Error fetching user:", error);
+    console.error("Error in /api/user/me:", error);
     return NextResponse.json(
-      { error: "Failed to fetch user" },
+      { error: "Internal Server Error" },
       { status: 500 },
     );
   }

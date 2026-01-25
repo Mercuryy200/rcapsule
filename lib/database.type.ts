@@ -97,6 +97,17 @@ export interface OutfitWearLog {
   notes?: string;
 }
 export interface User {
+  username: string;
+  website: string;
+  coverImage: string;
+  instagramHandle: string;
+  tiktokHandle: string;
+  pinterestHandle: string;
+  styleTags: never[];
+  profilePublic: boolean;
+  showClosetValue: boolean;
+  showItemPrices: boolean;
+  allowMessages: boolean;
   id: string;
   email: string;
   name?: string;
