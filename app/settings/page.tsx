@@ -29,6 +29,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useUser } from "@/contexts/UserContext";
 import { ImageUpload } from "@/components/closet/ImageUpload";
+import { toast } from "sonner";
 
 const STYLE_TAGS = [
   { label: "Minimalist", value: "minimalist" },
@@ -386,13 +387,15 @@ export default function SettingsPage() {
                   onChange={(e) => updateField("name", e.target.value)}
                 />
                 <Input
+                  isReadOnly
                   label="Username"
                   variant="bordered"
                   radius="none"
-                  startContent={<span className="text-default-400">@</span>}
                   value={formData.username}
-                  onChange={(e) => updateField("username", e.target.value)}
+                  startContent={<span className="text-default-400">@</span>}
+                  isDisabled={true}
                 />
+
                 <Input
                   label="Location"
                   placeholder="City, Country"

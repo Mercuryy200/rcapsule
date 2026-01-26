@@ -1,10 +1,16 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Form, Input, Button, Link, Divider } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import {
+  AtSymbolIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
+import { User, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { debounce } from "lodash";
 
 import {
   SignInButtonGithub,
@@ -15,13 +21,97 @@ export default function SignUpForm() {
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [username, setUsername] = useState("");
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
+    null,
+  );
+  const [usernameError, setUsernameError] = useState<string>("");
   const router = useRouter();
 
   const toggleVisibility = () => setIsVisible(!isVisible);
 
+  const validateUsername = (value: string): string | null => {
+    if (!value) return "Username is required";
+    if (value.length < 3) return "Must be at least 3 characters";
+    if (value.length > 30) return "Must be less than 30 characters";
+    if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
+      return "Only letters, numbers, dashes, and underscores";
+    }
+    if (/^[-_]|[-_]$/.test(value)) {
+      return "Cannot start or end with dash or underscore";
+    }
+    return null;
+  };
+
+  const checkUsernameAvailability = useCallback(
+    debounce(async (value: string) => {
+      const validationError = validateUsername(value);
+
+      if (validationError) {
+        setUsernameError(validationError);
+        setUsernameAvailable(null);
+        setIsCheckingUsername(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/users/check-username?username=${encodeURIComponent(value)}`,
+        );
+        const data = await response.json();
+
+        if (response.ok) {
+          setUsernameAvailable(data.available);
+          setUsernameError(data.available ? "" : "Username already taken");
+        } else {
+          setUsernameError(data.error || "Failed to check username");
+          setUsernameAvailable(null);
+        }
+      } catch (err) {
+        setUsernameError("Failed to check username");
+        setUsernameAvailable(null);
+      } finally {
+        setIsCheckingUsername(false);
+      }
+    }, 500),
+    [],
+  );
+
+  useEffect(() => {
+    if (username) {
+      setIsCheckingUsername(true);
+      setUsernameError("");
+      setUsernameAvailable(null);
+      checkUsernameAvailability(username);
+    } else {
+      setUsernameAvailable(null);
+      setUsernameError("");
+    }
+  }, [username, checkUsernameAvailability]);
+
+  const getUsernameEndContent = () => {
+    if (isCheckingUsername) {
+      return <Loader2 size={18} className="animate-spin text-default-400" />;
+    }
+    if (usernameAvailable === true) {
+      return <CheckCircleIcon className="w-5 h-5 text-success" />;
+    }
+    if (usernameAvailable === false || usernameError) {
+      return <XCircleIcon className="w-5 h-5 text-danger" />;
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+
+    if (!usernameAvailable) {
+      setError("Please choose an available username");
+      return;
+    }
+
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
@@ -40,7 +130,12 @@ export default function SignUpForm() {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          username: username.toLowerCase(),
+        }),
       });
 
       const data = await response.json();
@@ -52,7 +147,7 @@ export default function SignUpForm() {
       }
 
       router.push("/login?signup=success");
-      toast.success("Successfuly Signed Up!");
+      toast.success("Successfully Signed Up!");
     } catch (err) {
       setError("An unexpected error occurred");
       setIsLoading(false);
@@ -67,7 +162,7 @@ export default function SignUpForm() {
     >
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-extrabold tracking-tighter uppercase italic">
-          Join Capsule
+          Join RCapsule
         </h2>
         <p className="text-default-500 text-sm tracking-wide">
           Start digitizing your wardrobe today
@@ -83,7 +178,7 @@ export default function SignUpForm() {
           isRequired
           label="Full Name"
           name="name"
-          placeholder="Anna"
+          placeholder="Name"
           type="text"
           variant="bordered"
           labelPlacement="outside"
@@ -93,9 +188,25 @@ export default function SignUpForm() {
 
         <Input
           isRequired
+          label="Username"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value.toLowerCase())}
+          variant="bordered"
+          labelPlacement="outside"
+          startContent={<AtSymbolIcon className="w-5 h-5 text-default-400" />}
+          endContent={getUsernameEndContent()}
+          description="3-30 characters. Letters, numbers, dashes, and underscores only."
+          errorMessage={usernameError}
+          isInvalid={!!usernameError || usernameAvailable === false}
+          classNames={{ inputWrapper: "h-12" }}
+        />
+
+        <Input
+          isRequired
           label="Email"
           name="email"
-          placeholder="AnnaVogue@email.com"
+          placeholder="Email"
           type="email"
           variant="bordered"
           labelPlacement="outside"
@@ -140,6 +251,21 @@ export default function SignUpForm() {
           type={isVisible ? "text" : "password"}
           classNames={{ inputWrapper: "h-12" }}
         />
+        <div className="text-center font-light">
+          By signing up, you agree to our{" "}
+          <Link className="font-bold" href="/terms">
+            Terms
+          </Link>
+          ,{" "}
+          <Link className="font-bold" href="/privacy">
+            Privacy Policy
+          </Link>{" "}
+          and
+          <Link className="font-bold" href="#">
+            Cookies Policy
+          </Link>{" "}
+          .
+        </div>
 
         {error && (
           <p className="text-danger text-xs text-center font-medium">{error}</p>
@@ -150,6 +276,7 @@ export default function SignUpForm() {
           color="primary"
           isLoading={isLoading}
           type="submit"
+          isDisabled={!usernameAvailable || isCheckingUsername}
         >
           Create Account
         </Button>

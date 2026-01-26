@@ -9,7 +9,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is premium
     const supabase = getSupabaseServer();
     const { data: user } = await supabase
       .from("User")
@@ -40,12 +39,9 @@ export async function POST(req: Request) {
 
       const arrayBuffer = await response.arrayBuffer();
 
-      // Determine content type from URL or response
       let contentType = response.headers.get("content-type") || "image/jpeg";
 
-      // Handle cases where content-type might be wrong
       if (contentType.includes("mp4") || contentType.includes("video")) {
-        // Try to determine from URL extension
         const urlLower = imageUrl.toLowerCase();
         if (urlLower.includes(".jpg") || urlLower.includes(".jpeg")) {
           contentType = "image/jpeg";
@@ -54,18 +50,16 @@ export async function POST(req: Request) {
         } else if (urlLower.includes(".webp")) {
           contentType = "image/webp";
         } else {
-          contentType = "image/jpeg"; // Default to jpeg
+          contentType = "image/jpeg"; 
         }
       }
 
       imageBlob = new Blob([arrayBuffer], { type: contentType });
       fileName = `image.${contentType.split("/")[1] || "jpg"}`;
     } else if (file) {
-      // Validate file type
       const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
       if (!validTypes.includes(file.type)) {
-        // Try to determine from file name
         const nameLower = file.name.toLowerCase();
         let contentType = "image/jpeg";
 
@@ -91,7 +85,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Send to Remove.bg API
     const removeBgFormData = new FormData();
     removeBgFormData.append("image_file", imageBlob, fileName);
     removeBgFormData.append("size", "auto");

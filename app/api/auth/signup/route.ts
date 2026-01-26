@@ -4,17 +4,63 @@ import { getSupabaseServer } from "@/lib/supabase-server";
 export async function POST(req: Request) {
   try {
     const supabase = getSupabaseServer();
-    const { email, password, name } = await req.json();
+    const { email, password, name, username } = await req.json();
 
     console.log("=== SIGNUP DEBUG ===");
-    console.log("Signup attempt:", { email, name });
-    console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.log("Has Service Key:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    console.log("Signup attempt:", { email, name, username });
 
     if (!email || !password) {
       return NextResponse.json(
         { error: "Email and password are required" },
-        { status: 400 }
+        { status: 400 },
+      );
+    }
+
+    if (!username) {
+      return NextResponse.json(
+        { error: "Username is required" },
+        { status: 400 },
+      );
+    }
+
+    // Validate username format
+    if (username.length < 3 || username.length > 30) {
+      return NextResponse.json(
+        { error: "Username must be 3-30 characters" },
+        { status: 400 },
+      );
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+      return NextResponse.json(
+        {
+          error:
+            "Username can only contain letters, numbers, dashes, and underscores",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (/^[-_]|[-_]$/.test(username)) {
+      return NextResponse.json(
+        {
+          error: "Username cannot start or end with a dash or underscore",
+        },
+        { status: 400 },
+      );
+    }
+
+    // Check if username is already taken
+    const { data: existingUser } = await supabase
+      .from("User")
+      .select("id")
+      .ilike("username", username)
+      .single();
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "Username is already taken" },
+        { status: 400 },
       );
     }
 
@@ -22,7 +68,10 @@ export async function POST(req: Request) {
       email,
       password,
       options: {
-        data: { name: name || null },
+        data: {
+          name: name || null,
+          username: username.toLowerCase(),
+        },
         emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/callback`,
       },
     });
@@ -41,19 +90,17 @@ export async function POST(req: Request) {
     if (!authData.user) {
       return NextResponse.json(
         { error: "Failed to create user" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.log("User created in auth.users:", authData.user.id);
 
-    // Wait a moment for the trigger to execute
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Check if user record was created in User table
     const { data: userRecord, error: dbError } = await supabase
       .from("User")
-      .select("id, email, name")
+      .select("id, email, name, username")
       .eq("id", authData.user.id)
       .single();
 
@@ -64,12 +111,13 @@ export async function POST(req: Request) {
 
     if (dbError) {
       console.error("Database record check error:", dbError);
-      // If trigger didn't work, create manually
       console.log("Attempting manual user creation...");
+
       const { error: insertError } = await supabase.from("User").insert({
         id: authData.user.id,
         email: authData.user.email!,
         name: name || null,
+        username: username.toLowerCase(),
         emailVerified: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -77,6 +125,16 @@ export async function POST(req: Request) {
 
       if (insertError) {
         console.error("Manual insert error:", insertError);
+
+        if (
+          insertError.code === "23505" &&
+          insertError.message?.includes("username")
+        ) {
+          return NextResponse.json(
+            { error: "Username is already taken" },
+            { status: 400 },
+          );
+        }
       } else {
         console.log("User manually created in User table");
       }
@@ -94,15 +152,16 @@ export async function POST(req: Request) {
           id: authData.user.id,
           email: authData.user.email,
           name: name,
+          username: username.toLowerCase(),
         },
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Signup error:", error);
     return NextResponse.json(
       { error: "Something went wrong" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
