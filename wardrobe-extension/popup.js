@@ -3,7 +3,7 @@
 // ============================================================================
 
 const CONFIG = {
-  API_URL: "https://capsulewardrobe.vercel.app/api/extension/import",
+  API_URL: "https://rcapsule/api/extension/import",
   TIMEOUT_MS: 10000,
   CLOSE_DELAY_MS: 1500,
 };
