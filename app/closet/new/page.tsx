@@ -14,11 +14,7 @@ import {
   Textarea,
   Chip,
 } from "@heroui/react";
-import {
-  ArrowLeftIcon,
-  SparklesIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import {
   colors,
   occasions,
@@ -27,7 +23,6 @@ import {
   colorMap,
   conditions,
   purchaseTypes,
-  materials,
   silhouettes,
   styles,
   necklines,
@@ -43,8 +38,6 @@ export default function NewItemPage() {
   const router = useRouter();
 
   const [saving, setSaving] = useState(false);
-  const [imageMethod, setImageMethod] = useState<"upload" | "url">("upload");
-  const [isScraping, setIsScraping] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
 
   const [formData, setFormData] = useState({
@@ -69,7 +62,7 @@ export default function NewItemPage() {
     size: "",
     colors: [] as string[],
     season: [] as string[],
-    materials: "", // Changed to string for free-form composition
+    materials: "",
     condition: "excellent",
 
     // Style Details
@@ -95,53 +88,6 @@ export default function NewItemPage() {
     if (status === "unauthenticated") router.push("/login");
   }, [status, router]);
 
-  /* const handleAutoFill = async () => {
-    if (!formData.link) return;
-
-    setIsScraping(true);
-    try {
-      const res = await fetch("/api/scrape", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: formData.link }),
-      });
-
-      const data = await res.json();
-
-      if (res.status === 403 || data.blocked) {
-        alert(
-          data.message ||
-            "Unable to import from this site. Please enter details manually.",
-        );
-        if (data.prefill) {
-          setFormData((prev) => ({
-            ...prev,
-            brand: data.prefill.brand || prev.brand,
-            link: data.prefill.link || prev.link,
-          }));
-        }
-      } else if (res.ok && !data.blocked) {
-        setFormData((prev) => ({
-          ...prev,
-          name: data.name || prev.name,
-          brand: data.brand || prev.brand,
-          imageUrl: data.imageUrl || prev.imageUrl,
-          price: data.price ? String(data.price) : prev.price,
-          link: data.link || prev.link,
-        }));
-
-        if (data.imageUrl) {
-          setImageMethod("url");
-        }
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Unable to import. Please enter details manually.");
-    } finally {
-      setIsScraping(false);
-    }
-  };
-*/
   const handleAddTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
       setFormData({
@@ -291,41 +237,6 @@ export default function NewItemPage() {
         </div>
         {/* Right Column: Form with Tabs */}
         <div className="lg:col-span-7 flex flex-col gap-6">
-          {/* Auto Import Section */}
-          {/*
-          <section className="pb-6 border-b border-divider">
-            <div className="flex items-center gap-2 mb-4">
-              <SparklesIcon className="w-4 h-4 text-primary" />
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
-                Auto Import
-              </h3>
-            </div>
-            <div className="flex gap-2 sm:gap-3">
-              <Input
-                placeholder="Paste product URL to auto-fill"
-                variant="bordered"
-                radius="sm"
-                classNames={{
-                  input: "text-sm",
-                  inputWrapper:
-                    "border-default-300 bg-background hover:border-default-400",
-                }}
-                value={formData.link}
-                onChange={(e) =>
-                  setFormData({ ...formData, link: e.target.value })
-                }
-              />
-              <Button
-                radius="sm"
-                className="bg-foreground text-background font-medium tracking-wide uppercase text-xs px-6 sm:px-8"
-                isLoading={isScraping}
-                onPress={handleAutoFill}
-              >
-                Import
-              </Button>
-            </div>
-          </section>
-          */}
           {/* Tabbed Form Sections */}
           <Tabs
             selectedKey={activeTab}
@@ -755,7 +666,6 @@ export default function NewItemPage() {
               </div>
             </Tab>
 
-            {/* Materials & Care Tab */}
             {/* Materials & Care Tab */}
             <Tab key="materials" title="Materials">
               <div className="space-y-6">

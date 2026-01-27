@@ -22,7 +22,6 @@ import {
   PencilSquareIcon,
   ArrowTopRightOnSquareIcon,
   CalendarDaysIcon,
-  XMarkIcon,
   TagIcon,
 } from "@heroicons/react/24/outline";
 
@@ -35,7 +34,6 @@ import {
   colorMap,
   conditions,
   purchaseTypes,
-  materials,
   silhouettes,
   styles,
   necklines,
@@ -57,7 +55,7 @@ export default function ItemPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editTab, setEditTab] = useState("basic");
 
-  const [imageMethod, setImageMethod] = useState<"upload" | "url">("upload");
+  // Removed redundant imageMethod state
   const [item, setItem] = useState<Clothes | null>(null);
   const [newTag, setNewTag] = useState("");
 
@@ -144,11 +142,7 @@ export default function ItemPage() {
           tags: data.tags || [],
         });
 
-        if (data.imageUrl && !data.imageUrl.startsWith("https")) {
-          setImageMethod("upload");
-        } else {
-          setImageMethod("url");
-        }
+        // Removed redundant setImageMethod logic here
       } else {
         router.push("/closet");
       }
@@ -302,8 +296,6 @@ export default function ItemPage() {
             <EditMode
               formData={formData}
               setFormData={setFormData}
-              imageMethod={imageMethod}
-              setImageMethod={setImageMethod}
               editTab={editTab}
               setEditTab={setEditTab}
               newTag={newTag}
@@ -321,7 +313,7 @@ export default function ItemPage() {
   );
 }
 
-// View Mode Component
+// ... ViewMode and DetailItem components remain exactly the same ...
 function ViewMode({
   item,
   onEdit,
@@ -608,8 +600,6 @@ function DetailItem({
 function EditMode({
   formData,
   setFormData,
-  imageMethod,
-  setImageMethod,
   editTab,
   setEditTab,
   newTag,
@@ -631,76 +621,23 @@ function EditMode({
         </Button>
       </div>
 
-      {/* Image Upload Section */}
+      {/* REPLACED: Single ImageUpload Component */}
       <div className="pb-4 border-b border-divider">
         <h3 className="text-xs font-bold uppercase tracking-widest mb-3 text-default-500">
-          Update Image
+          Visual
         </h3>
-        <Tabs
-          selectedKey={imageMethod}
-          onSelectionChange={(key) => setImageMethod(key)}
-          radius="sm"
-          size="sm"
-          classNames={{
-            base: "w-auto mb-4",
-            tabList: "bg-default-100 p-1 gap-2",
-            cursor: "bg-background shadow-sm",
-            tab: "px-6 h-9",
-          }}
-        >
-          <Tab key="upload" title="Upload" />
-          <Tab key="url" title="URL" />
-        </Tabs>
-
-        <div className="aspect-video bg-content2 border border-dashed border-default-300 rounded-lg overflow-hidden relative">
-          {imageMethod === "upload" ? (
-            <div className="w-full h-full flex items-center justify-center">
-              <ImageUpload
-                value={formData.imageUrl}
-                onChange={(url) => setFormData({ ...formData, imageUrl: url })}
-                folder="clothes"
-                label="Drop image here"
-              />
-            </div>
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center p-6 gap-4">
-              {formData.imageUrl ? (
-                <div className="relative w-full h-full group">
-                  <Image
-                    src={formData.imageUrl}
-                    alt="Preview"
-                    className="w-full h-full object-contain rounded-md"
-                  />
-                  <Button
-                    isIconOnly
-                    size="sm"
-                    color="danger"
-                    variant="solid"
-                    className="absolute top-2 right-2 shadow-lg"
-                    onPress={() => setFormData({ ...formData, imageUrl: "" })}
-                  >
-                    <XMarkIcon className="w-4 h-4" />
-                  </Button>
-                </div>
-              ) : (
-                <Input
-                  label="Image URL"
-                  placeholder="https://"
-                  variant="bordered"
-                  radius="sm"
-                  value={formData.imageUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, imageUrl: e.target.value })
-                  }
-                  classNames={{ inputWrapper: "bg-background" }}
-                />
-              )}
-            </div>
-          )}
+        <div className="w-full aspect-[3/4] sm:aspect-video bg-content2 border border-dashed border-default-300 rounded-lg overflow-hidden relative">
+          <ImageUpload
+            value={formData.imageUrl}
+            onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+            folder="clothes"
+            label="Update Image"
+            className="h-full w-full"
+          />
         </div>
       </div>
 
-      {/* Tabbed Edit Sections - Similar structure to new item page but more compact */}
+      {/* Tabbed Edit Sections */}
       <Tabs
         selectedKey={editTab}
         onSelectionChange={(key) => setEditTab(key as string)}
@@ -1068,11 +1005,7 @@ function EditMode({
           <div className="space-y-4">
             <Textarea
               label="Material Composition"
-              placeholder="Body:
-81% Nylon, 19% Lycra Elastane
-
-Lining:
-56% Polyester, 33% Coolmax Polyester, 11% Lycra Elastane"
+              placeholder="Body:&#10;81% Nylon, 19% Lycra Elastane&#10;&#10;Lining:&#10;56% Polyester, 33% Coolmax Polyester, 11% Lycra Elastane"
               variant="bordered"
               radius="sm"
               minRows={5}
