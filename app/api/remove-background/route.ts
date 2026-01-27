@@ -1,3 +1,4 @@
+// app/api/remove-background/route.ts
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getSupabaseServer } from "@/lib/supabase-server";
@@ -27,57 +28,45 @@ export async function POST(req: Request) {
     const file = formData.get("file") as File | null;
     const imageUrl = formData.get("imageUrl") as string | null;
 
-    let imageBlob: Blob;
-    let fileName: string;
+    let base64Image: string;
 
     if (imageUrl) {
-      // Fetch image from URL
-      const response = await fetch(imageUrl);
-      if (!response.ok) {
-        throw new Error("Failed to fetch image from URL");
+      console.log("Downloading image from URL:", imageUrl);
+
+      // Download image from Vercel (bypasses all blocking)
+      const imageResponse = await fetch(imageUrl, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+          Referer: new URL(imageUrl).origin,
+        },
+      });
+
+      if (!imageResponse.ok) {
+        throw new Error(
+          `Failed to fetch image: ${imageResponse.status} ${imageResponse.statusText}`,
+        );
       }
 
-      const arrayBuffer = await response.arrayBuffer();
+      const arrayBuffer = await imageResponse.arrayBuffer();
+      const base64 = Buffer.from(arrayBuffer).toString("base64");
+      const contentType =
+        imageResponse.headers.get("content-type") || "image/jpeg";
 
-      let contentType = response.headers.get("content-type") || "image/jpeg";
-
-      if (contentType.includes("mp4") || contentType.includes("video")) {
-        const urlLower = imageUrl.toLowerCase();
-        if (urlLower.includes(".jpg") || urlLower.includes(".jpeg")) {
-          contentType = "image/jpeg";
-        } else if (urlLower.includes(".png")) {
-          contentType = "image/png";
-        } else if (urlLower.includes(".webp")) {
-          contentType = "image/webp";
-        } else {
-          contentType = "image/jpeg"; 
-        }
-      }
-
-      imageBlob = new Blob([arrayBuffer], { type: contentType });
-      fileName = `image.${contentType.split("/")[1] || "jpg"}`;
+      base64Image = `data:${contentType};base64,${base64}`;
+      console.log(
+        `Image downloaded: ${(arrayBuffer.byteLength / 1024 / 1024).toFixed(2)}MB`,
+      );
     } else if (file) {
-      const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-
-      if (!validTypes.includes(file.type)) {
-        const nameLower = file.name.toLowerCase();
-        let contentType = "image/jpeg";
-
-        if (nameLower.endsWith(".png")) {
-          contentType = "image/png";
-        } else if (nameLower.endsWith(".webp")) {
-          contentType = "image/webp";
-        } else if (nameLower.endsWith(".jpg") || nameLower.endsWith(".jpeg")) {
-          contentType = "image/jpeg";
-        }
-
-        const arrayBuffer = await file.arrayBuffer();
-        imageBlob = new Blob([arrayBuffer], { type: contentType });
-        fileName = file.name;
-      } else {
-        imageBlob = file;
-        fileName = file.name;
-      }
+      // Convert file to base64
+      const arrayBuffer = await file.arrayBuffer();
+      const base64 = Buffer.from(arrayBuffer).toString("base64");
+      const mimeType = file.type || "image/jpeg";
+      base64Image = `data:${mimeType};base64,${base64}`;
+      console.log(
+        `File converted: ${(arrayBuffer.byteLength / 1024 / 1024).toFixed(2)}MB`,
+      );
     } else {
       return NextResponse.json(
         { error: "No file or URL provided" },
@@ -85,29 +74,37 @@ export async function POST(req: Request) {
       );
     }
 
-    const removeBgFormData = new FormData();
-    removeBgFormData.append("image_file", imageBlob, fileName);
-    removeBgFormData.append("size", "auto");
-
-    const response = await fetch("https://api.remove.bg/v1.0/removebg", {
-      method: "POST",
-      headers: {
-        "X-Api-Key": process.env.REMOVE_BG_API_KEY!,
-      },
-      body: removeBgFormData,
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error("Remove.bg error:", error);
-      throw new Error(error.errors?.[0]?.title || "Background removal failed");
+    // Check if endpoint is configured
+    if (!process.env.AWS_LAMBDA_ENDPOINT) {
+      console.error("AWS_LAMBDA_ENDPOINT is not configured");
+      return NextResponse.json(
+        { error: "Background removal service is not configured" },
+        { status: 500 },
+      );
     }
 
-    const imageBuffer = await response.arrayBuffer();
-    const base64 = Buffer.from(imageBuffer).toString("base64");
+    console.log("Calling Lambda endpoint:", process.env.AWS_LAMBDA_ENDPOINT);
+
+    // Call AWS Lambda function with base64 image
+    const lambdaResponse = await fetch(process.env.AWS_LAMBDA_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ imageBase64: base64Image }),
+    });
+
+    if (!lambdaResponse.ok) {
+      const error = await lambdaResponse.json();
+      console.error("Lambda error:", error);
+      throw new Error(error.error || "Background removal failed");
+    }
+
+    const data = await lambdaResponse.json();
 
     return NextResponse.json({
-      image: `data:image/png;base64,${base64}`,
+      image: data.image,
+      success: data.success,
     });
   } catch (error) {
     console.error("Remove background error:", error);
