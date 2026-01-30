@@ -29,7 +29,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useUser } from "@/contexts/UserContext";
 import { ImageUpload } from "@/components/closet/ImageUpload";
-import { toast } from "sonner";
+import LocationInput from "@/components/settings/LocationInput";
 
 const STYLE_TAGS = [
   { label: "Minimalist", value: "minimalist" },
@@ -396,17 +396,9 @@ export default function SettingsPage() {
                   isDisabled={true}
                 />
 
-                <Input
-                  label="Location"
-                  placeholder="City, Country"
-                  variant="bordered"
-                  radius="none"
-                  className="md:col-span-2"
-                  startContent={
-                    <GlobeAltIcon className="w-4 h-4 text-default-400" />
-                  }
+                <LocationInput
                   value={formData.location}
-                  onChange={(e) => updateField("location", e.target.value)}
+                  onChange={(value) => updateField("location", value)}
                 />
                 <Textarea
                   label="Bio"

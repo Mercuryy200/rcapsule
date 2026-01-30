@@ -236,6 +236,9 @@ importers:
       swr:
         specifier: ^2.3.8
         version: 2.3.8(react@19.2.1)
+      use-places-autocomplete:
+        specifier: ^4.0.1
+        version: 4.0.1(react@19.2.1)
     devDependencies:
       '@eslint/compat':
         specifier: ^1.4.0
@@ -4836,6 +4839,11 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  use-places-autocomplete@4.0.1:
+    resolution: {integrity: sha512-AybOR/qzXcdaMCGSFveycfL3kztwseAOdagbYoJD8c3amll+gEiPmUkSNhYNUEBqbR+JmJG6/oBTRgihNbE+1A==}
+    peerDependencies:
+      react: '>= 16.8.0'
 
   use-sync-external-store@1.6.0:
     resolution: {integrity: sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==}
@@ -10566,6 +10574,10 @@ snapshots:
       use-isomorphic-layout-effect: 1.2.1(@types/react@18.3.3)(react@19.2.1)
     optionalDependencies:
       '@types/react': 18.3.3
+
+  use-places-autocomplete@4.0.1(react@19.2.1):
+    dependencies:
+      react: 19.2.1
 
   use-sync-external-store@1.6.0(react@19.2.1):
     dependencies:

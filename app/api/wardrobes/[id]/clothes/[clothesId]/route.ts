@@ -1,10 +1,11 @@
+// app/api/wardrobes/[id]/clothes/[clothesId]/route.ts
 import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string; clothesId: string }> }
+  { params }: { params: Promise<{ id: string; clothesId: string }> },
 ) {
   try {
     const session = await auth();
@@ -25,7 +26,7 @@ export async function DELETE(
     if (wardrobeError || !wardrobe || wardrobe.userId !== session.user.id) {
       return NextResponse.json(
         { error: "Wardrobe not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -44,7 +45,7 @@ export async function DELETE(
     console.error("Error removing clothes from wardrobe:", error);
     return NextResponse.json(
       { error: "Failed to remove clothes" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,3 +1,4 @@
+// app/api/wardrobes/route.ts
 import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
@@ -18,7 +19,7 @@ export async function GET() {
         `
         *,
         WardrobeClothes(count)
-      `
+      `,
       )
       .eq("userId", session.user.id)
       .order("createdAt", { ascending: false });
@@ -43,7 +44,7 @@ export async function GET() {
     console.error("Error fetching wardrobes:", error);
     return NextResponse.json(
       { error: "Failed to fetch wardrobes" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -85,7 +86,7 @@ export async function POST(req: Request) {
     console.error("Error creating wardrobe:", error);
     return NextResponse.json(
       { error: "Failed to create wardrobe" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

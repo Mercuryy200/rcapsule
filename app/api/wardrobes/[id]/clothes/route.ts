@@ -1,10 +1,11 @@
+// app/api/wardrobes/[id]/clothes/route.ts
 import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -26,7 +27,7 @@ export async function POST(
     if (wardrobeError || !wardrobe || wardrobe.userId !== session.user.id) {
       return NextResponse.json(
         { error: "Wardrobe not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -50,7 +51,7 @@ export async function POST(
     console.error("Error adding clothes to wardrobe:", error);
     return NextResponse.json(
       { error: "Failed to add clothes" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
