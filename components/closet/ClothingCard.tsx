@@ -1,6 +1,7 @@
 "use client";
-import { Card, CardBody, CardFooter, Image, Chip } from "@heroui/react";
-import { HeartIcon } from "@heroicons/react/24/outline";
+import { Card, CardBody, CardFooter, Image, Chip, Button } from "@heroui/react";
+import { HeartIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { useState } from "react";
 
 interface ClothingItem {
   id: string;
@@ -20,15 +21,52 @@ interface ClothingCardProps {
 }
 
 export default function ClothingCard({ item, onClick }: ClothingCardProps) {
+  const [isUpdating, setIsUpdating] = useState(false);
   const isWishlist = item.status === "wishlist";
+
+  const handleMarkAsPurchased = async () => {
+    if (isUpdating) return;
+
+    setIsUpdating(true);
+    try {
+      const response = await fetch(`/api/clothes/${item.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "owned",
+          purchaseDate: new Date().toISOString().split("T")[0],
+        }),
+      });
+
+      if (response.ok) {
+        // Refresh the page or trigger a refetch
+        window.location.reload();
+      } else {
+        alert("Failed to update item status");
+      }
+    } catch (error) {
+      console.error("Error updating item:", error);
+      alert("Error updating item status");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCardClick = () => {
+    if (!isUpdating) {
+      onClick(item.id);
+    }
+  };
 
   return (
     <Card
       className="w-full bg-transparent group cursor-pointer"
-      isPressable
-      onPress={() => onClick(item.id)}
+      isPressable={false} // Disable isPressable to prevent button wrapper
     >
-      <CardBody className="p-0 overflow-hidden rounded-none aspect-[3/4] bg-content2 relative flex justify-center items-center">
+      <CardBody
+        className="p-0 overflow-hidden rounded-none aspect-[3/4] bg-content2 relative flex justify-center items-center cursor-pointer"
+        onClick={handleCardClick}
+      >
         <Image
           alt={item.name}
           src={item.imageUrl || "/images/placeholder.png"}
@@ -38,22 +76,23 @@ export default function ClothingCard({ item, onClick }: ClothingCardProps) {
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 z-10" />
 
-        {/* Status badge for wishlist items */}
+        {/* Mark as Purchased button for wishlist items */}
         {isWishlist && (
-          <div className="absolute top-2 right-2 z-20">
-            <Chip
+          <div
+            className="absolute top-2 right-2 z-20"
+            onClick={(e) => e.stopPropagation()} // Prevent card click
+          >
+            <Button
               size="sm"
+              color="success"
               variant="flat"
-              color="danger"
-              startContent={<HeartIcon className="w-3 h-3" />}
-              classNames={{
-                base: "bg-danger-50/90 backdrop-blur-sm",
-                content:
-                  "text-danger font-semibold text-[10px] uppercase tracking-wider px-1",
-              }}
+              isIconOnly
+              isLoading={isUpdating}
+              onPress={handleMarkAsPurchased}
+              className="backdrop-blur-sm bg-success-50/90 hover:bg-success-100"
             >
-              Wishlist
-            </Chip>
+              {!isUpdating && <CheckIcon className="w-4 h-4" />}
+            </Button>
           </div>
         )}
 
@@ -101,7 +140,10 @@ export default function ClothingCard({ item, onClick }: ClothingCardProps) {
         )}
       </CardBody>
 
-      <CardFooter className="flex flex-col items-start p-4 gap-1">
+      <CardFooter
+        className="flex flex-col items-start p-4 gap-1 cursor-pointer"
+        onClick={handleCardClick}
+      >
         <div className="flex justify-between w-full items-baseline">
           <p className="text-[10px] font-bold uppercase tracking-widest text-default-500">
             {item.brand || "Unbranded"}

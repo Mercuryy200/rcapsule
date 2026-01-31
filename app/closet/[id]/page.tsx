@@ -734,9 +734,51 @@ function EditMode({
             </div>
           </div>
         </Tab>
-
+        // In the EditMode component, update the Purchase tab section:
         <Tab key="purchase" title="Purchase">
           <div className="space-y-4">
+            {/* Status Toggle Button for Wishlist Items */}
+            {formData.status === "wishlist" && (
+              <div className="bg-default-100 p-4 rounded-lg border border-default-200">
+                <p className="text-sm text-default-600 mb-3">
+                  This item is currently in your wishlist. Mark it as purchased
+                  to track ownership details.
+                </p>
+                <Button
+                  fullWidth
+                  color="success"
+                  variant="flat"
+                  radius="sm"
+                  className="font-semibold"
+                  onPress={() => setFormData({ ...formData, status: "owned" })}
+                >
+                  Mark as Purchased
+                </Button>
+              </div>
+            )}
+
+            {/* Status Toggle Button for Owned Items */}
+            {formData.status === "owned" && (
+              <div className="bg-default-100 p-4 rounded-lg border border-default-200">
+                <p className="text-sm text-default-600 mb-3">
+                  This item is in your collection. Move it back to your wishlist
+                  if you no longer own it.
+                </p>
+                <Button
+                  fullWidth
+                  color="warning"
+                  variant="flat"
+                  radius="sm"
+                  className="font-semibold"
+                  onPress={() =>
+                    setFormData({ ...formData, status: "wishlist" })
+                  }
+                >
+                  Move to Wishlist
+                </Button>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="Current Price"
@@ -779,17 +821,21 @@ function EditMode({
                   <SelectItem key={curr}>{curr}</SelectItem>
                 ))}
               </Select>
-              <Input
-                type="date"
-                label="Purchase Date"
-                variant="bordered"
-                radius="sm"
-                value={formData.purchaseDate}
-                onChange={(e) =>
-                  setFormData({ ...formData, purchaseDate: e.target.value })
-                }
-                classNames={{ inputWrapper: "border-default-300" }}
-              />
+
+              {/* Only show Purchase Date for owned items */}
+              {formData.status === "owned" && (
+                <Input
+                  type="date"
+                  label="Purchase Date"
+                  variant="bordered"
+                  radius="sm"
+                  value={formData.purchaseDate}
+                  onChange={(e) =>
+                    setFormData({ ...formData, purchaseDate: e.target.value })
+                  }
+                  classNames={{ inputWrapper: "border-default-300" }}
+                />
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -803,24 +849,28 @@ function EditMode({
                 }
                 classNames={{ inputWrapper: "border-default-300" }}
               />
-              <Select
-                label="Purchase Type"
-                variant="bordered"
-                radius="sm"
-                selectedKeys={
-                  formData.purchaseType ? [formData.purchaseType] : []
-                }
-                onChange={(e) =>
-                  setFormData({ ...formData, purchaseType: e.target.value })
-                }
-                classNames={{ trigger: "border-default-300" }}
-              >
-                {purchaseTypes.map((type) => (
-                  <SelectItem key={type} className="capitalize">
-                    {type}
-                  </SelectItem>
-                ))}
-              </Select>
+
+              {/* Only show Purchase Type for owned items */}
+              {formData.status === "owned" && (
+                <Select
+                  label="Purchase Type"
+                  variant="bordered"
+                  radius="sm"
+                  selectedKeys={
+                    formData.purchaseType ? [formData.purchaseType] : []
+                  }
+                  onChange={(e) =>
+                    setFormData({ ...formData, purchaseType: e.target.value })
+                  }
+                  classNames={{ trigger: "border-default-300" }}
+                >
+                  {purchaseTypes.map((type) => (
+                    <SelectItem key={type} className="capitalize">
+                      {type}
+                    </SelectItem>
+                  ))}
+                </Select>
+              )}
             </div>
 
             <Input
@@ -835,7 +885,6 @@ function EditMode({
             />
           </div>
         </Tab>
-
         <Tab key="style" title="Style">
           <div className="space-y-4">
             <Select
@@ -1000,7 +1049,6 @@ function EditMode({
             </div>
           </div>
         </Tab>
-
         <Tab key="materials" title="Materials">
           <div className="space-y-4">
             <Textarea
@@ -1042,7 +1090,6 @@ function EditMode({
             />
           </div>
         </Tab>
-
         <Tab key="tags" title="Tags">
           <div className="space-y-4">
             <div className="flex gap-2">
