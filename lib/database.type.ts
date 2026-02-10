@@ -36,6 +36,7 @@ export interface Clothes {
   lastwornat?: string;
   description?: string;
   processed_image_url?: string;
+  globalproductid?: string;
 }
 
 export interface Wardrobe {

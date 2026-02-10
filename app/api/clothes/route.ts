@@ -171,6 +171,10 @@ export async function POST(req: Request) {
       link: data.link || null,
       imageUrl: data.imageUrl || null,
       placesToWear: Array.isArray(data.placesToWear) ? data.placesToWear : [],
+      materials: data.materials || null,
+      description: data.description || null,
+      condition: data.condition || null,
+      globalproductid: data.globalproductid || null,
     };
 
     const { data: clothing, error: createError } = await supabase
