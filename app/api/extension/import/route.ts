@@ -13,10 +13,7 @@ function corsHeaders(origin: string) {
 
 export async function OPTIONS(req: Request) {
   const origin = req.headers.get("origin") || "";
-  return new NextResponse(null, {
-    status: 200,
-    headers: corsHeaders(origin),
-  });
+  return new NextResponse(null, { status: 200, headers: corsHeaders(origin) });
 }
 
 export async function POST(req: Request) {
@@ -25,11 +22,25 @@ export async function POST(req: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      console.log("No session found in API call");
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401, headers: corsHeaders(origin) },
+      );
     }
 
     const body = await req.json();
-    const { name, brand, price, imageUrl, link, size, category, status } = body;
+    const {
+      name,
+      brand,
+      price,
+      imageUrl,
+      link,
+      size,
+      category,
+      status,
+      materials,
+      description,
+    } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -39,20 +50,57 @@ export async function POST(req: Request) {
     }
 
     const supabase = getSupabaseServer();
-
-    // Use category from extension, default to Uncategorized if empty
     const finalCategory = category || "Uncategorized";
-
     const finalStatus = status || "owned";
     const finalDate =
       finalStatus === "wishlist"
         ? null
         : new Date().toISOString().split("T")[0];
 
-    const { data: clothingItem, error } = await supabase
+    // 1. Upsert into GlobalProduct catalog
+    let globalProductId: string | null = null;
+
+    if (link) {
+      const { data: existingProduct } = await supabase
+        .from("GlobalProduct")
+        .select("id")
+        .eq("retaillink", link)
+        .single();
+
+      if (existingProduct) {
+        globalProductId = existingProduct.id;
+      } else {
+        const { data: newProduct, error: gpError } = await supabase
+          .from("GlobalProduct")
+          .insert({
+            name,
+            brand: brand || "Unknown",
+            category: finalCategory,
+            description: description || null,
+            retaillink: link,
+            imageurl: imageUrl || null,
+            colors: [],
+            materials: materials || null,
+            originalprice: price ? parseFloat(price) : null,
+            source: new URL(link).hostname.replace("www.", ""),
+          })
+          .select("id")
+          .single();
+
+        if (gpError) {
+          console.error("GlobalProduct insert error:", gpError);
+          // Non-blocking — still save the clothing item
+        } else {
+          globalProductId = newProduct.id;
+        }
+      }
+    }
+
+    // 2. Insert into user's Clothes
+    const { error } = await supabase
       .from("Clothes")
       .insert({
-        userId: session?.user?.id || "",
+        userId: session.user.id,
         name,
         brand: brand || null,
         price: price ? parseFloat(price) : null,
@@ -64,12 +112,15 @@ export async function POST(req: Request) {
         purchaseDate: finalDate,
         colors: [],
         placesToWear: [],
+        materials: materials || null,
+        description: description || null,
+        globalproductid: globalProductId,
       })
       .select()
       .single();
 
     if (error) {
-      console.error("Database Insert Error:", error);
+      console.error("Clothes insert error:", error);
       return NextResponse.json(
         { error: "Database Error", details: error.message },
         { status: 500, headers: corsHeaders(origin) },
@@ -77,15 +128,14 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(
-      { success: true, message: "Imported successfully" },
+      { success: true, message: "Imported successfully", globalProductId },
       { headers: corsHeaders(origin) },
     );
   } catch (error) {
     console.error("Server Error:", error);
-    const safeOrigin = req.headers.get("origin") || "";
     return NextResponse.json(
       { error: "Server Exception", details: String(error) },
-      { status: 500, headers: corsHeaders(safeOrigin) },
+      { status: 500, headers: corsHeaders(req.headers.get("origin") || "") },
     );
   }
 }

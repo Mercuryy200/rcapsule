@@ -3,7 +3,7 @@
 // ============================================================================
 
 const CONFIG = {
-  API_URL: "https://rcapsule/api/extension/import",
+  API_URL: "https://rcapsule.com/api/extension/import",
   TIMEOUT_MS: 10000,
   CLOSE_DELAY_MS: 1500,
 };
@@ -371,7 +371,7 @@ function populateForm(data) {
     inputCategory: data.category,
     inputImgUrl: data.imageUrl,
     inputMaterials: data.materials,
-    inputText: data.description,
+    inputDescription: data.description,
   };
 
   Object.entries(fields).forEach(([id, value]) => {
@@ -543,7 +543,7 @@ async function saveProduct() {
     if (response.ok) {
       setStatus("Saved to Wardrobe!", "success");
       saveBtn.textContent = "Saved";
-      setTimeout(() => window.close(), CONFIG.CLOSE_DELAY_MS);
+      //setTimeout(() => window.close(), CONFIG.CLOSE_DELAY_MS);
     } else {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || "Save failed");
