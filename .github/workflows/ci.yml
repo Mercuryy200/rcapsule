@@ -40,11 +40,11 @@ jobs:
 
       # ── Lint ─────────────────────────────────────────────────────────────
       - name: Lint
-        run: pnpm lint:check
+        run: pnpm lint
 
       # ── Typecheck ────────────────────────────────────────────────────────
       - name: Typecheck
-        run: pnpm typecheck
+        run: pnpm tsc --noEmit
 
       # ── Test ─────────────────────────────────────────────────────────────
       - name: Test
