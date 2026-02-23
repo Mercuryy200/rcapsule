@@ -4,6 +4,7 @@
 
 const CONFIG = {
   API_URL: "https://rcapsule.com/api/extension/import",
+  BULK_API_URL: "https://rcapsule.com/api/extension/bulk-import",
   TIMEOUT_MS: 10000,
   CLOSE_DELAY_MS: 1500,
 };
@@ -335,7 +336,7 @@ function setStatus(message, type = "") {
 }
 
 function switchView(viewToShow) {
-  const views = ["scanView", "formView"];
+  const views = ["scanView", "formView", "bulkView"];
   views.forEach((viewId) => {
     const el = document.getElementById(viewId);
     if (el) {
@@ -1011,6 +1012,389 @@ async function extractProductData() {
 }
 
 // ============================================================================
+// BULK IMPORT FUNCTIONS
+// ============================================================================
+
+// Track bulk import state locally in popup
+let bulkProducts = [];
+
+function deduplicateByUrl(products) {
+  const seen = new Set();
+  return products.filter((p) => {
+    const normalized = p.url.split("?")[0].replace(/\/$/, "");
+    if (seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
+}
+
+function updateBulkUI({ phase, message, current, total }) {
+  const subtext = document.getElementById("bulkSubtext");
+  const progressBar = document.getElementById("bulkProgressBar");
+  const progressText = document.getElementById("bulkProgressText");
+  const cancelBtn = document.getElementById("bulkCancelBtn");
+  const startBtn = document.getElementById("bulkStartBtn");
+  const backBtn = document.getElementById("bulkBackBtn");
+  const summaryEl = document.getElementById("bulkSummary");
+
+  if (subtext && message) subtext.textContent = message;
+
+  if (current !== undefined && total && progressBar) {
+    const pct = Math.round((current / total) * 100);
+    progressBar.style.width = `${pct}%`;
+    progressBar.textContent = pct > 5 ? `${pct}%` : "";
+  }
+
+  if (progressText && phase === "scanning" && current !== undefined) {
+    progressText.textContent = `Scanning product ${current} of ${total}...`;
+  } else if (progressText && phase === "importing") {
+    progressText.textContent = message || "Importing...";
+  }
+
+  // Show/hide buttons based on phase
+  if (cancelBtn) {
+    cancelBtn.classList.toggle(
+      "hidden",
+      phase === "complete" || phase === "ready",
+    );
+  }
+  if (startBtn) {
+    startBtn.classList.toggle("hidden", phase !== "ready");
+  }
+  if (backBtn) {
+    backBtn.classList.toggle("hidden", phase !== "complete");
+  }
+  if (summaryEl) {
+    summaryEl.classList.toggle(
+      "hidden",
+      phase !== "complete" && phase !== "importing",
+    );
+  }
+}
+
+function renderBulkProductList(products) {
+  const listEl = document.getElementById("bulkProductList");
+  if (!listEl) return;
+
+  listEl.classList.remove("hidden");
+  listEl.innerHTML = products
+    .map(
+      (p, i) => `
+    <div class="bulk-product-item" id="bulk-item-${i}">
+      ${p.imageUrl ? `<img src="${p.imageUrl}" alt="" />` : '<div style="width:36px;height:48px;background:#f3f4f6;border-radius:3px;"></div>'}
+      <div class="bulk-product-info">
+        <div class="bulk-product-name">${p.name || "Unknown"}</div>
+        <div class="bulk-product-meta">${p.brand || "Aritzia"} ${p.price ? "- $" + p.price : ""}</div>
+      </div>
+      <span class="bulk-product-status pending" id="bulk-status-${i}">Pending</span>
+    </div>
+  `,
+    )
+    .join("");
+}
+
+function updateBulkItemStatus(index, status, label) {
+  const statusEl = document.getElementById(`bulk-status-${index}`);
+  if (statusEl) {
+    statusEl.className = `bulk-product-status ${status}`;
+    statusEl.textContent = label;
+  }
+}
+
+async function startBulkScan() {
+  setStatus("", "");
+
+  const [tab] = await chrome.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
+
+  if (!tab?.id || !tab.url?.includes("aritzia.com")) {
+    setStatus("Navigate to an Aritzia category page first.", "error");
+    return;
+  }
+
+  switchView("bulkView");
+  updateBulkUI({
+    phase: "scrolling",
+    message: "Scrolling to load all products on the page...",
+  });
+
+  try {
+    // Pass 1A: Scroll to load all products
+    const scrollResult = await chrome.tabs.sendMessage(tab.id, {
+      action: "SCROLL_AND_LOAD_ALL",
+    });
+
+    updateBulkUI({
+      phase: "extracting",
+      message: `Found ${scrollResult.totalProducts} products. Extracting details...`,
+    });
+
+    // Pass 1B: Extract all product card data
+    const listingResult = await chrome.tabs.sendMessage(tab.id, {
+      action: "EXTRACT_LISTING_PRODUCTS",
+    });
+
+    if (!listingResult?.products?.length) {
+      // Run debug to see what's on the page
+      console.log("No products found, running debug...");
+      try {
+        const debug = await chrome.tabs.sendMessage(tab.id, {
+          action: "DEBUG_PAGE",
+        });
+        console.log("Page debug info:", JSON.stringify(debug, null, 2));
+      } catch (e) {
+        console.log("Debug failed:", e);
+      }
+      updateBulkUI({
+        phase: "complete",
+        message:
+          "No products found. Make sure you're on an Aritzia category page. Check console for debug info.",
+      });
+      return;
+    }
+
+    // Deduplicate by URL
+    const uniqueProducts = deduplicateByUrl(listingResult.products);
+    bulkProducts = uniqueProducts;
+
+    updateBulkUI({
+      phase: "ready",
+      message: `Found ${uniqueProducts.length} unique products. Ready to scan full details.`,
+    });
+
+    renderBulkProductList(uniqueProducts);
+  } catch (error) {
+    console.error("Bulk scan error:", error);
+    updateBulkUI({
+      phase: "complete",
+      message:
+        "Error scanning page. Make sure you're on an Aritzia category page.",
+    });
+  }
+}
+
+async function startPass2() {
+  if (!bulkProducts.length) return;
+
+  updateBulkUI({
+    phase: "scanning",
+    message: "Opening each product page to get full details...",
+    current: 0,
+    total: bulkProducts.length,
+  });
+
+  // Mark all items as pending
+  bulkProducts.forEach((_, i) => updateBulkItemStatus(i, "pending", "Pending"));
+
+  // Send to background for tab-based scanning
+  chrome.runtime.sendMessage({
+    action: "BULK_SCAN_START",
+    products: bulkProducts,
+  });
+}
+
+async function handleBulkScanComplete(result) {
+  const summaryEl = document.getElementById("bulkSummary");
+
+  if (result.cancelled) {
+    updateBulkUI({
+      phase: "complete",
+      message: `Cancelled. Scanned ${result.scanned} of ${result.total} products.`,
+    });
+    if (summaryEl) {
+      summaryEl.classList.remove("hidden");
+      summaryEl.className = "bulk-summary has-errors";
+      summaryEl.textContent = `Import cancelled. ${result.scanned} products were scanned.`;
+    }
+
+    // Still import what we have if any were scanned
+    if (result.scanned > 0) {
+      await submitBulkImport();
+    }
+    return;
+  }
+
+  updateBulkUI({
+    phase: "importing",
+    message: `Scan complete! Importing ${result.scanned} items to your catalog...`,
+  });
+
+  await submitBulkImport();
+}
+
+async function submitBulkImport() {
+  const state = await chrome.runtime.sendMessage({ action: "GET_BULK_STATE" });
+  const products = state.scannedProducts || [];
+
+  if (!products.length) {
+    updateBulkUI({
+      phase: "complete",
+      message: "No products to import.",
+    });
+    return;
+  }
+
+  const progressText = document.getElementById("bulkProgressText");
+  const summaryEl = document.getElementById("bulkSummary");
+  const CHUNK_SIZE = 25;
+  let imported = 0;
+  let duplicates = 0;
+  let importErrors = 0;
+
+  for (let i = 0; i < products.length; i += CHUNK_SIZE) {
+    const chunk = products.slice(i, i + CHUNK_SIZE);
+
+    // Add category detection and status to each product
+    const processedChunk = chunk.map((p) => ({
+      ...p,
+      category: detectCategory(p.name),
+      status: "wishlist",
+      purchaseDate: null,
+    }));
+
+    try {
+      const response = await fetch(CONFIG.BULK_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ products: processedChunk }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Bulk import chunk response:", data);
+        imported += data.imported || 0;
+        duplicates += data.duplicates || 0;
+        importErrors += data.errors || 0;
+      } else {
+        const errorBody = await response.text().catch(() => "");
+        console.error(
+          `Bulk import failed: ${response.status} ${response.statusText}`,
+          errorBody,
+        );
+        importErrors += chunk.length;
+      }
+    } catch (err) {
+      console.error("Bulk import chunk error:", err.message, err);
+      importErrors += chunk.length;
+    }
+
+    if (progressText) {
+      const progress = Math.min(i + CHUNK_SIZE, products.length);
+      progressText.textContent = `Imported ${progress}/${products.length}...`;
+    }
+  }
+
+  // Show final summary
+  const totalScanned = products.length;
+  const scanErrors = state.errors?.length || 0;
+
+  if (summaryEl) {
+    summaryEl.classList.remove("hidden");
+    const parts = [`${imported} imported`];
+    if (duplicates > 0) parts.push(`${duplicates} duplicates skipped`);
+    if (scanErrors > 0) parts.push(`${scanErrors} scan errors`);
+    if (importErrors > 0) parts.push(`${importErrors} import errors`);
+
+    summaryEl.textContent = `Done! ${parts.join(", ")}`;
+    summaryEl.className =
+      importErrors > 0 || scanErrors > 0
+        ? "bulk-summary has-errors"
+        : "bulk-summary";
+  }
+
+  updateBulkUI({
+    phase: "complete",
+    message: "Bulk import complete!",
+  });
+}
+
+async function cancelBulkScan() {
+  await chrome.runtime.sendMessage({ action: "BULK_SCAN_CANCEL" });
+  updateBulkUI({
+    phase: "complete",
+    message: "Cancelling...",
+  });
+}
+
+// Listen for bulk scan progress from background
+chrome.runtime.onMessage.addListener((request) => {
+  if (request.action === "BULK_SCAN_PROGRESS") {
+    updateBulkUI({
+      phase: "scanning",
+      current: request.current,
+      total: request.total,
+    });
+
+    const subtext = document.getElementById("bulkSubtext");
+    if (subtext) {
+      const name = request.product?.name || "Unknown";
+      subtext.textContent = `Scanning: ${name}`;
+    }
+
+    // Update the item in the list
+    const idx = request.current - 1;
+    updateBulkItemStatus(idx, "success", "Done");
+
+    // Mark next as scanning
+    if (request.current < request.total) {
+      updateBulkItemStatus(request.current, "scanning", "Scanning...");
+    }
+
+    // Auto-scroll the list to show current item
+    const listEl = document.getElementById("bulkProductList");
+    const itemEl = document.getElementById(`bulk-item-${idx}`);
+    if (listEl && itemEl) {
+      itemEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
+  if (request.action === "BULK_SCAN_ERROR") {
+    const idx = request.current - 1;
+    updateBulkItemStatus(idx, "error", "Failed");
+
+    updateBulkUI({
+      phase: "scanning",
+      current: request.current,
+      total: request.total,
+    });
+  }
+
+  if (request.action === "BULK_SCAN_COMPLETE") {
+    handleBulkScanComplete(request);
+  }
+
+  if (request.action === "SCROLL_PROGRESS_UPDATE") {
+    const subtext = document.getElementById("bulkSubtext");
+    if (subtext) {
+      subtext.textContent = `Loading products... (${request.totalProducts} found so far)`;
+    }
+  }
+});
+
+// Check if there's an ongoing bulk import when popup opens
+async function checkBulkImportState() {
+  try {
+    const state = await chrome.runtime.sendMessage({
+      action: "GET_BULK_STATE",
+    });
+    if (state && state.status === "scanning") {
+      switchView("bulkView");
+      updateBulkUI({
+        phase: "scanning",
+        message: "Bulk import in progress...",
+        current: state.currentIndex,
+        total: state.totalCount,
+      });
+    }
+  } catch (e) {
+    // No ongoing import
+  }
+}
+
+// ============================================================================
 // EVENT LISTENERS & INITIALIZATION
 // ============================================================================
 
@@ -1022,6 +1406,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (scanBtn) scanBtn.addEventListener("click", scanPage);
   if (saveBtn) saveBtn.addEventListener("click", saveProduct);
   if (cancelBtn) cancelBtn.addEventListener("click", cancelForm);
+
+  // Bulk import buttons
+  const bulkScanBtn = document.getElementById("bulkScanBtn");
+  const bulkStartBtn = document.getElementById("bulkStartBtn");
+  const bulkCancelBtn = document.getElementById("bulkCancelBtn");
+  const bulkBackBtn = document.getElementById("bulkBackBtn");
+
+  if (bulkScanBtn) bulkScanBtn.addEventListener("click", startBulkScan);
+  if (bulkStartBtn) bulkStartBtn.addEventListener("click", startPass2);
+  if (bulkCancelBtn) bulkCancelBtn.addEventListener("click", cancelBulkScan);
+  if (bulkBackBtn)
+    bulkBackBtn.addEventListener("click", () => switchView("scanView"));
+
+  // Check for ongoing bulk import
+  checkBulkImportState();
 
   // Setup keyboard shortcuts
   setupKeyboardShortcuts();

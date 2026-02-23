@@ -3,10 +3,12 @@
   "name": "Wardrobe Import",
   "version": "1.0",
   "description": "Import fashion items to your wardrobe",
-  "permissions": ["activeTab", "scripting", "storage"],
+  "permissions": ["activeTab", "scripting", "storage", "tabs"],
   "host_permissions": [
     "http://localhost:3000/*",
-    "https://closetwardrobe.vercel.app/*"
+    "https://closetwardrobe.vercel.app/*",
+    "https://www.aritzia.com/*",
+    "https://rcapsule.com/*"
   ],
   "action": {
     "default_popup": "popup.html",

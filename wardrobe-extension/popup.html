@@ -469,7 +469,8 @@
       }
 
       #scanView,
-      #formView {
+      #formView,
+      #bulkView {
         animation: slideIn 0.3s ease-out;
       }
 
@@ -512,6 +513,137 @@
       textarea#inputDescription::placeholder {
         color: #9ca3af;
       }
+
+      /* Bulk Import Styles */
+      .bulk-header {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 4px;
+        color: #111;
+      }
+
+      .bulk-subtext {
+        font-size: 11px;
+        color: #6b7280;
+        margin-bottom: 16px;
+        line-height: 1.5;
+      }
+
+      .progress-bar-track {
+        width: 100%;
+        background: #e5e7eb;
+        border-radius: 4px;
+        height: 24px;
+        margin-bottom: 8px;
+        overflow: hidden;
+      }
+
+      .progress-bar-fill {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(135deg, #171717 0%, #2d2d2d 100%);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 10px;
+        font-weight: 700;
+        min-width: 0;
+      }
+
+      .bulk-progress-text {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 16px;
+        text-align: center;
+        min-height: 18px;
+      }
+
+      .bulk-product-list {
+        max-height: 200px;
+        overflow-y: auto;
+        margin-bottom: 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 4px;
+        background: #fff;
+      }
+
+      .bulk-product-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 11px;
+      }
+
+      .bulk-product-item:last-child {
+        border-bottom: none;
+      }
+
+      .bulk-product-item img {
+        width: 36px;
+        height: 48px;
+        object-fit: cover;
+        border-radius: 3px;
+        background: #f3f4f6;
+      }
+
+      .bulk-product-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .bulk-product-name {
+        font-weight: 600;
+        color: #111;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .bulk-product-meta {
+        color: #9ca3af;
+        font-size: 10px;
+      }
+
+      .bulk-product-status {
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .bulk-product-status.success { color: #10b981; }
+      .bulk-product-status.error { color: #ef4444; }
+      .bulk-product-status.pending { color: #9ca3af; }
+      .bulk-product-status.scanning { color: #f59e0b; }
+
+      .bulk-summary {
+        font-size: 11px;
+        text-align: center;
+        padding: 12px;
+        background: rgba(16, 185, 129, 0.05);
+        border-radius: 4px;
+        color: #10b981;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      .bulk-summary.has-errors {
+        background: rgba(245, 158, 11, 0.05);
+        color: #f59e0b;
+      }
+
+      .btn-bulk {
+        background: linear-gradient(135deg, #2d2d2d 0%, #404040 100%);
+        color: white;
+        margin-top: 8px;
+      }
+
+      .btn-bulk:hover:not(:disabled) {
+        background: linear-gradient(135deg, #404040 0%, #525252 100%);
+      }
     </style>
   </head>
   <body>
@@ -539,10 +671,42 @@
         >
           Scan Current Page
         </button>
+        <button
+          id="bulkScanBtn"
+          class="btn btn-bulk"
+          aria-label="Bulk import all products from Aritzia listing page"
+        >
+          Bulk Import from Aritzia
+        </button>
         <div class="shortcut-hint">
           Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> to scan from
           anywhere
         </div>
+      </div>
+
+      <!-- Bulk Import View -->
+      <div id="bulkView" class="hidden">
+        <div class="bulk-header">Bulk Import</div>
+        <div id="bulkSubtext" class="bulk-subtext">Preparing...</div>
+
+        <div class="progress-bar-track">
+          <div id="bulkProgressBar" class="progress-bar-fill"></div>
+        </div>
+        <div id="bulkProgressText" class="bulk-progress-text"></div>
+
+        <div id="bulkProductList" class="bulk-product-list hidden"></div>
+
+        <div id="bulkSummary" class="bulk-summary hidden"></div>
+
+        <button id="bulkStartBtn" class="btn btn-primary hidden">
+          Start Import
+        </button>
+        <button id="bulkCancelBtn" class="btn btn-secondary">
+          Cancel
+        </button>
+        <button id="bulkBackBtn" class="btn btn-secondary hidden">
+          Back to Scan
+        </button>
       </div>
 
       <!-- Form View -->
