@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getSupabaseServer } from "@/lib/supabase-server";
+import { cacheGet, cacheSet } from "@/lib/redis";
 
 export async function GET(req: Request) {
   try {
@@ -12,6 +13,16 @@ export async function GET(req: Request) {
     const suggestions = searchParams.get("suggestions") === "true";
 
     const supabase = getSupabaseServer();
+
+    // Check cache for non-suggestion requests
+    if (!suggestions) {
+      const cacheKey = `catalog:${query}:${filterType}:${limit}:${offset}`;
+      const cached = await cacheGet<{ products: unknown[]; total: number; limit: number; offset: number }>(cacheKey);
+
+      if (cached) {
+        return NextResponse.json(cached, { headers: { "X-Cache": "HIT" } });
+      }
+    }
 
     // If requesting suggestions (top 10 by popularity)
     if (suggestions && query) {
@@ -93,12 +104,17 @@ export async function GET(req: Request) {
       clothes: undefined,
     }));
 
-    return NextResponse.json({
+    const cacheKey = `catalog:${query}:${filterType}:${limit}:${offset}`;
+    const responseBody = {
       products: productsWithPopularity,
       total: count || 0,
       limit,
       offset,
-    });
+    };
+
+    await cacheSet(cacheKey, responseBody, 300);
+
+    return NextResponse.json(responseBody, { headers: { "X-Cache": "MISS" } });
   } catch (error) {
     console.error("Error fetching catalog:", error);
 
