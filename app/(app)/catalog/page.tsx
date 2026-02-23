@@ -3,15 +3,27 @@ import type { GlobalProduct } from "@/lib/types/globalproduct";
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Button, Input, useDisclosure, Image } from "@heroui/react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import {
+  Button,
+  Input,
+  useDisclosure,
+  Select,
+  SelectItem,
+  Accordion,
+  AccordionItem,
+  CheckboxGroup,
+  Checkbox,
+  Switch,
+  ScrollShadow,
+} from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import useSWR from "swr";
 import { toast } from "sonner";
 import {
   MagnifyingGlassIcon,
   XMarkIcon,
-  SparklesIcon,
+  AdjustmentsHorizontalIcon,
 } from "@heroicons/react/24/outline";
 
 import ProductCard from "@/components/catalog/ProductCard";
@@ -21,12 +33,25 @@ import AddToClosetModal from "@/components/catalog/AddToClosetModal";
 interface CatalogResponse {
   products: GlobalProduct[];
   total: number;
-  type?: string;
+  limit: number;
+  offset: number;
+  availableBrands?: string[];
+  availableCategories?: string[];
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-type FilterTab = "all" | "product" | "brand" | "category";
+type SortOption = "popularity" | "newest" | "price-asc" | "price-desc" | "name";
+
+const sortOptions: { key: SortOption; label: string }[] = [
+  { key: "popularity", label: "Most Popular" },
+  { key: "newest", label: "Newest" },
+  { key: "price-asc", label: "Price: Low → High" },
+  { key: "price-desc", label: "Price: High → Low" },
+  { key: "name", label: "Name A–Z" },
+];
+
+const LIMIT = 24;
 
 export default function CatalogPage() {
   const { status } = useSession();
@@ -39,83 +64,101 @@ export default function CatalogPage() {
     null,
   );
 
-  // Search State
+  // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
-  const [hasSearched, setHasSearched] = useState(false);
-  const [isInputFocused, setIsInputFocused] = useState(false);
 
-  // Debounce search query for suggestions
+  // Sort state
+  const [sort, setSort] = useState<SortOption>("popularity");
+
+  // Filter state
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [inStockOnly, setInStockOnly] = useState(false);
+
+  // Pagination state
+  const [offset, setOffset] = useState(0);
+  const [products, setProducts] = useState<GlobalProduct[]>([]);
+  const [total, setTotal] = useState(0);
+
+  // Filter metadata from API
+  const [availableBrands, setAvailableBrands] = useState<string[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+
+  // Mobile filter toggle
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery);
-    }, 300);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch suggestions (top 10 by popularity) while typing
-  const { data: suggestionsData, isLoading: suggestionsLoading } =
-    useSWR<CatalogResponse>(
-      debouncedQuery && !hasSearched
-        ? `/api/catalog?q=${encodeURIComponent(debouncedQuery)}&suggestions=true`
-        : null,
-      fetcher,
-    );
+  // Reset offset when filters/sort/search change
+  useEffect(() => {
+    setOffset(0);
+    setProducts([]);
+  }, [debouncedQuery, sort, selectedCategories, selectedBrands, inStockOnly]);
 
-  // Fetch full results after search
-  const { data: resultsData, isLoading: resultsLoading } =
-    useSWR<CatalogResponse>(
-      hasSearched && searchQuery
-        ? `/api/catalog?q=${encodeURIComponent(searchQuery)}&filter=${activeFilter}`
-        : null,
-      fetcher,
-    );
+  // Build API URL
+  const apiUrl = useMemo(() => {
+    const params = new URLSearchParams();
 
-  const suggestions = suggestionsData?.products || [];
-  const results = resultsData?.products || [];
+    if (debouncedQuery) params.set("q", debouncedQuery);
+    params.set("sort", sort);
+    params.set("limit", String(LIMIT));
+    params.set("offset", String(offset));
+    if (selectedCategories.length > 0)
+      params.set("category", selectedCategories.join(","));
+    if (selectedBrands.length > 0)
+      params.set("brand", selectedBrands.join(","));
+    if (inStockOnly) params.set("inStock", "true");
 
-  // Handle search submit
-  const handleSearch = useCallback(() => {
-    if (searchQuery.trim()) {
-      setHasSearched(true);
-      setIsInputFocused(false);
-      inputRef.current?.blur();
+    return `/api/catalog?${params.toString()}`;
+  }, [debouncedQuery, sort, offset, selectedCategories, selectedBrands, inStockOnly]);
+
+  // Fetch data
+  const { data, isLoading } = useSWR<CatalogResponse>(apiUrl, fetcher, {
+    keepPreviousData: true,
+  });
+
+  // Update products when data arrives
+  useEffect(() => {
+    if (!data) return;
+
+    if (data.offset === 0) {
+      setProducts(data.products);
+    } else {
+      setProducts((prev) => [...prev, ...data.products]);
     }
-  }, [searchQuery]);
 
-  // Handle keyboard enter
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-    if (e.key === "Escape") {
-      setIsInputFocused(false);
-      inputRef.current?.blur();
-    }
-  };
+    setTotal(data.total);
 
-  // Handle filter tab change
-  const handleFilterChange = (filter: FilterTab) => {
-    setActiveFilter(filter);
-    if (hasSearched) {
-      // Re-trigger search with new filter
-      setHasSearched(false);
-      setTimeout(() => setHasSearched(true), 10);
-    }
-  };
+    // Store metadata from first page
+    if (data.availableBrands) setAvailableBrands(data.availableBrands);
+    if (data.availableCategories) setAvailableCategories(data.availableCategories);
+  }, [data]);
 
-  // Clear search and go back to initial state
+  // Handlers
+  const handleLoadMore = useCallback(() => {
+    setOffset((prev) => prev + LIMIT);
+  }, []);
+
   const handleClearSearch = () => {
     setSearchQuery("");
     setDebouncedQuery("");
-    setHasSearched(false);
-    setActiveFilter("all");
     inputRef.current?.focus();
   };
 
-  // Handle "Add to Closet" click
+  const handleClearFilters = () => {
+    setSelectedCategories([]);
+    setSelectedBrands([]);
+    setInStockOnly(false);
+  };
+
   const handleAddToCloset = (product: GlobalProduct) => {
     if (status !== "authenticated") {
       router.push("/login");
@@ -126,376 +169,313 @@ export default function CatalogPage() {
     onOpen();
   };
 
-  // After successful add
   const handleAddSuccess = () => {
     toast.success("Added to your closet!");
     onClose();
     setSelectedProduct(null);
   };
 
-  // Click on suggestion item
-  const handleSuggestionClick = (product: GlobalProduct) => {
-    setSearchQuery(product.name);
-    setHasSearched(true);
-    setIsInputFocused(false);
+  const hasActiveFilters =
+    selectedCategories.length > 0 ||
+    selectedBrands.length > 0 ||
+    inStockOnly;
+
+  const allLoaded = products.length >= total;
+  const isLoadingMore = isLoading && offset > 0;
+  const isInitialLoading = isLoading && offset === 0 && products.length === 0;
+
+  const itemClasses = {
+    title: "text-xs font-bold uppercase tracking-widest text-foreground",
+    trigger: "py-4",
+    content: "pb-4 pl-1",
   };
 
-  const showSuggestions =
-    isInputFocused && searchQuery && !hasSearched && suggestions.length > 0;
-  const showResults = hasSearched && searchQuery;
+  // Filter sidebar content (shared between desktop and mobile)
+  const filterContent = (
+    <div className="w-full h-full flex flex-col">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-sm font-bold uppercase tracking-widest">
+          Filters
+        </h3>
+        {hasActiveFilters && (
+          <Button
+            className="text-xs uppercase tracking-wider text-default-400 data-[hover=true]:text-foreground"
+            radius="none"
+            size="sm"
+            startContent={<XMarkIcon className="w-3 h-3" />}
+            variant="light"
+            onPress={handleClearFilters}
+          >
+            Clear
+          </Button>
+        )}
+      </div>
+
+      <ScrollShadow hideScrollBar className="flex-1 -mr-2 pr-2">
+        <Accordion
+          defaultExpandedKeys={["category", "brand"]}
+          itemClasses={itemClasses}
+          selectionMode="multiple"
+          showDivider={false}
+        >
+          <AccordionItem
+            key="category"
+            aria-label="Category"
+            title="Category"
+          >
+            <CheckboxGroup
+              classNames={{ wrapper: "gap-3" }}
+              value={selectedCategories}
+              onValueChange={setSelectedCategories}
+            >
+              {availableCategories.map((cat) => (
+                <Checkbox
+                  key={cat}
+                  classNames={{
+                    label: "text-sm text-default-500 capitalize ml-1",
+                  }}
+                  radius="none"
+                  size="sm"
+                  value={cat}
+                >
+                  {cat}
+                </Checkbox>
+              ))}
+            </CheckboxGroup>
+          </AccordionItem>
+
+          <AccordionItem key="brand" aria-label="Brand" title="Brand">
+            <CheckboxGroup
+              classNames={{ wrapper: "gap-3" }}
+              value={selectedBrands}
+              onValueChange={setSelectedBrands}
+            >
+              {availableBrands.map((brand) => (
+                <Checkbox
+                  key={brand}
+                  classNames={{
+                    label: "text-sm text-default-500 ml-1",
+                  }}
+                  radius="none"
+                  size="sm"
+                  value={brand}
+                >
+                  {brand}
+                </Checkbox>
+              ))}
+            </CheckboxGroup>
+          </AccordionItem>
+
+          <AccordionItem
+            key="stock"
+            aria-label="Availability"
+            title="Availability"
+          >
+            <div className="flex items-center gap-3">
+              <Switch
+                isSelected={inStockOnly}
+                size="sm"
+                onValueChange={setInStockOnly}
+              />
+              <span className="text-sm text-default-500">In Stock Only</span>
+            </div>
+          </AccordionItem>
+        </Accordion>
+      </ScrollShadow>
+    </div>
+  );
 
   return (
     <div className="min-h-screen">
-      {/* Hero Search Section */}
-      <AnimatePresence mode="wait">
-        {!showResults ? (
-          <motion.div
-            key="search-hero"
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center min-h-[70vh] px-6"
-            exit={{ opacity: 0, y: -20 }}
-            initial={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            {/* Editorial Title */}
-            <motion.div
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-12"
-              initial={{ opacity: 0, y: 20 }}
-              transition={{ delay: 0.1, duration: 0.6 }}
-            >
-              <h1 className="text-5xl md:text-7xl font-extralight tracking-[0.2em] uppercase mb-4">
-                Catalog
-              </h1>
-              <p className="text-sm md:text-base font-light tracking-[0.3em] uppercase text-default-400">
-                Discover &bull; Curate &bull; Collect
-              </p>
-            </motion.div>
-
-            {/* Search Container */}
-            <motion.div
-              animate={{ opacity: 1, y: 0 }}
-              className="w-full max-w-2xl relative"
-              initial={{ opacity: 0, y: 20 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-            >
-              {/* Search Input */}
-              <div className="relative">
-                <Input
-                  ref={inputRef}
-                  classNames={{
-                    inputWrapper:
-                      "h-16 md:h-20 border-default-300 hover:border-default-500 focus-within:border-foreground transition-colors bg-transparent group-data-[focus=true]:border-foreground",
-                    input:
-                      "text-lg md:text-xl font-light tracking-wide placeholder:text-default-300 placeholder:font-extralight placeholder:tracking-widest",
-                  }}
-                  endContent={
-                    searchQuery && (
-                      <Button
-                        isIconOnly
-                        className="mr-2"
-                        radius="none"
-                        size="sm"
-                        variant="light"
-                        onPress={handleClearSearch}
-                      >
-                        <XMarkIcon className="w-5 h-5" />
-                      </Button>
-                    )
-                  }
-                  placeholder="Search products, brands, categories..."
-                  radius="none"
-                  size="lg"
-                  startContent={
-                    <MagnifyingGlassIcon className="w-5 h-5 md:w-6 md:h-6 text-default-400 ml-2" />
-                  }
-                  value={searchQuery}
-                  variant="bordered"
-                  onFocus={() => setIsInputFocused(true)}
-                  onKeyDown={handleKeyDown}
-                  onValueChange={setSearchQuery}
-                />
+      <div className="wardrobe-page-container">
+        {/* Page Header */}
+        <header className="pt-8 pb-6">
+          <div className="flex flex-col gap-6">
+            {/* Title Row */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-extralight tracking-[0.15em] uppercase">
+                  Catalog
+                </h1>
+                <p className="text-sm text-default-400 mt-1 tracking-wide">
+                  {isInitialLoading
+                    ? "Loading..."
+                    : `${total} product${total !== 1 ? "s" : ""}`}
+                </p>
               </div>
 
-              {/* Search Button */}
+              {/* Search + Sort Row */}
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                {/* Search Input */}
+                <div className="relative flex-1 md:w-72">
+                  <Input
+                    ref={inputRef}
+                    classNames={{
+                      inputWrapper:
+                        "h-10 border-default-200 hover:border-default-400 bg-transparent group-data-[focus=true]:border-foreground",
+                      input:
+                        "text-sm font-light placeholder:text-default-300 placeholder:font-extralight",
+                    }}
+                    endContent={
+                      searchQuery ? (
+                        <button
+                          className="text-default-400 hover:text-foreground transition-colors"
+                          onClick={handleClearSearch}
+                        >
+                          <XMarkIcon className="w-4 h-4" />
+                        </button>
+                      ) : null
+                    }
+                    placeholder="Search..."
+                    radius="none"
+                    size="sm"
+                    startContent={
+                      <MagnifyingGlassIcon className="w-4 h-4 text-default-400" />
+                    }
+                    value={searchQuery}
+                    variant="bordered"
+                    onValueChange={setSearchQuery}
+                  />
+                </div>
+
+                {/* Sort Dropdown */}
+                <Select
+                  aria-label="Sort by"
+                  classNames={{
+                    trigger:
+                      "h-10 min-h-10 border-default-200 bg-transparent data-[hover=true]:border-default-400",
+                    value: "text-xs uppercase tracking-wider font-medium",
+                    selectorIcon: "text-default-400",
+                  }}
+                  radius="none"
+                  selectedKeys={new Set([sort])}
+                  size="sm"
+                  variant="bordered"
+                  onSelectionChange={(keys) => {
+                    const selected = Array.from(keys)[0] as SortOption;
+
+                    if (selected) setSort(selected);
+                  }}
+                >
+                  {sortOptions.map((option) => (
+                    <SelectItem key={option.key}>{option.label}</SelectItem>
+                  ))}
+                </Select>
+
+                {/* Mobile Filter Toggle */}
+                <Button
+                  isIconOnly
+                  className="md:hidden border-default-200"
+                  radius="none"
+                  size="sm"
+                  variant="bordered"
+                  onPress={() => setShowFilters(!showFilters)}
+                >
+                  <AdjustmentsHorizontalIcon className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content: Filters + Grid */}
+        <div className="flex gap-8 pb-20">
+          {/* Desktop Filter Sidebar */}
+          <aside className="hidden md:block w-56 flex-shrink-0 border-r border-divider pr-6">
+            {filterContent}
+          </aside>
+
+          {/* Mobile Filter Drawer */}
+          <AnimatePresence>
+            {showFilters && (
               <motion.div
-                animate={{ opacity: searchQuery ? 1 : 0 }}
-                className="flex justify-end mt-4"
+                animate={{ opacity: 1 }}
+                className="fixed inset-0 z-50 md:hidden"
+                exit={{ opacity: 0 }}
                 initial={{ opacity: 0 }}
               >
-                <Button
-                  className="uppercase tracking-[0.2em] font-medium px-12"
-                  color="primary"
-                  isDisabled={!searchQuery.trim()}
-                  radius="none"
-                  size="lg"
-                  onPress={handleSearch}
+                {/* Backdrop */}
+                <div
+                  className="absolute inset-0 bg-black/50"
+                  onClick={() => setShowFilters(false)}
+                />
+
+                {/* Panel */}
+                <motion.div
+                  animate={{ x: 0 }}
+                  className="absolute left-0 top-0 bottom-0 w-72 bg-background p-6 shadow-2xl overflow-y-auto"
+                  exit={{ x: -288 }}
+                  initial={{ x: -288 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
                 >
-                  Search
-                </Button>
-              </motion.div>
-
-              {/* Filter Tabs - Show when typing */}
-              <AnimatePresence>
-                {searchQuery && (
-                  <motion.div
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex justify-center gap-1 mt-6"
-                    exit={{ opacity: 0, y: -10 }}
-                    initial={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {(
-                      ["all", "product", "brand", "category"] as FilterTab[]
-                    ).map((filter) => (
-                      <Button
-                        key={filter}
-                        className={`uppercase tracking-[0.15em] text-xs font-medium px-6 ${
-                          activeFilter === filter
-                            ? ""
-                            : "text-default-500 hover:text-foreground"
-                        }`}
-                        color={activeFilter === filter ? "primary" : "default"}
-                        radius="none"
-                        size="sm"
-                        variant={activeFilter === filter ? "solid" : "light"}
-                        onPress={() => handleFilterChange(filter)}
-                      >
-                        {filter}
-                      </Button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Suggestions Dropdown */}
-              <AnimatePresence>
-                {showSuggestions && (
-                  <motion.div
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-background border border-default-200 shadow-2xl z-50 max-h-[60vh] overflow-y-auto"
-                    exit={{ opacity: 0, y: 10 }}
-                    initial={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="p-4 border-b border-default-100">
-                      <div className="flex items-center gap-2 text-default-400">
-                        <SparklesIcon className="w-4 h-4" />
-                        <span className="text-[10px] uppercase tracking-[0.2em] font-medium">
-                          Popular in closets
-                        </span>
-                      </div>
-                    </div>
-
-                    {suggestionsLoading ? (
-                      <div className="p-8 text-center">
-                        <div className="inline-block w-6 h-6 border-2 border-default-300 border-t-foreground rounded-full animate-spin" />
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-default-100">
-                        {suggestions.map((product, index) => (
-                          <motion.button
-                            key={product.id}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="w-full p-4 flex items-center gap-4 hover:bg-default-50 transition-colors text-left group"
-                            initial={{ opacity: 0, x: -10 }}
-                            transition={{ delay: index * 0.05 }}
-                            onClick={() => handleSuggestionClick(product)}
-                          >
-                            {/* Product Image */}
-                            <div className="w-16 h-20 bg-default-100 flex-shrink-0 overflow-hidden">
-                              <Image
-                                alt={product.name}
-                                className="w-full h-full object-contain"
-                                radius="none"
-                                src={
-                                  product.processed_image_url ||
-                                  product.imageurl ||
-                                  "/images/placeholder.png"
-                                }
-                              />
-                            </div>
-
-                            {/* Product Info */}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[10px] uppercase tracking-[0.15em] text-default-400 mb-1">
-                                {product.brand}
-                              </p>
-                              <p className="text-sm font-light truncate group-hover:text-primary transition-colors">
-                                {product.name}
-                              </p>
-                              <p className="text-xs text-default-400 capitalize mt-1">
-                                {product.category}
-                              </p>
-                            </div>
-
-                            {/* Popularity Badge */}
-                            {product.popularityCount &&
-                              product.popularityCount > 0 && (
-                                <div className="flex-shrink-0 text-right">
-                                  <p className="text-xs font-medium">
-                                    {product.popularityCount}
-                                  </p>
-                                  <p className="text-[9px] uppercase tracking-wider text-default-400">
-                                    in closets
-                                  </p>
-                                </div>
-                              )}
-                          </motion.button>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </motion.div>
-        ) : (
-          /* Results View */
-          <motion.div
-            key="results"
-            animate={{ opacity: 1 }}
-            className="wardrobe-page-container"
-            initial={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            {/* Results Header */}
-            <header className="pt-8 pb-12">
-              <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col md:flex-row md:items-end justify-between gap-6"
-                initial={{ opacity: 0, y: -20 }}
-                transition={{ delay: 0.1 }}
-              >
-                <div>
-                  <button
-                    className="text-[10px] uppercase tracking-[0.2em] text-default-400 hover:text-foreground transition-colors mb-4 flex items-center gap-2"
-                    onClick={handleClearSearch}
-                  >
-                    <span>&larr;</span>
-                    <span>Back to search</span>
-                  </button>
-                  <h1 className="text-3xl md:text-4xl font-extralight tracking-[0.1em] uppercase">
-                    &ldquo;{searchQuery}&rdquo;
-                  </h1>
-                  <p className="text-sm text-default-400 mt-2 tracking-wide">
-                    {resultsLoading
-                      ? "Searching..."
-                      : `${results.length} results found`}
-                  </p>
-                </div>
-
-                {/* Filter Tabs in Results View */}
-                <div className="flex gap-1">
-                  {(["all", "product", "brand", "category"] as FilterTab[]).map(
-                    (filter) => (
-                      <Button
-                        key={filter}
-                        className={`uppercase tracking-[0.1em] text-xs ${
-                          activeFilter !== filter ? "border-default-200" : ""
-                        }`}
-                        color={activeFilter === filter ? "primary" : "default"}
-                        radius="none"
-                        size="sm"
-                        variant={activeFilter === filter ? "solid" : "bordered"}
-                        onPress={() => handleFilterChange(filter)}
-                      >
-                        {filter}
-                      </Button>
-                    ),
-                  )}
-                </div>
-              </motion.div>
-
-              {/* Search Bar in Results */}
-              <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-8 max-w-xl"
-                initial={{ opacity: 0, y: 10 }}
-                transition={{ delay: 0.2 }}
-              >
-                <Input
-                  classNames={{
-                    inputWrapper:
-                      "border-b border-default-200 hover:border-default-400 after:bg-foreground",
-                    input:
-                      "text-base font-light placeholder:text-default-300 placeholder:font-extralight",
-                  }}
-                  endContent={
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-lg font-bold uppercase tracking-wider">
+                      Filters
+                    </h2>
                     <Button
                       isIconOnly
                       radius="none"
                       size="sm"
                       variant="light"
-                      onPress={handleClearSearch}
+                      onPress={() => setShowFilters(false)}
                     >
-                      <XMarkIcon className="w-4 h-4" />
+                      <XMarkIcon className="w-5 h-5" />
                     </Button>
-                  }
-                  placeholder="Refine your search..."
-                  radius="none"
-                  startContent={
-                    <MagnifyingGlassIcon className="w-4 h-4 text-default-400" />
-                  }
-                  value={searchQuery}
-                  variant="underlined"
-                  onKeyDown={handleKeyDown}
-                  onValueChange={(val) => {
-                    setSearchQuery(val);
-                    if (!val) {
-                      setHasSearched(false);
-                    }
-                  }}
-                />
+                  </div>
+                  {filterContent}
+                </motion.div>
               </motion.div>
-            </header>
+            )}
+          </AnimatePresence>
 
-            {/* Results Grid */}
-            <motion.div
-              animate={{ opacity: 1 }}
-              initial={{ opacity: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              {resultsLoading ? (
-                <div className="wardrobe-grid">
-                  {[...Array(8)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      animate={{ opacity: 1, y: 0 }}
-                      initial={{ opacity: 0, y: 20 }}
-                      transition={{ delay: i * 0.05 }}
-                    >
-                      <ProductCardSkeleton />
-                    </motion.div>
-                  ))}
-                </div>
-              ) : results.length === 0 ? (
-                <motion.div
-                  animate={{ opacity: 1 }}
-                  className="flex flex-col items-center justify-center py-32"
-                  initial={{ opacity: 0 }}
-                >
-                  <p className="text-xl font-extralight italic text-default-400 mb-6">
-                    No products found for &ldquo;{searchQuery}&rdquo;
-                  </p>
+          {/* Product Grid */}
+          <div className="flex-1 min-w-0">
+            {isInitialLoading ? (
+              <div className="wardrobe-grid">
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    transition={{ delay: i * 0.05 }}
+                  >
+                    <ProductCardSkeleton />
+                  </motion.div>
+                ))}
+              </div>
+            ) : products.length === 0 ? (
+              <motion.div
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center justify-center py-32"
+                initial={{ opacity: 0 }}
+              >
+                <p className="text-xl font-extralight italic text-default-400 mb-6">
+                  No products found
+                </p>
+                {(debouncedQuery || hasActiveFilters) && (
                   <Button
                     className="uppercase tracking-[0.15em] text-xs border-default-300"
                     radius="none"
                     variant="bordered"
-                    onPress={handleClearSearch}
+                    onPress={() => {
+                      handleClearSearch();
+                      handleClearFilters();
+                    }}
                   >
-                    Try a different search
+                    Clear all filters
                   </Button>
-                </motion.div>
-              ) : (
-                <div className="wardrobe-grid pb-20">
-                  {results.map((product, index) => (
+                )}
+              </motion.div>
+            ) : (
+              <>
+                <div className="wardrobe-grid">
+                  {products.map((product, index) => (
                     <motion.div
                       key={product.id}
                       animate={{ opacity: 1, y: 0 }}
                       initial={{ opacity: 0, y: 30 }}
                       transition={{
-                        delay: index * 0.05,
+                        delay: Math.min(index, 8) * 0.05,
                         duration: 0.4,
                         ease: [0.25, 0.1, 0.25, 1],
                       }}
@@ -507,11 +487,31 @@ export default function CatalogPage() {
                     </motion.div>
                   ))}
                 </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+                {/* Load More */}
+                <div className="flex flex-col items-center gap-3 mt-12">
+                  {!allLoaded && (
+                    <Button
+                      className="uppercase tracking-[0.2em] font-medium px-12"
+                      isDisabled={isLoadingMore}
+                      isLoading={isLoadingMore}
+                      radius="none"
+                      size="lg"
+                      variant="bordered"
+                      onPress={handleLoadMore}
+                    >
+                      Load More
+                    </Button>
+                  )}
+                  <p className="text-xs text-default-400 tracking-wide">
+                    {products.length} of {total} products
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Add to Closet Modal */}
       <AddToClosetModal

@@ -780,6 +780,27 @@ async function extractProductData() {
 
   // Aritzia
   if (hostname.includes("aritzia")) {
+    // Extract Description
+    const descContainer = document.querySelector(
+      '[data-testid="product-description"]',
+    );
+    if (descContainer) {
+      // Find all paragraph tags, but filter out any that are inside a button
+      const paragraphs = Array.from(descContainer.querySelectorAll("p"))
+        .filter((p) => !p.closest("button"))
+        .map((p) => p.textContent.trim())
+        .filter((text) => text.length > 0);
+
+      if (paragraphs.length > 0) {
+        data.description = paragraphs.join("\n\n");
+      } else {
+        // Fallback: clone the container, remove all buttons, then get the text
+        const clone = descContainer.cloneNode(true);
+        clone.querySelectorAll("button").forEach((btn) => btn.remove());
+        data.description = clone.textContent.trim();
+      }
+    }
+
     const detailsButton = document.querySelector(
       'button[data-testid="details-link"]',
     );
