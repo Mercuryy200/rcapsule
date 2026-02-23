@@ -9,7 +9,7 @@ import { Eye, EyeOff, Lock, User } from "lucide-react";
 import {
   SignInButtonGithub,
   SignInButtonGoogle,
-} from "@/components/login/button";
+} from "@/components/auth/button";
 
 function LoginFormContent() {
   const searchParams = useSearchParams();

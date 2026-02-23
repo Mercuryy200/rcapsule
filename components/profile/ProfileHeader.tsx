@@ -7,9 +7,9 @@ import {
   LinkIcon,
 } from "@heroicons/react/24/outline";
 
-import { SocialIcon } from "../icons";
+import { SocialIcon } from "@/components/ui/icons";
 
-import { useUser } from "@/contexts/UserContext";
+import { useUser } from "@/lib/contexts/UserContext";
 
 interface ProfileHeaderProps {
   user: {

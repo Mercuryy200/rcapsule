@@ -40,8 +40,12 @@ export function ProfileDropdown({ user }: { user: any }) {
           My Profile
         </DropdownItem>
 
-        <DropdownItem key="closet" as={NextLink} href="/closet">
-          My Closet
+        <DropdownItem key="wishlist" as={NextLink} href="/wishlist">
+          Wishlist
+        </DropdownItem>
+
+        <DropdownItem key="collections" as={NextLink} href="/collections">
+          Collections
         </DropdownItem>
 
         <DropdownItem key="settings" as={NextLink} href="/settings">

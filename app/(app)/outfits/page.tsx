@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 // Import your WardrobeHeader component
 // Note: Ensure the path matches where you saved the header component
-import WardrobeHeader, { useSearchHistory } from "@/components/WardrobeHeader";
+import WardrobeHeader, { useSearchHistory } from "@/components/closet/WardrobeHeader";
 
 interface Outfit {
   id: string;

@@ -11,7 +11,7 @@ import {
   ArrowUpTrayIcon,
 } from "@heroicons/react/24/outline";
 
-import { useUser } from "@/contexts/UserContext";
+import { useUser } from "@/lib/contexts/UserContext";
 
 interface ImageUploadProps {
   value?: string;

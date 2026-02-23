@@ -23,18 +23,18 @@ import {
 } from "@heroicons/react/24/outline";
 
 import ProfileHeader from "@/components/profile/ProfileHeader";
-import { useUser } from "@/contexts/UserContext";
+import { useUser } from "@/lib/contexts/UserContext";
 
 // Import Visualization Components
 import { ColorPalette } from "@/components/closet/ColorPalette";
 import { StatsCard } from "@/components/analytics/StatsCard";
 import CalendarTracker from "@/components/calendar/CalendarTracker";
-import OutfitRecommendation from "@/components/OutfitRecommendation";
-import LocationSettings from "@/components/LocationSettings";
-import WeatherWidget from "@/components/WeatherWidget";
+import OutfitRecommendation from "@/components/outfit/OutfitRecommendation";
+import LocationSettings from "@/components/settings/LocationSettings";
+import WeatherWidget from "@/components/weather/WeatherWidget";
 
 // Analytics
-import { useAnalytics } from "@/hooks/useAnalytics";
+import { useAnalytics } from "@/lib/hooks/useAnalytics";
 import { OverviewDashboard } from "@/components/analytics/OverviewDashboard";
 import { CategoryBreakdown } from "@/components/analytics/CategoryBreakdown";
 import { InsightsCard } from "@/components/analytics/InsightsCard";

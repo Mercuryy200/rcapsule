@@ -4,14 +4,13 @@ import { useRouter } from "next/navigation";
 import { useState, useMemo } from "react";
 import { Button } from "@heroui/react";
 import { motion } from "framer-motion";
-import * as Sentry from "@sentry/nextjs";
 import useSWR from "swr";
 
 import ClothingCard from "@/components/closet/ClothingCard";
 import ClothesFilter, {
   FilterOptions,
 } from "@/components/closet/ClothesFilter";
-import WardrobeHeader, { useSearchHistory } from "@/components/WardrobeHeader";
+import WardrobeHeader, { useSearchHistory } from "@/components/closet/WardrobeHeader";
 import { ClothingCardSkeleton } from "@/components/closet/ClothingCardSkeleton";
 
 interface ClothingItem {
@@ -34,10 +33,10 @@ interface ClothingItem {
   createdAt?: string;
 }
 
-// 1. Fetcher function for SWR
+// 1. Fetcher function
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export default function ClosetPage() {
+export default function WishlistPage() {
   const { status } = useSession();
   const router = useRouter();
 
@@ -49,36 +48,34 @@ export default function ClosetPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const { history, addSearch, clearHistory } = useSearchHistory();
 
-  // Filters State
+  // Filter State
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterOptions>({
     categories: [],
     colors: [],
     seasons: [],
     placesToWear: [],
-    priceRange: [0, 500],
+    priceRange: [0, 5000], // Kept higher for wishlist items
     brands: [],
     styles: [],
     conditions: [],
   });
 
   // 2. Data State via SWR
-  // This replaces the manual useEffect and useState for 'clothes' and 'loading'
   const { data: clothes = [], isLoading: swrLoading } = useSWR<ClothingItem[]>(
-    status === "authenticated" ? "/api/clothes?status=owned" : null,
+    status === "authenticated" ? "/api/clothes?status=wishlist" : null,
     fetcher,
     {
-      revalidateOnFocus: true, // This enables the auto-refresh on window focus
+      revalidateOnFocus: true, // Auto-refresh when tab is focused
     },
   );
 
-  // Combine session loading and data loading
   const isLoading = status === "loading" || swrLoading;
 
   if (status === "unauthenticated") {
     router.push("/login");
 
-    return null; // Prevent flash of content
+    return null;
   }
 
   // --- Logic: Derived Data ---
@@ -103,7 +100,7 @@ export default function ClosetPage() {
     if (filters.conditions.length > 0) activeFilterGroups.push("condition");
 
     const isPriceFiltered =
-      filters.priceRange[0] > 0 || filters.priceRange[1] < 500;
+      filters.priceRange[0] > 0 || filters.priceRange[1] < 5000;
 
     if (activeFilterGroups.length === 0 && !isPriceFiltered) return clothes;
 
@@ -217,8 +214,6 @@ export default function ClosetPage() {
     filteredClothes.forEach((item) => {
       if (item.name.toLowerCase().includes(lowerQuery)) terms.add(item.name);
       if (item.brand?.toLowerCase().includes(lowerQuery)) terms.add(item.brand);
-      if (item.category.toLowerCase().includes(lowerQuery))
-        terms.add(item.category);
     });
 
     return Array.from(terms).slice(0, 5);
@@ -240,12 +235,6 @@ export default function ClosetPage() {
   }, [sortedClothes]);
 
   const handleItemClick = (itemId: string) => {
-    Sentry.addBreadcrumb({
-      category: "navigation",
-      message: "Navigated to item detail",
-      level: "info",
-      data: { itemId },
-    });
     router.push(`/closet/${itemId}`);
   };
 
@@ -257,7 +246,7 @@ export default function ClosetPage() {
   return (
     <div className="wardrobe-page-container min-h-screen">
       <WardrobeHeader
-        actionLabel="Add Piece"
+        actionLabel="Add Wish"
         history={history}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -270,11 +259,11 @@ export default function ClosetPage() {
           isLoading ? (
             <div className="h-5 w-32 bg-default-200 animate-pulse rounded" />
           ) : (
-            <>{sortedClothes.length} Items &bull; S/S 2026</>
+            <>{sortedClothes.length} Items &bull; Future Buys</>
           )
         }
         suggestions={suggestions}
-        title="Capsule"
+        title="Wishlist"
         viewMode={viewMode}
         onAddNew={() => router.push("/closet/new")}
         onClearHistory={clearHistory}
@@ -290,7 +279,7 @@ export default function ClosetPage() {
           >
             <ClothesFilter
               availableBrands={availableBrands}
-              maxPrice={500}
+              maxPrice={5000}
               onFilterChange={setFilters}
             />
           </motion.div>
@@ -307,8 +296,8 @@ export default function ClosetPage() {
             <div className="wardrobe-empty-state">
               <p className="text-xl font-light italic text-default-400 mb-6">
                 {clothes.length === 0
-                  ? "Your closet is empty."
-                  : "No pieces match your search or filter."}
+                  ? "Your wishlist is empty."
+                  : "No wishes found."}
               </p>
               {searchQuery && (
                 <Button
@@ -326,12 +315,11 @@ export default function ClosetPage() {
                 variant="flat"
                 onPress={() => router.push("/closet/new")}
               >
-                Curate your first piece
+                Make a Wish
               </Button>
             </div>
           ) : (
             <>
-              {/* Grid View */}
               {viewMode === "grid" && (
                 <div className="wardrobe-grid">
                   {sortedClothes.map((item) => (
@@ -344,7 +332,6 @@ export default function ClosetPage() {
                 </div>
               )}
 
-              {/* Gallery View */}
               {viewMode === "gallery" && (
                 <div className="space-y-16 pb-20">
                   {clothesByCategory.map(([category, items]) => (

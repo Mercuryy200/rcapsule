@@ -27,7 +27,7 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
-import { useUser } from "@/contexts/UserContext";
+import { useUser } from "@/lib/contexts/UserContext";
 import { ImageUpload } from "@/components/closet/ImageUpload";
 import LocationInput from "@/components/settings/LocationInput";
 

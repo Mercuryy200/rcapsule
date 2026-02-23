@@ -15,7 +15,7 @@ import { debounce } from "lodash";
 import {
   SignInButtonGithub,
   SignInButtonGoogle,
-} from "@/components/login/button";
+} from "@/components/auth/button";
 
 export default function SignUpForm() {
   const [error, setError] = useState<string>("");

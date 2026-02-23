@@ -9,7 +9,7 @@ import { Providers } from "./providers";
 
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
-import { fontSans } from "@/config/fonts";
+import { fontSans } from "@/lib/config/fonts";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 
 Sentry.init({

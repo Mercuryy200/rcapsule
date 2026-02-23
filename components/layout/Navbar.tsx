@@ -14,16 +14,18 @@ import { link as linkStyles } from "@heroui/theme";
 import NextLink from "next/link";
 import clsx from "clsx";
 
-import { siteConfig } from "@/config/site";
-import { ThemeSwitch } from "@/components/theme-switch";
-import { ProfileDropdown } from "@/components/login/dropdown";
-import { Logo } from "@/components/logo";
+import { siteConfig } from "@/lib/config/site";
+import { ThemeSwitch } from "@/components/ui/theme-switch";
+import { ProfileDropdown } from "@/components/auth/dropdown";
+import { Logo } from "@/components/ui/logo";
 
 export const AppNavbar = ({ user }: { user: any }) => {
   const [isMenuOpen, setIsMenuOpen] = React.useReducer(
     (current) => !current,
     false,
   );
+
+  const navLinks = user ? siteConfig.navItems : siteConfig.marketingNavItems;
 
   return (
     <HeroUINavbar
@@ -46,23 +48,21 @@ export const AppNavbar = ({ user }: { user: any }) => {
           </NextLink>
         </NavbarBrand>
 
-        {user && (
-          <ul className="hidden lg:flex gap-4 ml-4">
-            {siteConfig.navItems.map((item) => (
-              <NavbarItem key={item.href}>
-                <NextLink
-                  className={clsx(
-                    linkStyles({ color: "foreground" }),
-                    "text-sm uppercase tracking-widest font-medium",
-                  )}
-                  href={item.href}
-                >
-                  {item.label}
-                </NextLink>
-              </NavbarItem>
-            ))}
-          </ul>
-        )}
+        <ul className="hidden lg:flex gap-4 ml-4">
+          {navLinks.map((item) => (
+            <NavbarItem key={item.href}>
+              <NextLink
+                className={clsx(
+                  linkStyles({ color: "foreground" }),
+                  "text-sm uppercase tracking-widest font-medium",
+                )}
+                href={item.href}
+              >
+                {item.label}
+              </NextLink>
+            </NavbarItem>
+          ))}
+        </ul>
       </NavbarContent>
 
       <NavbarContent justify="end">
@@ -77,7 +77,7 @@ export const AppNavbar = ({ user }: { user: any }) => {
         ) : (
           <div className="flex gap-2">
             <Button as={NextLink} href="/login" size="sm" variant="light">
-              Login
+              Log In
             </Button>
             <Button
               as={NextLink}
@@ -95,32 +95,34 @@ export const AppNavbar = ({ user }: { user: any }) => {
 
       <NavbarMenu className="pt-6">
         <div className="flex flex-col gap-4">
-          {user ? (
-            siteConfig.navItems.map((item, index) => (
-              <NavbarMenuItem key={`${item.label}-${index}`}>
-                <NextLink
-                  className="w-full text-2xl font-light uppercase tracking-tighter py-2"
-                  href={item.href}
-                  onClick={() => setIsMenuOpen()}
-                >
-                  {item.label}
-                </NextLink>
-              </NavbarMenuItem>
-            ))
-          ) : (
+          {navLinks.map((item, index) => (
+            <NavbarMenuItem key={`${item.label}-${index}`}>
+              <NextLink
+                className="w-full text-2xl font-light uppercase tracking-tighter py-2"
+                href={item.href}
+                onClick={() => setIsMenuOpen()}
+              >
+                {item.label}
+              </NextLink>
+            </NavbarMenuItem>
+          ))}
+
+          {!user && (
             <>
               <NavbarMenuItem>
                 <NextLink
                   className="text-2xl font-light uppercase tracking-tighter py-2"
                   href="/login"
+                  onClick={() => setIsMenuOpen()}
                 >
-                  Login
+                  Log In
                 </NextLink>
               </NavbarMenuItem>
               <NavbarMenuItem>
                 <NextLink
                   className="text-2xl font-light uppercase tracking-tighter py-2"
                   href="/signup"
+                  onClick={() => setIsMenuOpen()}
                 >
                   Sign Up
                 </NextLink>

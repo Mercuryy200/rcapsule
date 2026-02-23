@@ -3,7 +3,7 @@ import { Link, Input, Button, Divider } from "@heroui/react";
 import { ArrowRight } from "lucide-react";
 import { FaGithub, FaInstagram, FaTwitter } from "react-icons/fa";
 
-import { Logo } from "@/components/logo";
+import { Logo } from "@/components/ui/logo";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
