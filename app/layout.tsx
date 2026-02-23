@@ -27,14 +27,24 @@ Sentry.init({
   },
 });
 
+// app/layout.tsx
 export const metadata: Metadata = {
   title: {
-    default: "Capsule — Your Digital Closet",
-    template: `%s | Capsule`,
+    default: "Rcapsule — Your Digital Closet",
+    template: `%s | Rcapsule`,
   },
-  description: "Organize your wardrobe and plan outfits with ease.",
+  description:
+    "Organize your wardrobe and plan outfits with ease using Rcapsule.",
   icons: {
     icon: "/favicon.ico",
+  },
+  openGraph: {
+    title: "Rcapsule — Your Digital Closet",
+    description:
+      "Organize your wardrobe and plan outfits with ease using Rcapsule.",
+    url: "https://rcapsule.com",
+    siteName: "Rcapsule",
+    type: "website",
   },
 };
 
