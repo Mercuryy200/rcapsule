@@ -28,7 +28,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  console.log("Webhook received:", event.type);
 
   try {
     switch (event.type) {
@@ -38,12 +37,6 @@ export async function POST(request: NextRequest) {
         const userId = session.metadata?.userId;
         const customerId = session.customer as string;
         const subscriptionId = session.subscription as string;
-
-        console.log("DEBUG checkout.session.completed:");
-        console.log("   userId:", userId);
-        console.log("   customerId:", customerId);
-        console.log("   subscriptionId:", subscriptionId);
-        console.log("   metadata:", session.metadata);
 
         if (!userId) {
           console.error("No userId in metadata!");
@@ -64,16 +57,11 @@ export async function POST(request: NextRequest) {
             ).toISOString()
           : null;
 
-        console.log("   periodEnd:", periodEnd);
-
         const { data: existingUser, error: fetchError } = await supabase
           .from("User")
           .select("id, email, subscription_status")
           .eq("id", userId)
           .single();
-
-        console.log("   existingUser:", existingUser);
-        console.log("   fetchError:", fetchError);
 
         if (fetchError) {
           console.error("User not found in database:", fetchError);
@@ -91,13 +79,8 @@ export async function POST(request: NextRequest) {
           .eq("id", userId)
           .select();
 
-        console.log("   updateData:", updateData);
-        console.log("   updateError:", updateError);
-
         if (updateError) {
           console.error("Failed to update user subscription:", updateError);
-        } else {
-          console.log(`User ${userId} upgraded to premium`);
         }
         break;
       }

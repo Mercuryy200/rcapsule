@@ -31,15 +31,34 @@ export async function POST(req: Request) {
     let base64Image: string;
 
     if (imageUrl) {
-      console.log("Downloading image from URL:", imageUrl);
+      // Validate URL to prevent SSRF – only allow public HTTPS hosts
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(imageUrl);
+      } catch {
+        return NextResponse.json({ error: "Invalid image URL" }, { status: 400 });
+      }
 
-      // Download image from Vercel (bypasses all blocking)
+      if (parsedUrl.protocol !== "https:") {
+        return NextResponse.json(
+          { error: "Image URL must use HTTPS" },
+          { status: 400 },
+        );
+      }
+
+      // Block private/internal IP ranges and localhost
+      const hostname = parsedUrl.hostname.toLowerCase();
+      const blocked = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|::1|0\.0\.0\.0)/.test(hostname);
+      if (blocked) {
+        return NextResponse.json(
+          { error: "Image URL points to a disallowed host" },
+          { status: 400 },
+        );
+      }
+
       const imageResponse = await fetch(imageUrl, {
         headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
-          Referer: new URL(imageUrl).origin,
         },
       });
 
@@ -55,18 +74,12 @@ export async function POST(req: Request) {
         imageResponse.headers.get("content-type") || "image/jpeg";
 
       base64Image = `data:${contentType};base64,${base64}`;
-      console.log(
-        `Image downloaded: ${(arrayBuffer.byteLength / 1024 / 1024).toFixed(2)}MB`,
-      );
     } else if (file) {
       // Convert file to base64
       const arrayBuffer = await file.arrayBuffer();
       const base64 = Buffer.from(arrayBuffer).toString("base64");
       const mimeType = file.type || "image/jpeg";
       base64Image = `data:${mimeType};base64,${base64}`;
-      console.log(
-        `File converted: ${(arrayBuffer.byteLength / 1024 / 1024).toFixed(2)}MB`,
-      );
     } else {
       return NextResponse.json(
         { error: "No file or URL provided" },
@@ -76,14 +89,11 @@ export async function POST(req: Request) {
 
     // Check if endpoint is configured
     if (!process.env.AWS_LAMBDA_ENDPOINT) {
-      console.error("AWS_LAMBDA_ENDPOINT is not configured");
       return NextResponse.json(
         { error: "Background removal service is not configured" },
         { status: 500 },
       );
     }
-
-    console.log("Calling Lambda endpoint:", process.env.AWS_LAMBDA_ENDPOINT);
 
     // Call AWS Lambda function with base64 image
     const lambdaResponse = await fetch(process.env.AWS_LAMBDA_ENDPOINT, {

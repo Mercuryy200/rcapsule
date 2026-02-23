@@ -2,13 +2,27 @@ import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
+// Browser extensions send a chrome-extension:// origin; allow the app origin too
+const ALLOWED_ORIGINS = new Set([
+  process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+  // chrome-extension origins are added at runtime via env var, e.g.:
+  // ALLOWED_EXTENSION_ORIGIN=chrome-extension://abcdefghijklmnopabcdefghijklmnop
+  ...(process.env.ALLOWED_EXTENSION_ORIGIN
+    ? [process.env.ALLOWED_EXTENSION_ORIGIN]
+    : []),
+]);
+
 function corsHeaders(origin: string) {
-  return {
-    "Access-Control-Allow-Origin": origin || "*",
+  const allowedOrigin = ALLOWED_ORIGINS.has(origin) ? origin : "";
+  const headers: Record<string, string> = {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Allow-Credentials": "true",
   };
+  if (allowedOrigin) {
+    headers["Access-Control-Allow-Origin"] = allowedOrigin;
+    headers["Access-Control-Allow-Credentials"] = "true";
+  }
+  return headers;
 }
 
 export async function OPTIONS(req: Request) {

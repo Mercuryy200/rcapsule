@@ -19,9 +19,17 @@ export async function PUT(req: Request) {
       );
     }
 
-    if (data.newPassword.length < 6) {
+    if (
+      data.newPassword.length < 8 ||
+      !/[A-Z]/.test(data.newPassword) ||
+      !/[a-z]/.test(data.newPassword) ||
+      !/[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(data.newPassword)
+    ) {
       return NextResponse.json(
-        { error: "New password must be at least 6 characters" },
+        {
+          error:
+            "New password must be at least 8 characters and include uppercase, lowercase, and a number or symbol",
+        },
         { status: 400 },
       );
     }

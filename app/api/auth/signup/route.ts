@@ -6,10 +6,7 @@ export async function POST(req: Request) {
     const supabase = getSupabaseServer();
     const { email, password, name, username } = await req.json();
 
-    console.log("=== SIGNUP DEBUG ===");
-    console.log("Signup attempt:", { email, name, username });
-
-    if (!email || !password) {
+    if (!email || !password || !username) {
       return NextResponse.json(
         { error: "Email and password are required" },
         { status: 400 },
@@ -76,14 +73,7 @@ export async function POST(req: Request) {
       },
     });
 
-    console.log("Auth response:", {
-      success: !authError,
-      userId: authData?.user?.id,
-      error: authError?.message,
-    });
-
     if (authError) {
-      console.error("Auth error:", authError);
       return NextResponse.json({ error: authError.message }, { status: 400 });
     }
 
@@ -94,8 +84,6 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log("User created in auth.users:", authData.user.id);
-
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     const { data: userRecord, error: dbError } = await supabase
@@ -104,14 +92,7 @@ export async function POST(req: Request) {
       .eq("id", authData.user.id)
       .single();
 
-    console.log("User table check:", {
-      found: !!userRecord,
-      error: dbError?.message,
-    });
-
     if (dbError) {
-      console.error("Database record check error:", dbError);
-      console.log("Attempting manual user creation...");
 
       const { error: insertError } = await supabase.from("User").insert({
         id: authData.user.id,
@@ -124,8 +105,6 @@ export async function POST(req: Request) {
       });
 
       if (insertError) {
-        console.error("Manual insert error:", insertError);
-
         if (
           insertError.code === "23505" &&
           insertError.message?.includes("username")
@@ -135,14 +114,8 @@ export async function POST(req: Request) {
             { status: 400 },
           );
         }
-      } else {
-        console.log("User manually created in User table");
       }
-    } else {
-      console.log("User record found:", userRecord);
     }
-
-    console.log("===================");
 
     return NextResponse.json(
       {

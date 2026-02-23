@@ -22,4 +22,5 @@ export interface GlobalProduct {
   updatedat: string;
   lastScrapedAt?: string;
   scrapingStatus?: "active" | "discontinued" | "error";
+  popularityCount?: number;
 }
