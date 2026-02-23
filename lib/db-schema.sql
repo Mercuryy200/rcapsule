@@ -1,0 +1,422 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.Account (
+  userId uuid NOT NULL,
+  type text NOT NULL,
+  provider text NOT NULL,
+  providerAccountId text NOT NULL,
+  refresh_token text,
+  access_token text,
+  expires_at integer,
+  token_type text,
+  scope text,
+  id_token text,
+  session_state text,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT Account_pkey PRIMARY KEY (provider, providerAccountId),
+  CONSTRAINT Account_userId_fkey FOREIGN KEY (userId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.Activity (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  userId uuid NOT NULL,
+  type text NOT NULL CHECK (type = ANY (ARRAY['created_outfit'::text, 'created_wardrobe'::text, 'liked_outfit'::text, 'liked_wardrobe'::text, 'followed_user'::text, 'added_item'::text, 'wore_outfit'::text])),
+  targetType text,
+  targetId uuid,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  isPublic boolean DEFAULT true,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT Activity_pkey PRIMARY KEY (id),
+  CONSTRAINT Activity_userId_fkey FOREIGN KEY (userId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.Block (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  blockerId uuid NOT NULL,
+  blockedId uuid NOT NULL,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT Block_pkey PRIMARY KEY (id),
+  CONSTRAINT Block_blockerId_fkey FOREIGN KEY (blockerId) REFERENCES public.User(id),
+  CONSTRAINT Block_blockedId_fkey FOREIGN KEY (blockedId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.Clothes (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  userId uuid NOT NULL,
+  name text NOT NULL,
+  brand text,
+  category text NOT NULL,
+  price double precision,
+  colors ARRAY,
+  season ARRAY,
+  size text,
+  link text,
+  imageUrl text,
+  placesToWear ARRAY,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  purchaseDate date,
+  status text NOT NULL DEFAULT 'owned'::text CHECK (status = ANY (ARRAY['owned'::text, 'wishlist'::text])),
+  materials text,
+  careInstructions text,
+  sustainability text,
+  condition text DEFAULT 'excellent'::text CHECK (condition = ANY (ARRAY['new'::text, 'excellent'::text, 'good'::text, 'fair'::text, 'poor'::text])),
+  tags ARRAY,
+  silhouette text,
+  style text,
+  neckline text,
+  pattern text,
+  length text,
+  fit text,
+  retiredAt timestamp without time zone,
+  retirementReason text,
+  purchaseLocation text,
+  originalPrice double precision,
+  purchaseType text CHECK ("purchaseType" = ANY (ARRAY['retail'::text, 'thrift'::text, 'vintage'::text, 'gift'::text, 'secondhand'::text])),
+  purchaseCurrency text DEFAULT 'CAD'::text,
+  timesworn integer DEFAULT 0,
+  lastwornat timestamp without time zone,
+  description text,
+  processed_image_url text,
+  globalproductid uuid,
+  CONSTRAINT Clothes_pkey PRIMARY KEY (id),
+  CONSTRAINT Clothes_userId_fkey FOREIGN KEY (userId) REFERENCES public.User(id),
+  CONSTRAINT fk_global_product FOREIGN KEY (globalproductid) REFERENCES public.GlobalProduct(id)
+);
+
+CREATE TABLE public.ClothesAnalytics (
+  clothesId uuid NOT NULL,
+  userId uuid NOT NULL,
+  totalWears integer NOT NULL DEFAULT 0,
+  lastWornAt timestamp without time zone,
+  firstWornAt timestamp without time zone,
+  costPerWear double precision,
+  averageDaysBetweenWears double precision,
+  wearFrequencyScore double precision,
+  versatilityScore double precision,
+  seasonalWearDistribution jsonb,
+  occasionDistribution jsonb,
+  lastCalculatedAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT ClothesAnalytics_pkey PRIMARY KEY (clothesId),
+  CONSTRAINT ClothesAnalytics_clothesId_fkey FOREIGN KEY (clothesId) REFERENCES public.Clothes(id)
+);
+
+CREATE TABLE public.Comment (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  userId uuid NOT NULL,
+  targetType text NOT NULL CHECK ("targetType" = ANY (ARRAY['wardrobe'::text, 'outfit'::text])),
+  targetId uuid NOT NULL,
+  parentId uuid,
+  content text NOT NULL,
+  likeCount integer DEFAULT 0,
+  isEdited boolean DEFAULT false,
+  isHidden boolean DEFAULT false,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT Comment_pkey PRIMARY KEY (id),
+  CONSTRAINT Comment_userId_fkey FOREIGN KEY (userId) REFERENCES public.User(id),
+  CONSTRAINT Comment_parentId_fkey FOREIGN KEY (parentId) REFERENCES public.Comment(id)
+);
+
+CREATE TABLE public.ContactMessages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  email text NOT NULL,
+  subject text NOT NULL,
+  message text NOT NULL,
+  createdAt timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT ContactMessages_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public.FeaturedContent (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  contentType text NOT NULL CHECK ("contentType" = ANY (ARRAY['user'::text, 'wardrobe'::text, 'outfit'::text])),
+  contentId uuid NOT NULL,
+  section text NOT NULL CHECK (section = ANY (ARRAY['hero'::text, 'trending'::text, 'staff_picks'::text, 'new_arrivals'::text])),
+  position integer DEFAULT 0,
+  startsAt timestamp without time zone,
+  endsAt timestamp without time zone,
+  isActive boolean DEFAULT true,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT FeaturedContent_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public.Follow (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  followerId uuid NOT NULL,
+  followingId uuid NOT NULL,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT Follow_pkey PRIMARY KEY (id),
+  CONSTRAINT Follow_followerId_fkey FOREIGN KEY (followerId) REFERENCES public.User(id),
+  CONSTRAINT Follow_followingId_fkey FOREIGN KEY (followingId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.GlobalProduct (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  brand text NOT NULL,
+  category text NOT NULL,
+  description text,
+  slug text UNIQUE,
+  sku text UNIQUE,
+  retaillink text UNIQUE,
+  imageurl text,
+  processed_image_url text,
+  colors ARRAY,
+  materials text,
+  sustainability text,
+  originalprice double precision,
+  currency text DEFAULT 'CAD'::text,
+  createdat timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedat timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  source text,
+  externalId text,
+  sizes ARRAY,
+  inStock boolean DEFAULT true,
+  lastScrapedAt timestamp without time zone,
+  scrapingStatus text CHECK ("scrapingStatus" = ANY (ARRAY['active'::text, 'discontinued'::text, 'error'::text])),
+  CONSTRAINT GlobalProduct_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public.Like (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  userId uuid NOT NULL,
+  targetType text NOT NULL CHECK ("targetType" = ANY (ARRAY['wardrobe'::text, 'outfit'::text, 'clothes'::text])),
+  targetId uuid NOT NULL,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT Like_pkey PRIMARY KEY (id),
+  CONSTRAINT Like_userId_fkey FOREIGN KEY (userId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.Notification (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  userId uuid NOT NULL,
+  type text NOT NULL CHECK (type = ANY (ARRAY['follow'::text, 'like_outfit'::text, 'like_wardrobe'::text, 'comment'::text, 'comment_reply'::text, 'mention'::text, 'feature'::text, 'system'::text])),
+  actorId uuid,
+  targetType text,
+  targetId uuid,
+  message text,
+  isRead boolean DEFAULT false,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT Notification_pkey PRIMARY KEY (id),
+  CONSTRAINT Notification_userId_fkey FOREIGN KEY (userId) REFERENCES public.User(id),
+  CONSTRAINT Notification_actorId_fkey FOREIGN KEY (actorId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.Outfit (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  userId uuid NOT NULL,
+  name text NOT NULL,
+  description text,
+  season text,
+  occasion text,
+  imageUrl text,
+  isFavorite boolean NOT NULL DEFAULT false,
+  timesWorn integer NOT NULL DEFAULT 0,
+  lastWornAt timestamp without time zone,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  weatherWorn text,
+  temperatureWorn integer,
+  locationWorn text,
+  rating integer CHECK (rating >= 1 AND rating <= 5),
+  colorPalette ARRAY,
+  isPublic boolean DEFAULT false,
+  slug text,
+  viewCount integer DEFAULT 0,
+  likeCount integer DEFAULT 0,
+  saveCount integer DEFAULT 0,
+  shareCount integer DEFAULT 0,
+  isFeatured boolean DEFAULT false,
+  featuredAt timestamp without time zone,
+  styleTags ARRAY DEFAULT '{}'::text[],
+  allowComments boolean DEFAULT true,
+  CONSTRAINT Outfit_pkey PRIMARY KEY (id),
+  CONSTRAINT Outfit_userId_fkey FOREIGN KEY (userId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.OutfitClothes (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  outfitId uuid NOT NULL,
+  clothesId uuid NOT NULL,
+  layer integer,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT OutfitClothes_pkey PRIMARY KEY (id),
+  CONSTRAINT OutfitClothes_outfitId_fkey FOREIGN KEY (outfitId) REFERENCES public.Outfit(id),
+  CONSTRAINT OutfitClothes_clothesId_fkey FOREIGN KEY (clothesId) REFERENCES public.Clothes(id)
+);
+
+CREATE TABLE public.OutfitRecommendations (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  userid uuid NOT NULL,
+  items jsonb NOT NULL,
+  reasoning text,
+  stylenotes text,
+  weatherconsiderations text,
+  occasion text,
+  weatherdata jsonb,
+  status text DEFAULT 'suggested'::text CHECK (status = ANY (ARRAY['suggested'::text, 'worn'::text, 'dismissed'::text, 'saved'::text])),
+  expiresat timestamp without time zone,
+  createdat timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT OutfitRecommendations_pkey PRIMARY KEY (id),
+  CONSTRAINT OutfitRecommendations_userid_fkey FOREIGN KEY (userid) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.Report (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  reporterId uuid NOT NULL,
+  targetType text NOT NULL CHECK ("targetType" = ANY (ARRAY['user'::text, 'wardrobe'::text, 'outfit'::text, 'comment'::text])),
+  targetId uuid NOT NULL,
+  reason text NOT NULL CHECK (reason = ANY (ARRAY['spam'::text, 'harassment'::text, 'inappropriate_content'::text, 'copyright'::text, 'impersonation'::text, 'other'::text])),
+  description text,
+  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'reviewed'::text, 'resolved'::text, 'dismissed'::text])),
+  reviewedBy uuid,
+  reviewedAt timestamp without time zone,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT Report_pkey PRIMARY KEY (id),
+  CONSTRAINT Report_reporterId_fkey FOREIGN KEY (reporterId) REFERENCES public.User(id),
+  CONSTRAINT Report_reviewedBy_fkey FOREIGN KEY (reviewedBy) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.Save (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  userId uuid NOT NULL,
+  targetType text NOT NULL CHECK ("targetType" = ANY (ARRAY['wardrobe'::text, 'outfit'::text, 'clothes'::text, 'user'::text])),
+  targetId uuid NOT NULL,
+  collectionName text DEFAULT 'Inspiration'::text,
+  notes text,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT Save_pkey PRIMARY KEY (id),
+  CONSTRAINT Save_userId_fkey FOREIGN KEY (userId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.StyleTag (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL UNIQUE,
+  slug text NOT NULL UNIQUE,
+  category text CHECK (category = ANY (ARRAY['style'::text, 'occasion'::text, 'season'::text, 'aesthetic'::text, 'trend'::text])),
+  usageCount integer DEFAULT 0,
+  isFeatured boolean DEFAULT false,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT StyleTag_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public.User (
+  id uuid NOT NULL,
+  name text,
+  email text NOT NULL UNIQUE,
+  emailVerified timestamp without time zone,
+  image text,
+  password text,
+  profilePublic boolean NOT NULL DEFAULT false,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  subscription_status text DEFAULT 'free'::text,
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  subscription_period_end timestamp with time zone,
+  username text UNIQUE,
+  bio text,
+  location text,
+  website text,
+  instagramHandle text,
+  tiktokHandle text,
+  pinterestHandle text,
+  styleTags ARRAY DEFAULT '{}'::text[],
+  coverImage text,
+  isVerified boolean DEFAULT false,
+  isFeatured boolean DEFAULT false,
+  profileViews integer DEFAULT 0,
+  followerCount integer DEFAULT 0,
+  followingCount integer DEFAULT 0,
+  showClosetValue boolean DEFAULT false,
+  showItemPrices boolean DEFAULT false,
+  allowMessages boolean DEFAULT true,
+  lastActiveAt timestamp without time zone,
+  CONSTRAINT User_pkey PRIMARY KEY (id),
+  CONSTRAINT User_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+
+CREATE TABLE public.UserPreferences (
+  userId uuid NOT NULL,
+  budgetGoal double precision,
+  sustainabilityGoals jsonb,
+  styleGoals ARRAY,
+  notifications jsonb,
+  analyticsPrivacy text DEFAULT 'private'::text,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  location_city text,
+  location_country text,
+  location_lat double precision,
+  location_lon double precision,
+  temperature_unit text DEFAULT 'celsius'::text CHECK (temperature_unit = ANY (ARRAY['celsius'::text, 'fahrenheit'::text])),
+  CONSTRAINT UserPreferences_pkey PRIMARY KEY (userId),
+  CONSTRAINT UserPreferences_userId_fkey FOREIGN KEY (userId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.Wardrobe (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  userId uuid NOT NULL,
+  title text NOT NULL,
+  description text,
+  isPublic boolean NOT NULL DEFAULT false,
+  coverImage text,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  slug text,
+  viewCount integer DEFAULT 0,
+  likeCount integer DEFAULT 0,
+  saveCount integer DEFAULT 0,
+  shareCount integer DEFAULT 0,
+  isFeatured boolean DEFAULT false,
+  featuredAt timestamp without time zone,
+  styleTags ARRAY DEFAULT '{}'::text[],
+  season text,
+  occasion text,
+  allowComments boolean DEFAULT true,
+  CONSTRAINT Wardrobe_pkey PRIMARY KEY (id),
+  CONSTRAINT Wardrobe_userId_fkey FOREIGN KEY (userId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.WardrobeClothes (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  wardrobeId uuid NOT NULL,
+  clothesId uuid NOT NULL,
+  addedAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  notes text,
+  CONSTRAINT WardrobeClothes_pkey PRIMARY KEY (id),
+  CONSTRAINT WardrobeClothes_wardrobeId_fkey FOREIGN KEY (wardrobeId) REFERENCES public.Wardrobe(id),
+  CONSTRAINT WardrobeClothes_clothesId_fkey FOREIGN KEY (clothesId) REFERENCES public.Clothes(id)
+);
+
+CREATE TABLE public.WardrobeOutfit (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  wardrobeId uuid NOT NULL,
+  outfitId uuid NOT NULL,
+  addedAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  notes text,
+  CONSTRAINT WardrobeOutfit_pkey PRIMARY KEY (id),
+  CONSTRAINT WardrobeOutfit_wardrobeId_fkey FOREIGN KEY (wardrobeId) REFERENCES public.Wardrobe(id),
+  CONSTRAINT WardrobeOutfit_outfitId_fkey FOREIGN KEY (outfitId) REFERENCES public.Outfit(id)
+);
+
+CREATE TABLE public.WearLog (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  userId uuid NOT NULL,
+  clothesId uuid NOT NULL,
+  outfitId uuid,
+  wornAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  occasion text,
+  weather text,
+  temperature integer,
+  location text,
+  notes text,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT WearLog_pkey PRIMARY KEY (id),
+  CONSTRAINT wearlog_userid_fkey FOREIGN KEY (userId) REFERENCES public.User(id),
+  CONSTRAINT wearlog_clothesid_fkey FOREIGN KEY (clothesId) REFERENCES public.Clothes(id),
+  CONSTRAINT wearlog_outfitid_fkey FOREIGN KEY (outfitId) REFERENCES public.Outfit(id)
+);

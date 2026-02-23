@@ -13,6 +13,14 @@ class EmailNotVerifiedError extends CredentialsSignin {
   code = "EmailNotVerified";
 }
 
+class UserNotFoundError extends CredentialsSignin {
+  code = "UserNotFound";
+}
+
+class WrongPasswordError extends CredentialsSignin {
+  code = "WrongPassword";
+}
+
 export const { auth, handlers, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   providers: [
@@ -26,23 +34,66 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     }),
     Credentials({
       credentials: {
-        email: { label: "Email", type: "email" },
+        identifier: { label: "Email or Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (!credentials?.identifier || !credentials?.password) {
           return null;
         }
 
+        const identifier = credentials.identifier as string;
+        const password = credentials.password as string;
+
         try {
+          // Determine if identifier is an email or username
+          const isEmail = identifier.includes("@");
+          let email: string;
+
+          if (isEmail) {
+            // Check if the email exists in our User table
+            const { data: userByEmail } = await supabase
+              .from("User")
+              .select("email")
+              .eq("email", identifier)
+              .single();
+
+            if (!userByEmail) {
+              throw new UserNotFoundError();
+            }
+
+            email = identifier;
+          } else {
+            // Look up email by username (case-insensitive)
+            const { data: userByUsername } = await supabase
+              .from("User")
+              .select("email")
+              .ilike("username", identifier)
+              .single();
+
+            if (!userByUsername) {
+              throw new UserNotFoundError();
+            }
+
+            email = userByUsername.email;
+          }
+
+          // Attempt sign-in with Supabase Auth
           const { data, error } = await supabase.auth.signInWithPassword({
-            email: credentials.email as string,
-            password: credentials.password as string,
+            email,
+            password,
           });
 
           if (error) {
             if (error.message.includes("Email not confirmed")) {
               throw new EmailNotVerifiedError();
+            }
+            // Invalid credentials = wrong password (user exists but password is wrong)
+            if (
+              error.message.includes("Invalid login credentials") ||
+              error.message.includes("invalid_credentials")
+            ) {
+              throw new WrongPasswordError();
             }
 
             return null;
@@ -72,7 +123,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             image: data.user.user_metadata?.image || null,
           };
         } catch (error) {
-          if (error instanceof EmailNotVerifiedError) {
+          if (
+            error instanceof EmailNotVerifiedError ||
+            error instanceof UserNotFoundError ||
+            error instanceof WrongPasswordError
+          ) {
             throw error;
           }
           console.error("Authorization error:", error);

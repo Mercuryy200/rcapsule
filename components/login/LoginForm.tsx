@@ -4,7 +4,7 @@ import { Form, Input, Button, Link, Divider } from "@heroui/react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, User } from "lucide-react";
 
 import {
   SignInButtonGithub,
@@ -28,12 +28,12 @@ function LoginFormContent() {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
+    const identifier = formData.get("identifier") as string;
     const password = formData.get("password") as string;
 
     try {
       const result = await signIn("credentials", {
-        email,
+        identifier,
         password,
         redirect: false,
       });
@@ -45,8 +45,18 @@ function LoginFormContent() {
           setError(
             "Please check your email to verify your account before logging in.",
           );
+        } else if (result.code === "UserNotFound") {
+          const isEmail = identifier.includes("@");
+
+          setError(
+            isEmail
+              ? "No account found with that email address."
+              : "No account found with that username.",
+          );
+        } else if (result.code === "WrongPassword") {
+          setError("Incorrect password. Please try again.");
         } else {
-          setError("Invalid email or password.");
+          setError("Something went wrong. Please try again.");
         }
       } else {
         router.push("/closet");
@@ -87,12 +97,13 @@ function LoginFormContent() {
         <Input
           isRequired
           classNames={{ inputWrapper: "h-12" }}
-          label="Email"
+          description="You can use your email or username"
+          label="Email or Username"
           labelPlacement="outside"
-          name="email"
-          placeholder="AnnaVogue@email.com"
-          startContent={<Mail className="text-default-400" size={18} />}
-          type="email"
+          name="identifier"
+          placeholder="AnnaVogue@email.com or @annavogue"
+          startContent={<User className="text-default-400" size={18} />}
+          type="text"
           variant="bordered"
         />
         <Input
