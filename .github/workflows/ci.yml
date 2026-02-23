@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Lint · Typecheck · Test · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Setup pnpm ──────────────────────────────────────────────────────
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      # ── Setup Node ──────────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      # ── Install dependencies ─────────────────────────────────────────────
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ── Lint ─────────────────────────────────────────────────────────────
+      - name: Lint
+        run: pnpm lint:check
+
+      # ── Typecheck ────────────────────────────────────────────────────────
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # ── Test ─────────────────────────────────────────────────────────────
+      - name: Test
+        run: pnpm test
+        env:
+          # Tests run without real secrets — MSW intercepts all external calls
+          OPENWEATHER_API_KEY: test-key
+          OPENAI_API_KEY: test-key
+          UPSTASH_REDIS_REST_URL: https://test.upstash.io
+          UPSTASH_REDIS_REST_TOKEN: test-token
+          NEXT_PUBLIC_SUPABASE_URL: https://test.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: test-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: test-service-role-key
+          AUTH_SECRET: test-auth-secret-32-chars-minimum!!
+          STRIPE_SECRET_KEY: sk_test_fake
+          NEXT_PUBLIC_SITE_URL: https://rcapsule.com
+
+      # ── Build ─────────────────────────────────────────────────────────────
+      - name: Build
+        run: pnpm build
+        env:
+          # Build needs real-ish env vars to avoid crashing on missing values
+          NEXT_PUBLIC_SUPABASE_URL: https://test.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: test-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: test-service-role-key
+          AUTH_SECRET: test-auth-secret-32-chars-minimum!!
+          AUTH_GOOGLE_ID: test-google-id
+          AUTH_GOOGLE_SECRET: test-google-secret
+          AUTH_GITHUB_ID: test-github-id
+          AUTH_GITHUB_SECRET: test-github-secret
+          STRIPE_SECRET_KEY: sk_test_fake
+          STRIPE_WEBHOOK_SECRET: whsec_test_fake
+          UPSTASH_REDIS_REST_URL: https://test.upstash.io
+          UPSTASH_REDIS_REST_TOKEN: test-token
+          NEXT_PUBLIC_SITE_URL: https://rcapsule.com
+          OPENWEATHER_API_KEY: test-key
+          OPENAI_API_KEY: test-key
+          SENTRY_AUTH_TOKEN: test-sentry-token
+          NEXT_PUBLIC_SENTRY_DSN: https://test@sentry.io/0
