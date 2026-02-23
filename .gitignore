@@ -25,7 +25,12 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
+.env.local
 .env*.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # vercel
 .vercel
@@ -39,3 +44,12 @@ yarn.lock
 package-lock.json
 bun.lockb
 /lib/generated/prisma
+
+# sentry
+.sentryclirc
+
+
+# Sentry Config File
+.env.sentry-build-plugin
+
+.vscode

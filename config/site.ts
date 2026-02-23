@@ -1,17 +1,30 @@
 export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
-  name: "Closet & me",
-  description: "Closet & me - Your Personal Wardrobe Manager",
   navItems: [
     {
-      label: "Home",
-      href: "/",
+      label: "Closet",
+      href: "/closet",
     },
-
     {
-      label: "About",
-      href: "/about",
+      label: "Profile",
+      href: "/profile",
+    },
+    {
+      label: "Outfits",
+      href: "/outfits",
+    },
+    {
+      label: "Wishlist",
+      href: "/wishlist",
+    },
+    {
+      label: "Collections",
+      href: "/collections",
+    },
+    {
+      label: "Catalog",
+      href: "/catalog",
     },
   ],
   navMenuItems: [
@@ -33,6 +46,6 @@ export const siteConfig = {
     },
   ],
   links: {
-    github: "https://github.com/Mercuryy200/StockPortfolioTracker",
+    github: "https://github.com/Mercuryy200/ClosetOrganizer",
   },
 };

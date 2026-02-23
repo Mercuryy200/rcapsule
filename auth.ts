@@ -1,69 +1,202 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import GitHub from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { createClient } from "@supabase/supabase-js";
 
-const prisma = new PrismaClient();
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+);
+class EmailNotVerifiedError extends CredentialsSignin {
+  code = "EmailNotVerified";
+}
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   providers: [
-    GitHub,
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID!,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+    }),
+    GitHub({
+      clientId: process.env.AUTH_GITHUB_ID!,
+      clientSecret: process.env.AUTH_GITHUB_SECRET!,
+    }),
     Credentials({
-      name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Invalid credentials");
+          return null;
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string }
-        });
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: credentials.email as string,
+            password: credentials.password as string,
+          });
 
-        if (!user || !user.password) {
-          throw new Error("Invalid credentials");
+          if (error) {
+            if (error.message.includes("Email not confirmed")) {
+              throw new EmailNotVerifiedError();
+            }
+            return null;
+          }
+
+          if (!data.user) return null;
+
+          const { data: existingUser } = await supabase
+            .from("User")
+            .select("id, email, name, image")
+            .eq("email", data.user.email!)
+            .single();
+
+          if (existingUser) {
+            return {
+              id: existingUser.id,
+              email: existingUser.email,
+              name: existingUser.name,
+              image: existingUser.image,
+            };
+          }
+
+          return {
+            id: data.user.id,
+            email: data.user.email!,
+            name: data.user.user_metadata?.name || null,
+            image: data.user.user_metadata?.image || null,
+          };
+        } catch (error) {
+          if (error instanceof EmailNotVerifiedError) {
+            throw error;
+          }
+          console.error("Authorization error:", error);
+          return null;
         }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          throw new Error("Invalid credentials");
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-        };
-      }
-    })
+      },
+    }),
   ],
-  pages: {
-    signIn: "/login",
-  },
   callbacks: {
-    async jwt({ token, user }) {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "github" || account?.provider === "google") {
+        try {
+          const { data: existingUser } = await supabase
+            .from("User")
+            .select("id, name, image")
+            .eq("email", user.email!)
+            .single();
+
+          let userId: any;
+
+          if (existingUser) {
+            userId = existingUser.id;
+
+            if (!existingUser.name && user.name) {
+              await supabase
+                .from("User")
+                .update({
+                  name: user.name,
+                  image: user.image,
+                  updatedAt: new Date().toISOString(),
+                })
+                .eq("id", userId);
+            }
+          } else {
+            userId = user.id;
+            await supabase.from("User").insert({
+              id: userId,
+              email: user.email!,
+              name: user.name,
+              image: user.image,
+              emailVerified: new Date().toISOString(),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            });
+          }
+
+          const { error: accountError } = await supabase.from("Account").upsert(
+            {
+              userId: userId,
+              type: account.type,
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+              refresh_token: account.refresh_token,
+              access_token: account.access_token,
+              expires_at: account.expires_at,
+              token_type: account.token_type,
+              scope: account.scope,
+              id_token: account.id_token,
+              session_state: account.session_state,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+            {
+              onConflict: "provider,providerAccountId",
+            },
+          );
+
+          if (accountError) {
+            console.error("Error linking account:", accountError);
+            return false;
+          }
+
+          user.id = userId;
+
+          return true;
+        } catch (error) {
+          console.error("Error in signIn callback:", error);
+          return false;
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user, trigger, session, account }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        token.picture = user.image;
       }
+
+      if (trigger === "update" && session) {
+        token.name = session.user.name;
+        token.picture = session.user.image;
+        return token;
+      }
+
+      if (token.id) {
+        try {
+          const { data: userData } = await supabase
+            .from("User")
+            .select("name, image")
+            .eq("id", token.id as string)
+            .single();
+
+          if (userData) {
+            token.name = userData.name;
+            token.picture = userData.image;
+          }
+        } catch (error) {
+          console.error("Error fetching user data in JWT callback:", error);
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.name = token.name as string;
+        session.user.image = token.picture as string;
       }
       return session;
     },
   },
+  pages: {
+    signIn: "/login",
+  },
+  trustHost: true,
 });

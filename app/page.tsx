@@ -1,6 +1,12 @@
-"use server";
-import Hero from "@/components/layout/Hero";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import LandingPage from "@/components/layout/LandingPage";
+export default async function HomePage() {
+  const session = await auth();
 
-export default async function Home() {
-  return <Hero></Hero>;
+  if (session?.user) {
+    redirect("/closet");
+  }
+
+  return <LandingPage />;
 }

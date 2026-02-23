@@ -1,10 +1,9 @@
-import { title } from "@/components/primitives";
-import { LoginForm } from "@/components/login/form";
+import { LoginForm } from "@/components/login/LoginForm";
 
 export default function LoginPage() {
   return (
-    <div>
-      <h1 className={title()}>Login</h1>
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-6">
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-50" />
       <LoginForm />
     </div>
   );
