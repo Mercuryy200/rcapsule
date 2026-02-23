@@ -127,9 +127,9 @@ export async function GET(req: Request) {
       .eq("userId", session.user.id)
       .gte("wornAt", sevenDaysAgo.toISOString());
 
-    const recentlyWornIds = [
-      ...new Set(recentWearLogs?.map((log) => log.clothesId) || []),
-    ];
+    const recentlyWornIds = Array.from(
+      new Set(recentWearLogs?.map((log) => log.clothesId) || []),
+    );
 
     // 6. Build context
     const context = {
@@ -294,10 +294,12 @@ export async function POST(req: Request) {
       .eq("userId", session.user.id)
       .gte("wornAt", sevenDaysAgo.toISOString());
 
-    const recentlyWornIds = [
-      ...new Set(recentWearLogs?.map((log) => log.clothesId) || []),
-      ...(excludeIds || []),
-    ];
+    const recentlyWornIds = Array.from(
+      new Set([
+        ...(recentWearLogs?.map((log) => log.clothesId) || []),
+        ...(excludeIds || []),
+      ]),
+    );
 
     // 6. Build context
     const context = {
