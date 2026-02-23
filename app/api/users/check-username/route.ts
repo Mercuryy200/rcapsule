@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 
 export async function GET(req: Request) {
@@ -51,6 +52,7 @@ export async function GET(req: Request) {
 
     if (error && error.code !== "PGRST116") {
       console.error("Error checking username:", error);
+
       return NextResponse.json(
         { error: "Failed to check username" },
         { status: 500 },
@@ -62,6 +64,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ available });
   } catch (error) {
     console.error("Username check error:", error);
+
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 },

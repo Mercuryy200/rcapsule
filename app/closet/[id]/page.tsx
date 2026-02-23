@@ -1,5 +1,7 @@
 "use client";
 
+import type { Clothes } from "@/lib/database.type";
+
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -25,7 +27,6 @@ import {
   TagIcon,
 } from "@heroicons/react/24/outline";
 
-import type { Clothes } from "@/lib/database.type";
 import {
   colors,
   occasions,
@@ -98,11 +99,14 @@ export default function ItemPage() {
   const fetchItem = async () => {
     try {
       const response = await fetch(`/api/clothes/${itemId}`);
+
       if (response.ok) {
         const data: Clothes = await response.json();
+
         setItem(data);
 
         let seasonData: string[] = [];
+
         if (Array.isArray(data.season)) {
           seasonData = data.season;
         } else if (typeof data.season === "string" && data.season) {
@@ -173,6 +177,7 @@ export default function ItemPage() {
   const handleSave = async () => {
     if (!formData.name || !formData.category) {
       alert("Name and Category are required.");
+
       return;
     }
 
@@ -219,6 +224,7 @@ export default function ItemPage() {
 
       if (response.ok) {
         const updatedData: Clothes = await response.json();
+
         setItem(updatedData);
         setIsEditing(false);
       } else {
@@ -238,6 +244,7 @@ export default function ItemPage() {
       const response = await fetch(`/api/clothes/${itemId}`, {
         method: "DELETE",
       });
+
       if (response.ok)
         router.push(item?.status === "wishlist" ? "/wishlist" : "/closet");
     } catch (error) {
@@ -257,9 +264,9 @@ export default function ItemPage() {
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="mb-8">
         <Button
-          variant="light"
-          startContent={<ArrowLeftIcon className="w-4 h-4" />}
           className="uppercase tracking-widest text-xs font-bold pl-0 text-default-500 hover:text-foreground"
+          startContent={<ArrowLeftIcon className="w-4 h-4" />}
+          variant="light"
           onPress={() =>
             router.push(item.status === "wishlist" ? "/wishlist" : "/closet")
           }
@@ -272,11 +279,11 @@ export default function ItemPage() {
         <div className="relative w-full aspect-[3/4] sm:aspect-auto sm:h-[600px] bg-content2 rounded-lg overflow-hidden shadow-inner">
           {item.imageUrl ? (
             <Image
-              alt={item.name}
-              src={item.imageUrl}
-              radius="none"
               removeWrapper
+              alt={item.name}
               className="w-full h-full object-contain"
+              radius="none"
+              src={item.imageUrl}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-default-300">
@@ -289,22 +296,22 @@ export default function ItemPage() {
           {!isEditing ? (
             <ViewMode
               item={item}
-              onEdit={() => setIsEditing(true)}
               onDelete={handleDelete}
+              onEdit={() => setIsEditing(true)}
             />
           ) : (
             <EditMode
-              formData={formData}
-              setFormData={setFormData}
               editTab={editTab}
-              setEditTab={setEditTab}
-              newTag={newTag}
-              setNewTag={setNewTag}
+              formData={formData}
               handleAddTag={handleAddTag}
               handleRemoveTag={handleRemoveTag}
+              newTag={newTag}
               saving={saving}
-              onSave={handleSave}
+              setEditTab={setEditTab}
+              setFormData={setFormData}
+              setNewTag={setNewTag}
               onCancel={() => setIsEditing(false)}
+              onSave={handleSave}
             />
           )}
         </div>
@@ -364,14 +371,15 @@ function ViewMode({
       <Divider />
 
       <div className="grid grid-cols-2 gap-y-6 gap-x-4 text-sm">
-        <DetailItem label="Category" value={item.category} capitalize />
+        <DetailItem capitalize label="Category" value={item.category} />
         <DetailItem label="Size" value={item.size || "N/A"} />
         <DetailItem
+          capitalize
           label="Condition"
           value={item.condition || "excellent"}
-          capitalize
         />
         <DetailItem
+          capitalize
           label="Season"
           value={
             Array.isArray(item.season) && item.season.length > 0
@@ -380,7 +388,6 @@ function ViewMode({
                 ? item.season
                 : "All Season"
           }
-          capitalize
         />
       </div>
 
@@ -442,7 +449,7 @@ function ViewMode({
               <DetailItem label="Location" value={item.purchaseLocation} />
             )}
             {item.purchaseType && (
-              <DetailItem label="Type" value={item.purchaseType} capitalize />
+              <DetailItem capitalize label="Type" value={item.purchaseType} />
             )}
           </div>
         </div>
@@ -501,8 +508,8 @@ function ViewMode({
               <Chip
                 key={tag}
                 size="sm"
-                variant="flat"
                 startContent={<TagIcon className="w-3 h-3" />}
+                variant="flat"
               >
                 {tag}
               </Chip>
@@ -537,12 +544,12 @@ function ViewMode({
         {item.link && (
           <Button
             as="a"
-            href={item.link}
-            target="_blank"
-            variant="solid"
-            radius="sm"
             className="w-full bg-foreground text-background font-bold uppercase tracking-widest"
             endContent={<ArrowTopRightOnSquareIcon className="w-4 h-4" />}
+            href={item.link}
+            radius="sm"
+            target="_blank"
+            variant="solid"
           >
             View Product Link
           </Button>
@@ -551,20 +558,20 @@ function ViewMode({
         <div className="flex gap-4">
           <Button
             fullWidth
-            variant="bordered"
-            radius="sm"
             className="font-medium uppercase tracking-wider border-default-300"
+            radius="sm"
             startContent={<PencilSquareIcon className="w-4 h-4" />}
+            variant="bordered"
             onPress={onEdit}
           >
             Edit Details
           </Button>
           <Button
             isIconOnly
-            variant="flat"
-            radius="sm"
-            color="danger"
             className="font-medium"
+            color="danger"
+            radius="sm"
+            variant="flat"
             onPress={onDelete}
           >
             <TrashIcon className="w-5 h-5" />
@@ -616,7 +623,7 @@ function EditMode({
         <h2 className="text-xl font-bold uppercase tracking-tighter">
           Edit Piece
         </h2>
-        <Button size="sm" variant="light" color="danger" onPress={onCancel}>
+        <Button color="danger" size="sm" variant="light" onPress={onCancel}>
           Cancel
         </Button>
       </div>
@@ -628,20 +635,17 @@ function EditMode({
         </h3>
         <div className="w-full aspect-[3/4] sm:aspect-video bg-content2 border border-dashed border-default-300 rounded-lg overflow-hidden relative">
           <ImageUpload
-            value={formData.imageUrl}
-            onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+            className="h-full w-full"
             folder="clothes"
             label="Update Image"
-            className="h-full w-full"
+            value={formData.imageUrl}
+            onChange={(url) => setFormData({ ...formData, imageUrl: url })}
           />
         </div>
       </div>
 
       {/* Tabbed Edit Sections */}
       <Tabs
-        selectedKey={editTab}
-        onSelectionChange={(key) => setEditTab(key as string)}
-        size="sm"
         classNames={{
           base: "w-full",
           tabList: "w-full bg-default-100 p-1",
@@ -649,42 +653,45 @@ function EditMode({
           tab: "h-8 text-xs",
           panel: "pt-4",
         }}
+        selectedKey={editTab}
+        size="sm"
+        onSelectionChange={(key) => setEditTab(key as string)}
       >
         <Tab key="basic" title="Basic">
           <div className="space-y-4">
             <Input
               isRequired
+              classNames={{ inputWrapper: "border-default-300" }}
               label="Name"
-              variant="bordered"
               radius="sm"
               value={formData.name}
+              variant="bordered"
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              classNames={{ inputWrapper: "border-default-300" }}
             />
 
             <div className="grid grid-cols-2 gap-4">
               <Input
+                classNames={{ inputWrapper: "border-default-300" }}
                 label="Brand"
-                variant="bordered"
                 radius="sm"
                 value={formData.brand}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, brand: e.target.value })
                 }
-                classNames={{ inputWrapper: "border-default-300" }}
               />
               <Select
                 isRequired
+                classNames={{ trigger: "border-default-300" }}
                 label="Category"
-                variant="bordered"
                 radius="sm"
                 selectedKeys={formData.category ? [formData.category] : []}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, category: e.target.value })
                 }
-                classNames={{ trigger: "border-default-300" }}
               >
                 {categories.map((cat) => (
                   <SelectItem key={cat}>{cat}</SelectItem>
@@ -693,27 +700,27 @@ function EditMode({
             </div>
 
             <Textarea
+              classNames={{ inputWrapper: "border-default-300" }}
               label="Description"
-              variant="bordered"
-              radius="sm"
               minRows={2}
+              radius="sm"
               value={formData.description}
+              variant="bordered"
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              classNames={{ inputWrapper: "border-default-300" }}
             />
 
             <div className="grid grid-cols-2 gap-4">
               <Select
+                classNames={{ trigger: "border-default-300" }}
                 label="Condition"
-                variant="bordered"
                 radius="sm"
                 selectedKeys={formData.condition ? [formData.condition] : []}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, condition: e.target.value })
                 }
-                classNames={{ trigger: "border-default-300" }}
               >
                 {conditions.map((cond) => (
                   <SelectItem key={cond} className="capitalize">
@@ -722,14 +729,14 @@ function EditMode({
                 ))}
               </Select>
               <Input
+                classNames={{ inputWrapper: "border-default-300" }}
                 label="Size"
-                variant="bordered"
                 radius="sm"
                 value={formData.size}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, size: e.target.value })
                 }
-                classNames={{ inputWrapper: "border-default-300" }}
               />
             </div>
           </div>
@@ -746,10 +753,10 @@ function EditMode({
                 </p>
                 <Button
                   fullWidth
-                  color="success"
-                  variant="flat"
-                  radius="sm"
                   className="font-semibold"
+                  color="success"
+                  radius="sm"
+                  variant="flat"
                   onPress={() => setFormData({ ...formData, status: "owned" })}
                 >
                   Mark as Purchased
@@ -766,10 +773,10 @@ function EditMode({
                 </p>
                 <Button
                   fullWidth
-                  color="warning"
-                  variant="flat"
-                  radius="sm"
                   className="font-semibold"
+                  color="warning"
+                  radius="sm"
+                  variant="flat"
                   onPress={() =>
                     setFormData({ ...formData, status: "wishlist" })
                   }
@@ -781,41 +788,41 @@ function EditMode({
 
             <div className="grid grid-cols-2 gap-4">
               <Input
+                classNames={{ inputWrapper: "border-default-300" }}
                 label="Current Price"
-                type="number"
-                variant="bordered"
                 radius="sm"
                 startContent={<span className="text-default-400">$</span>}
+                type="number"
                 value={formData.price}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, price: e.target.value })
                 }
-                classNames={{ inputWrapper: "border-default-300" }}
               />
               <Input
+                classNames={{ inputWrapper: "border-default-300" }}
                 label="Original Price"
-                type="number"
-                variant="bordered"
                 radius="sm"
                 startContent={<span className="text-default-400">$</span>}
+                type="number"
                 value={formData.originalPrice}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, originalPrice: e.target.value })
                 }
-                classNames={{ inputWrapper: "border-default-300" }}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <Select
+                classNames={{ trigger: "border-default-300" }}
                 label="Currency"
-                variant="bordered"
                 radius="sm"
                 selectedKeys={[formData.purchaseCurrency]}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, purchaseCurrency: e.target.value })
                 }
-                classNames={{ trigger: "border-default-300" }}
               >
                 {currencies.map((curr) => (
                   <SelectItem key={curr}>{curr}</SelectItem>
@@ -825,44 +832,44 @@ function EditMode({
               {/* Only show Purchase Date for owned items */}
               {formData.status === "owned" && (
                 <Input
-                  type="date"
+                  classNames={{ inputWrapper: "border-default-300" }}
                   label="Purchase Date"
-                  variant="bordered"
                   radius="sm"
+                  type="date"
                   value={formData.purchaseDate}
+                  variant="bordered"
                   onChange={(e) =>
                     setFormData({ ...formData, purchaseDate: e.target.value })
                   }
-                  classNames={{ inputWrapper: "border-default-300" }}
                 />
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <Input
+                classNames={{ inputWrapper: "border-default-300" }}
                 label="Purchase Location"
-                variant="bordered"
                 radius="sm"
                 value={formData.purchaseLocation}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, purchaseLocation: e.target.value })
                 }
-                classNames={{ inputWrapper: "border-default-300" }}
               />
 
               {/* Only show Purchase Type for owned items */}
               {formData.status === "owned" && (
                 <Select
+                  classNames={{ trigger: "border-default-300" }}
                   label="Purchase Type"
-                  variant="bordered"
                   radius="sm"
                   selectedKeys={
                     formData.purchaseType ? [formData.purchaseType] : []
                   }
+                  variant="bordered"
                   onChange={(e) =>
                     setFormData({ ...formData, purchaseType: e.target.value })
                   }
-                  classNames={{ trigger: "border-default-300" }}
                 >
                   {purchaseTypes.map((type) => (
                     <SelectItem key={type} className="capitalize">
@@ -874,32 +881,32 @@ function EditMode({
             </div>
 
             <Input
+              classNames={{ inputWrapper: "border-default-300" }}
               label="Product Link"
-              variant="bordered"
               radius="sm"
               value={formData.link}
+              variant="bordered"
               onChange={(e) =>
                 setFormData({ ...formData, link: e.target.value })
               }
-              classNames={{ inputWrapper: "border-default-300" }}
             />
           </div>
         </Tab>
         <Tab key="style" title="Style">
           <div className="space-y-4">
             <Select
+              classNames={{ trigger: "border-default-300" }}
               label="Colors"
-              variant="bordered"
               radius="sm"
-              selectionMode="multiple"
               selectedKeys={new Set(formData.colors || [])}
+              selectionMode="multiple"
+              variant="bordered"
               onSelectionChange={(keys) =>
                 setFormData({
                   ...formData,
                   colors: Array.from(keys) as string[],
                 })
               }
-              classNames={{ trigger: "border-default-300" }}
             >
               {colors.map((color) => (
                 <SelectItem
@@ -918,28 +925,28 @@ function EditMode({
 
             <div className="grid grid-cols-2 gap-4">
               <Select
+                classNames={{ trigger: "border-default-300" }}
                 label="Style"
-                variant="bordered"
                 radius="sm"
                 selectedKeys={formData.style ? [formData.style] : []}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, style: e.target.value })
                 }
-                classNames={{ trigger: "border-default-300" }}
               >
                 {styles.map((s) => (
                   <SelectItem key={s}>{s}</SelectItem>
                 ))}
               </Select>
               <Select
+                classNames={{ trigger: "border-default-300" }}
                 label="Silhouette"
-                variant="bordered"
                 radius="sm"
                 selectedKeys={formData.silhouette ? [formData.silhouette] : []}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, silhouette: e.target.value })
                 }
-                classNames={{ trigger: "border-default-300" }}
               >
                 {silhouettes.map((s) => (
                   <SelectItem key={s}>{s}</SelectItem>
@@ -949,28 +956,28 @@ function EditMode({
 
             <div className="grid grid-cols-2 gap-4">
               <Select
+                classNames={{ trigger: "border-default-300" }}
                 label="Pattern"
-                variant="bordered"
                 radius="sm"
                 selectedKeys={formData.pattern ? [formData.pattern] : []}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, pattern: e.target.value })
                 }
-                classNames={{ trigger: "border-default-300" }}
               >
                 {patterns.map((p) => (
                   <SelectItem key={p}>{p}</SelectItem>
                 ))}
               </Select>
               <Select
+                classNames={{ trigger: "border-default-300" }}
                 label="Fit"
-                variant="bordered"
                 radius="sm"
                 selectedKeys={formData.fit ? [formData.fit] : []}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, fit: e.target.value })
                 }
-                classNames={{ trigger: "border-default-300" }}
               >
                 {fits.map((f) => (
                   <SelectItem key={f}>{f}</SelectItem>
@@ -980,28 +987,28 @@ function EditMode({
 
             <div className="grid grid-cols-2 gap-4">
               <Select
+                classNames={{ trigger: "border-default-300" }}
                 label="Length"
-                variant="bordered"
                 radius="sm"
                 selectedKeys={formData.length ? [formData.length] : []}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, length: e.target.value })
                 }
-                classNames={{ trigger: "border-default-300" }}
               >
                 {lengths.map((l) => (
                   <SelectItem key={l}>{l}</SelectItem>
                 ))}
               </Select>
               <Select
+                classNames={{ trigger: "border-default-300" }}
                 label="Neckline"
-                variant="bordered"
                 radius="sm"
                 selectedKeys={formData.neckline ? [formData.neckline] : []}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, neckline: e.target.value })
                 }
-                classNames={{ trigger: "border-default-300" }}
               >
                 {necklines.map((n) => (
                   <SelectItem key={n}>{n}</SelectItem>
@@ -1011,36 +1018,36 @@ function EditMode({
 
             <div className="grid grid-cols-2 gap-4">
               <Select
+                classNames={{ trigger: "border-default-300" }}
                 label="Season"
-                variant="bordered"
                 radius="sm"
-                selectionMode="multiple"
                 selectedKeys={new Set(formData.season || [])}
+                selectionMode="multiple"
+                variant="bordered"
                 onSelectionChange={(keys) =>
                   setFormData({
                     ...formData,
                     season: Array.from(keys) as string[],
                   })
                 }
-                classNames={{ trigger: "border-default-300" }}
               >
                 {seasons.map((s) => (
                   <SelectItem key={s}>{s}</SelectItem>
                 ))}
               </Select>
               <Select
+                classNames={{ trigger: "border-default-300" }}
                 label="Occasions"
-                variant="bordered"
                 radius="sm"
-                selectionMode="multiple"
                 selectedKeys={new Set(formData.placesToWear || [])}
+                selectionMode="multiple"
+                variant="bordered"
                 onSelectionChange={(keys) =>
                   setFormData({
                     ...formData,
                     placesToWear: Array.from(keys) as string[],
                   })
                 }
-                classNames={{ trigger: "border-default-300" }}
               >
                 {occasions.map((o) => (
                   <SelectItem key={o}>{o}</SelectItem>
@@ -1052,41 +1059,41 @@ function EditMode({
         <Tab key="materials" title="Materials">
           <div className="space-y-4">
             <Textarea
+              classNames={{ inputWrapper: "border-default-300" }}
+              description="Specify material composition including percentages and part names (Body, Lining, etc.)"
               label="Material Composition"
-              placeholder="Body:&#10;81% Nylon, 19% Lycra Elastane&#10;&#10;Lining:&#10;56% Polyester, 33% Coolmax Polyester, 11% Lycra Elastane"
-              variant="bordered"
-              radius="sm"
               minRows={5}
+              placeholder="Body:&#10;81% Nylon, 19% Lycra Elastane&#10;&#10;Lining:&#10;56% Polyester, 33% Coolmax Polyester, 11% Lycra Elastane"
+              radius="sm"
               value={formData.materials}
+              variant="bordered"
               onChange={(e) =>
                 setFormData({ ...formData, materials: e.target.value })
               }
-              classNames={{ inputWrapper: "border-default-300" }}
-              description="Specify material composition including percentages and part names (Body, Lining, etc.)"
             />
 
             <Textarea
+              classNames={{ inputWrapper: "border-default-300" }}
               label="Care Instructions"
-              variant="bordered"
-              radius="sm"
               minRows={2}
+              radius="sm"
               value={formData.careInstructions}
+              variant="bordered"
               onChange={(e) =>
                 setFormData({ ...formData, careInstructions: e.target.value })
               }
-              classNames={{ inputWrapper: "border-default-300" }}
             />
 
             <Textarea
+              classNames={{ inputWrapper: "border-default-300" }}
               label="Sustainability Notes"
-              variant="bordered"
-              radius="sm"
               minRows={2}
+              radius="sm"
               value={formData.sustainability}
+              variant="bordered"
               onChange={(e) =>
                 setFormData({ ...formData, sustainability: e.target.value })
               }
-              classNames={{ inputWrapper: "border-default-300" }}
             />
           </div>
         </Tab>
@@ -1094,10 +1101,11 @@ function EditMode({
           <div className="space-y-4">
             <div className="flex gap-2">
               <Input
+                classNames={{ inputWrapper: "border-default-300" }}
                 placeholder="Add a tag..."
-                variant="bordered"
                 radius="sm"
                 value={newTag}
+                variant="bordered"
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -1105,7 +1113,6 @@ function EditMode({
                     handleAddTag();
                   }
                 }}
-                classNames={{ inputWrapper: "border-default-300" }}
               />
               <Button radius="sm" variant="bordered" onPress={handleAddTag}>
                 Add
@@ -1117,9 +1124,9 @@ function EditMode({
                 {formData.tags.map((tag: string) => (
                   <Chip
                     key={tag}
-                    onClose={() => handleRemoveTag(tag)}
-                    variant="flat"
                     radius="sm"
+                    variant="flat"
+                    onClose={() => handleRemoveTag(tag)}
                   >
                     {tag}
                   </Chip>
@@ -1132,10 +1139,10 @@ function EditMode({
 
       <Button
         fullWidth
-        color="primary"
-        radius="sm"
         className="h-12 font-bold uppercase tracking-widest mt-4 shadow-lg shadow-primary/20"
+        color="primary"
         isLoading={saving}
+        radius="sm"
         onPress={onSave}
       >
         Save Changes

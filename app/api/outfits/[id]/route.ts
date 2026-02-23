@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
@@ -84,6 +85,7 @@ export async function GET(
     return NextResponse.json(transformedOutfit);
   } catch (error) {
     console.error("Error fetching outfit:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch outfit" },
       { status: 500 },
@@ -184,6 +186,7 @@ export async function PUT(
     return NextResponse.json(outfit);
   } catch (error) {
     console.error("Error updating outfit:", error);
+
     return NextResponse.json(
       { error: "Failed to update outfit" },
       { status: 500 },
@@ -233,6 +236,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting outfit:", error);
+
     return NextResponse.json(
       { error: "Failed to delete outfit" },
       { status: 500 },

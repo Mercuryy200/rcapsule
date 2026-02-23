@@ -28,12 +28,14 @@ export default function UpdatePasswordPage() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
+
       if (!session) {
         setError(
           "This link is invalid or has expired. Please request a new one.",
         );
       }
     };
+
     checkSession();
   }, [supabase]);
 
@@ -49,12 +51,14 @@ export default function UpdatePasswordPage() {
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       setIsLoading(false);
+
       return;
     }
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters.");
       setIsLoading(false);
+
       return;
     }
 
@@ -87,12 +91,12 @@ export default function UpdatePasswordPage() {
     return (
       <div className="flex h-screen items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-md p-8 bg-success-50 border border-success-200 rounded-2xl text-center space-y-4"
+          initial={{ opacity: 0, scale: 0.95 }}
         >
           <div className="flex justify-center">
-            <CheckCircle2 size={48} className="text-success-600" />
+            <CheckCircle2 className="text-success-600" size={48} />
           </div>
           <h2 className="text-2xl font-bold text-success-800">
             Password Updated!
@@ -103,9 +107,9 @@ export default function UpdatePasswordPage() {
           </p>
           <Button
             as={Link}
-            href="/login"
             className="font-bold mt-4"
             color="success"
+            href="/login"
             variant="flat"
           >
             Go to Login Now
@@ -118,9 +122,9 @@ export default function UpdatePasswordPage() {
   return (
     <div className="flex h-screen items-center justify-center p-4">
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md space-y-8"
+        initial={{ opacity: 0, y: 10 }}
       >
         <div className="text-center space-y-2">
           <h2 className="text-3xl font-extrabold tracking-tighter uppercase italic">
@@ -140,18 +144,12 @@ export default function UpdatePasswordPage() {
 
         <Form
           className="flex flex-col gap-4"
-          onSubmit={handleSubmit}
           validationBehavior="native"
+          onSubmit={handleSubmit}
         >
           <Input
             isRequired
-            label="New Password"
-            name="password"
-            placeholder="••••••••"
-            variant="bordered"
-            labelPlacement="outside"
             classNames={{ inputWrapper: "h-12" }}
-            startContent={<Lock size={18} className="text-default-400" />}
             endContent={
               <button
                 className="focus:outline-none"
@@ -165,27 +163,33 @@ export default function UpdatePasswordPage() {
                 )}
               </button>
             }
+            label="New Password"
+            labelPlacement="outside"
+            name="password"
+            placeholder="••••••••"
+            startContent={<Lock className="text-default-400" size={18} />}
             type={isVisible ? "text" : "password"}
+            variant="bordered"
           />
 
           <Input
             isRequired
+            classNames={{ inputWrapper: "h-12" }}
             label="Confirm Password"
+            labelPlacement="outside"
             name="confirmPassword"
             placeholder="••••••••"
-            variant="bordered"
-            labelPlacement="outside"
-            classNames={{ inputWrapper: "h-12" }}
-            startContent={<Lock size={18} className="text-default-400" />}
+            startContent={<Lock className="text-default-400" size={18} />}
             type="password"
+            variant="bordered"
           />
 
           <Button
             className="w-full h-12 font-bold text-md mt-2 shadow-lg shadow-primary/20"
             color="primary"
+            isDisabled={!!error && error.includes("link is invalid")}
             isLoading={isLoading}
             type="submit"
-            isDisabled={!!error && error.includes("link is invalid")}
           >
             Update Password
           </Button>

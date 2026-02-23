@@ -32,6 +32,7 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
   try {
     const redis = getRedis();
     const raw = await redis.get<T>(key);
+
     return raw ?? null;
   } catch {
     // Never let a Redis failure break the request
@@ -49,6 +50,7 @@ export async function cacheSet(
 ): Promise<void> {
   try {
     const redis = getRedis();
+
     await redis.set(key, value, { ex: ttlSeconds });
   } catch {
     // Non-fatal
@@ -62,6 +64,7 @@ export async function cacheDel(...keys: string[]): Promise<void> {
   if (keys.length === 0) return;
   try {
     const redis = getRedis();
+
     await redis.del(...keys);
   } catch {
     // Non-fatal

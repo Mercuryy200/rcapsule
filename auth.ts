@@ -8,6 +8,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
+
 class EmailNotVerifiedError extends CredentialsSignin {
   code = "EmailNotVerified";
 }
@@ -43,6 +44,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             if (error.message.includes("Email not confirmed")) {
               throw new EmailNotVerifiedError();
             }
+
             return null;
           }
 
@@ -74,6 +76,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             throw error;
           }
           console.error("Authorization error:", error);
+
           return null;
         }
       },
@@ -140,6 +143,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
           if (accountError) {
             console.error("Error linking account:", accountError);
+
             return false;
           }
 
@@ -148,9 +152,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           return true;
         } catch (error) {
           console.error("Error in signIn callback:", error);
+
           return false;
         }
       }
+
       return true;
     },
     async jwt({ token, user, trigger, session, account }) {
@@ -164,6 +170,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (trigger === "update" && session) {
         token.name = session.user.name;
         token.picture = session.user.image;
+
         return token;
       }
 
@@ -192,6 +199,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         session.user.name = token.name as string;
         session.user.image = token.picture as string;
       }
+
       return session;
     },
   },

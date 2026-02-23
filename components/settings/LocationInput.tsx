@@ -47,6 +47,7 @@ export default function LocationInput({ value, onChange }: LocationInputProps) {
             },
           );
           const data = await response.json();
+
           setSuggestions(data);
         } catch (error) {
           console.error("Error fetching locations:", error);
@@ -78,21 +79,21 @@ export default function LocationInput({ value, onChange }: LocationInputProps) {
   return (
     <div className="relative md:col-span-2">
       <Input
+        className="md:col-span-2"
         label="Location"
         placeholder="City, Country"
-        variant="bordered"
         radius="none"
-        className="md:col-span-2"
         startContent={<GlobeAltIcon className="w-4 h-4 text-default-400" />}
         value={inputValue}
+        variant="bordered"
+        onBlur={() => {
+          setTimeout(() => setShowSuggestions(false), 200);
+        }}
         onChange={(e) => {
           setInputValue(e.target.value);
           setShowSuggestions(true);
         }}
         onFocus={() => setShowSuggestions(true)}
-        onBlur={() => {
-          setTimeout(() => setShowSuggestions(false), 200);
-        }}
       />
 
       {showSuggestions && suggestions.length > 0 && (

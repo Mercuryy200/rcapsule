@@ -33,6 +33,7 @@ import {
   CheckCircleIcon,
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
+
 import { ImageUpload } from "@/components/closet/ImageUpload";
 import CollageBuilder from "@/components/outfit/CollageBuilder";
 
@@ -146,6 +147,7 @@ export default function CreateOutfitPage() {
       formData.description.trim() !== "" ||
       selectedClothes.length > 0 ||
       selectedWardrobes.size > 0;
+
     setHasUnsavedChanges(hasChanges);
   }, [formData, selectedClothes, selectedWardrobes]);
 
@@ -157,7 +159,9 @@ export default function CreateOutfitPage() {
         e.returnValue = "";
       }
     };
+
     window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
@@ -176,10 +180,12 @@ export default function CreateOutfitPage() {
 
       if (clothesRes.ok) {
         const clothes = await clothesRes.json();
+
         setAvailableClothes(clothes);
 
         // Get recently worn items (last 30 days)
         const thirtyDaysAgo = new Date();
+
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         const recent = clothes
           .filter(
@@ -192,6 +198,7 @@ export default function CreateOutfitPage() {
               new Date(a.lastWornAt!).getTime(),
           )
           .slice(0, 8);
+
         setRecentlyUsed(recent);
       }
 
@@ -201,6 +208,7 @@ export default function CreateOutfitPage() {
 
       if (outfitsRes.ok) {
         const outfits = await outfitsRes.json();
+
         setExistingOutfits(
           outfits.map((o: any) => ({
             id: o.id,
@@ -220,6 +228,7 @@ export default function CreateOutfitPage() {
   useEffect(() => {
     if (selectedClothes.length < 2) {
       setDuplicateWarning(null);
+
       return;
     }
 
@@ -227,6 +236,7 @@ export default function CreateOutfitPage() {
 
     const duplicate = existingOutfits.find((outfit) => {
       if (outfit.clothesIds.length !== selectedIds.size) return false;
+
       return outfit.clothesIds.every((id) => selectedIds.has(id));
     });
 
@@ -243,6 +253,7 @@ export default function CreateOutfitPage() {
         ).length;
         const similarity =
           overlap / Math.max(outfit.clothesIds.length, selectedIds.size);
+
         return similarity >= 0.8;
       });
 
@@ -259,6 +270,7 @@ export default function CreateOutfitPage() {
   const handleCollageSave = async (file: File) => {
     try {
       const uploadData = new FormData();
+
       uploadData.append("file", file);
       uploadData.append("folder", "outfits");
 
@@ -269,6 +281,7 @@ export default function CreateOutfitPage() {
 
       if (res.ok) {
         const data = await res.json();
+
         setFormData((prev) => ({ ...prev, imageUrl: data.url }));
         setShowCollageBuilder(false);
       } else {
@@ -288,6 +301,7 @@ export default function CreateOutfitPage() {
       const filtered = selectedClothes.filter(
         (c) => c.category !== item.category,
       );
+
       setSelectedClothes([...filtered, item]);
     } else {
       setSelectedClothes([...selectedClothes, item]);
@@ -331,11 +345,13 @@ export default function CreateOutfitPage() {
 
     if (!formData.name.trim()) {
       alert("Please enter a name for your outfit");
+
       return;
     }
 
     if (selectedClothes.length === 0) {
       alert("Please select at least one clothing item");
+
       return;
     }
 
@@ -354,10 +370,12 @@ export default function CreateOutfitPage() {
 
       if (response.ok) {
         const outfit = await response.json();
+
         setHasUnsavedChanges(false);
         router.push(`/outfits/${outfit.id}`);
       } else {
         const error = await response.json();
+
         alert(error.error || "Failed to create outfit");
       }
     } catch (error) {
@@ -387,6 +405,7 @@ export default function CreateOutfitPage() {
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.brand?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = !activeCategory || item.category === activeCategory;
+
     return matchesSearch && matchesCategory;
   });
 
@@ -395,6 +414,7 @@ export default function CreateOutfitPage() {
     (acc, item) => {
       if (!acc[item.category]) acc[item.category] = [];
       acc[item.category].push(item);
+
       return acc;
     },
     {} as Record<string, ClothingItem[]>,
@@ -412,8 +432,8 @@ export default function CreateOutfitPage() {
         <div className="flex items-center gap-4">
           <Button
             isIconOnly
-            variant="light"
             radius="full"
+            variant="light"
             onPress={() => handleNavigateAway("/outfits")}
           >
             <ArrowLeftIcon className="w-5 h-5" />
@@ -430,10 +450,10 @@ export default function CreateOutfitPage() {
 
         {hasUnsavedChanges && (
           <Chip
-            size="sm"
-            variant="flat"
             color="warning"
+            size="sm"
             startContent={<ExclamationTriangleIcon className="w-3 h-3" />}
+            variant="flat"
           >
             Unsaved Changes
           </Chip>
@@ -441,8 +461,8 @@ export default function CreateOutfitPage() {
       </div>
 
       <form
-        onSubmit={handleSubmit}
         className="grid grid-cols-1 lg:grid-cols-12 gap-12"
+        onSubmit={handleSubmit}
       >
         {/* LEFT COLUMN: Preview */}
         <div className="lg:col-span-5 h-fit lg:sticky lg:top-24 space-y-6">
@@ -450,16 +470,16 @@ export default function CreateOutfitPage() {
           <div className="aspect-[3/4] bg-content2 border border-dashed border-default-300 flex flex-col items-center justify-center relative overflow-hidden group">
             <div className="absolute top-4 z-10">
               <Tabs
-                selectedKey={imageMethod}
-                onSelectionChange={(k) =>
-                  setImageMethod(k as typeof imageMethod)
-                }
-                radius="none"
-                size="sm"
                 classNames={{
                   tabList:
                     "bg-background/80 backdrop-blur border border-default-200",
                 }}
+                radius="none"
+                selectedKey={imageMethod}
+                size="sm"
+                onSelectionChange={(k) =>
+                  setImageMethod(k as typeof imageMethod)
+                }
               >
                 <Tab key="builder" title="Collage" />
                 <Tab key="upload" title="Upload" />
@@ -471,15 +491,15 @@ export default function CreateOutfitPage() {
               {formData.imageUrl ? (
                 <div className="relative w-full h-full group">
                   <Image
-                    src={formData.imageUrl}
                     alt="Preview"
                     className="w-full h-full object-contain shadow-xl"
+                    src={formData.imageUrl}
                   />
                   <Button
-                    size="sm"
-                    color="danger"
-                    variant="flat"
                     className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100"
+                    color="danger"
+                    size="sm"
+                    variant="flat"
                     onPress={() =>
                       setFormData((prev) => ({ ...prev, imageUrl: "" }))
                     }
@@ -490,13 +510,13 @@ export default function CreateOutfitPage() {
               ) : imageMethod === "builder" ? (
                 <div className="text-center">
                   <Button
-                    variant="flat"
-                    size="lg"
-                    radius="none"
-                    startContent={<SparklesIcon className="w-5 h-5" />}
-                    onPress={() => setShowCollageBuilder(true)}
-                    isDisabled={selectedClothes.length === 0}
                     className="uppercase font-bold text-xs tracking-widest h-14 px-8"
+                    isDisabled={selectedClothes.length === 0}
+                    radius="none"
+                    size="lg"
+                    startContent={<SparklesIcon className="w-5 h-5" />}
+                    variant="flat"
+                    onPress={() => setShowCollageBuilder(true)}
                   >
                     Open Collage Studio
                   </Button>
@@ -508,27 +528,27 @@ export default function CreateOutfitPage() {
                 </div>
               ) : imageMethod === "upload" ? (
                 <ImageUpload
+                  folder="outfits"
+                  label="Upload Final Look"
                   value={formData.imageUrl}
                   onChange={(url) =>
                     setFormData((prev) => ({ ...prev, imageUrl: url }))
                   }
-                  folder="outfits"
-                  label="Upload Final Look"
                 />
               ) : (
                 <div className="w-full max-w-xs">
                   <Input
                     label="Image URL"
-                    variant="bordered"
+                    placeholder="https://..."
                     radius="none"
                     value={formData.imageUrl}
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
                         imageUrl: e.target.value,
                       }))
                     }
-                    placeholder="https://..."
                   />
                 </div>
               )}
@@ -575,36 +595,36 @@ export default function CreateOutfitPage() {
             </h3>
             <Input
               isRequired
+              classNames={{ inputWrapper: "h-12" }}
               label="Title"
               placeholder="e.g. Gallery Opening Night"
-              variant="bordered"
               radius="none"
               value={formData.name}
+              variant="bordered"
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, name: e.target.value }))
               }
-              classNames={{ inputWrapper: "h-12" }}
             />
             <Textarea
               label="Notes"
+              minRows={2}
               placeholder="Styling notes, inspiration, or when to wear..."
-              variant="bordered"
               radius="none"
               value={formData.description}
+              variant="bordered"
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
                   description: e.target.value,
                 }))
               }
-              minRows={2}
             />
             <div className="grid grid-cols-2 gap-4">
               <Select
                 label="Season"
-                variant="bordered"
                 radius="none"
                 selectedKeys={formData.season ? [formData.season] : []}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, season: e.target.value }))
                 }
@@ -615,9 +635,9 @@ export default function CreateOutfitPage() {
               </Select>
               <Select
                 label="Occasion"
-                variant="bordered"
                 radius="none"
                 selectedKeys={formData.occasion ? [formData.occasion] : []}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, occasion: e.target.value }))
                 }
@@ -652,14 +672,14 @@ export default function CreateOutfitPage() {
                 {recentlyUsed.map((item) => (
                   <Tooltip key={item.id} content={item.name}>
                     <button
+                      className="flex-shrink-0 w-16 h-16 border border-default-200 hover:border-primary transition-colors overflow-hidden"
                       type="button"
                       onClick={() => handleAddClothes(item)}
-                      className="flex-shrink-0 w-16 h-16 border border-default-200 hover:border-primary transition-colors overflow-hidden"
                     >
                       <Image
-                        src={item.imageUrl || ""}
-                        radius="none"
                         className="w-full h-full object-cover"
+                        radius="none"
+                        src={item.imageUrl || ""}
                       />
                     </button>
                   </Tooltip>
@@ -675,12 +695,12 @@ export default function CreateOutfitPage() {
                 Pieces ({selectedClothes.length})
               </h3>
               <Button
-                size="sm"
-                variant="light"
-                radius="none"
-                startContent={<PlusIcon className="w-4 h-4" />}
-                onPress={addClothesModal.onOpen}
                 className="uppercase font-bold text-[10px]"
+                radius="none"
+                size="sm"
+                startContent={<PlusIcon className="w-4 h-4" />}
+                variant="light"
+                onPress={addClothesModal.onOpen}
               >
                 Add Items
               </Button>
@@ -692,11 +712,11 @@ export default function CreateOutfitPage() {
                   No items selected yet
                 </p>
                 <Button
-                  variant="flat"
                   radius="none"
                   size="sm"
-                  onPress={addClothesModal.onOpen}
                   startContent={<PlusIcon className="w-4 h-4" />}
+                  variant="flat"
+                  onPress={addClothesModal.onOpen}
                 >
                   Browse Closet
                 </Button>
@@ -708,6 +728,7 @@ export default function CreateOutfitPage() {
                     (acc, item) => {
                       if (!acc[item.category]) acc[item.category] = [];
                       acc[item.category].push(item);
+
                       return acc;
                     },
                     {} as Record<string, ClothingItem[]>,
@@ -727,10 +748,10 @@ export default function CreateOutfitPage() {
                             onClick={() => handleRemoveClothes(item.id)}
                           >
                             <Image
-                              src={item.imageUrl || ""}
-                              radius="none"
                               className="w-full h-full object-cover"
                               classNames={{ wrapper: "w-full h-full" }}
+                              radius="none"
+                              src={item.imageUrl || ""}
                             />
                             <div className="absolute bottom-0 w-full bg-white/90 p-1 text-[9px] uppercase truncate text-center">
                               {item.name}
@@ -758,20 +779,22 @@ export default function CreateOutfitPage() {
               <div className="flex flex-wrap gap-3">
                 {availableWardrobes.map((w) => {
                   const isSelected = selectedWardrobes.has(w.id);
+
                   return (
                     <button
                       key={w.id}
-                      type="button"
-                      onClick={() => {
-                        const s = new Set(selectedWardrobes);
-                        s.has(w.id) ? s.delete(w.id) : s.add(w.id);
-                        setSelectedWardrobes(s);
-                      }}
                       className={`px-4 py-2 border text-xs uppercase tracking-wide transition-all ${
                         isSelected
                           ? "border-primary bg-primary text-white"
                           : "border-default-200 hover:border-default-400"
                       }`}
+                      type="button"
+                      onClick={() => {
+                        const s = new Set(selectedWardrobes);
+
+                        s.has(w.id) ? s.delete(w.id) : s.add(w.id);
+                        setSelectedWardrobes(s);
+                      }}
                     >
                       {w.title}
                     </button>
@@ -785,21 +808,21 @@ export default function CreateOutfitPage() {
           <div className="pt-8 flex gap-4">
             <Button
               fullWidth
-              variant="bordered"
-              radius="none"
               className="h-12 uppercase tracking-widest"
+              radius="none"
+              variant="bordered"
               onPress={() => handleNavigateAway("/outfits")}
             >
               Cancel
             </Button>
             <Button
               fullWidth
-              color="primary"
-              radius="none"
               className="h-12 uppercase tracking-widest font-bold"
-              type="submit"
-              isLoading={submitting}
+              color="primary"
               isDisabled={!formData.name.trim() || selectedClothes.length === 0}
+              isLoading={submitting}
+              radius="none"
+              type="submit"
             >
               {submitting ? "Saving..." : "Save Look"}
             </Button>
@@ -810,10 +833,10 @@ export default function CreateOutfitPage() {
       {/* Add Clothes Modal */}
       <Modal
         isOpen={addClothesModal.isOpen}
-        onClose={addClothesModal.onClose}
-        size="5xl"
-        scrollBehavior="inside"
         radius="none"
+        scrollBehavior="inside"
+        size="5xl"
+        onClose={addClothesModal.onClose}
       >
         <ModalContent>
           <ModalHeader className="flex-col gap-4">
@@ -829,26 +852,26 @@ export default function CreateOutfitPage() {
             {/* Search and Filter */}
             <div className="flex gap-3 w-full">
               <Input
+                isClearable
+                className="flex-1"
                 placeholder="Search items..."
-                variant="bordered"
                 radius="none"
                 size="sm"
                 startContent={
                   <MagnifyingGlassIcon className="w-4 h-4 text-default-400" />
                 }
                 value={searchQuery}
+                variant="bordered"
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1"
-                isClearable
                 onClear={() => setSearchQuery("")}
               />
               <Select
-                placeholder="All Categories"
-                variant="bordered"
-                radius="none"
-                size="sm"
                 className="w-48"
+                placeholder="All Categories"
+                radius="none"
                 selectedKeys={activeCategory ? [activeCategory] : []}
+                size="sm"
+                variant="bordered"
                 onChange={(e) => setActiveCategory(e.target.value || null)}
               >
                 {allCategories.map((cat) => (
@@ -876,7 +899,7 @@ export default function CreateOutfitPage() {
                         <h4 className="text-xs font-bold uppercase tracking-widest">
                           {category}
                         </h4>
-                        <Chip size="sm" variant="flat" className="text-[10px]">
+                        <Chip className="text-[10px]" size="sm" variant="flat">
                           {isAccessory ? "Multiple OK" : "Pick One"}
                         </Chip>
                         {!isAccessory && selectedInCategory && (
@@ -915,9 +938,9 @@ export default function CreateOutfitPage() {
                                 onClick={() => handleAddClothes(item)}
                               >
                                 <Image
-                                  src={item.imageUrl || ""}
-                                  radius="none"
                                   className="w-full h-full object-cover group-hover:opacity-90"
+                                  radius="none"
+                                  src={item.imageUrl || ""}
                                 />
                                 <div
                                   className={`absolute bottom-0 w-full p-1 text-[9px] uppercase truncate text-center ${
@@ -956,8 +979,8 @@ export default function CreateOutfitPage() {
                 {totalCost > 0 && ` • $${totalCost.toFixed(2)} total`}
               </span>
               <Button
-                radius="none"
                 color="primary"
+                radius="none"
                 onPress={addClothesModal.onClose}
               >
                 Done
@@ -969,11 +992,11 @@ export default function CreateOutfitPage() {
 
       {/* Collage Builder Modal */}
       <Modal
-        isOpen={showCollageBuilder}
-        onClose={() => setShowCollageBuilder(false)}
-        size="5xl"
-        radius="none"
         classNames={{ body: "p-0", header: "border-b border-default-200" }}
+        isOpen={showCollageBuilder}
+        radius="none"
+        size="5xl"
+        onClose={() => setShowCollageBuilder(false)}
       >
         <ModalContent className="h-[85vh]">
           <ModalHeader className="uppercase tracking-widest font-bold">
@@ -991,9 +1014,9 @@ export default function CreateOutfitPage() {
       {/* Confirm Leave Modal */}
       <Modal
         isOpen={confirmLeaveModal.isOpen}
-        onClose={confirmLeaveModal.onClose}
         radius="none"
         size="sm"
+        onClose={confirmLeaveModal.onClose}
       >
         <ModalContent>
           <ModalHeader className="flex items-center gap-2">
@@ -1008,8 +1031,8 @@ export default function CreateOutfitPage() {
           </ModalBody>
           <ModalFooter>
             <Button
-              variant="light"
               radius="none"
+              variant="light"
               onPress={confirmLeaveModal.onClose}
             >
               Stay

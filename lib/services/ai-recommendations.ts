@@ -163,12 +163,14 @@ async function callOpenAI(prompt: string): Promise<string> {
 
   if (!response.ok) {
     const error = await response.json();
+
     throw new Error(
       `OpenAI API error: ${error.error?.message || response.statusText}`,
     );
   }
 
   const data = await response.json();
+
   return data.choices[0].message.content;
 }
 
@@ -203,12 +205,14 @@ async function callClaude(prompt: string): Promise<string> {
 
   if (!response.ok) {
     const error = await response.json();
+
     throw new Error(
       `Claude API error: ${error.error?.message || response.statusText}`,
     );
   }
 
   const data = await response.json();
+
   return data.content[0].text;
 }
 
@@ -241,6 +245,7 @@ export async function getOutfitRecommendation(
   try {
     // Clean up response if it has markdown code blocks
     let cleanJson = responseText.trim();
+
     if (cleanJson.startsWith("```json")) {
       cleanJson = cleanJson.slice(7);
     }
@@ -255,6 +260,7 @@ export async function getOutfitRecommendation(
 
     // Validate that returned IDs exist in the clothes array
     const clothesIds = new Set(ownedClothes.map((c) => c.id));
+
     recommendation.items = recommendation.items.filter((item) =>
       clothesIds.has(item.id),
     );
@@ -262,6 +268,7 @@ export async function getOutfitRecommendation(
     // Enrich with image URLs from original data
     recommendation.items = recommendation.items.map((item) => {
       const originalItem = ownedClothes.find((c) => c.id === item.id);
+
       return {
         ...item,
         imageUrl: originalItem?.imageUrl,
@@ -299,6 +306,7 @@ export async function getOutfitOptions(
         clothes,
         modifiedContext,
       );
+
       results.push(recommendation);
 
       // Track used items for variety

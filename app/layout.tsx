@@ -1,14 +1,16 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import clsx from "clsx";
+import { Analytics } from "@vercel/analytics/next";
+import * as Sentry from "@sentry/nextjs";
+import { Toaster } from "sonner";
+
 import { Providers } from "./providers";
+
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
 import { fontSans } from "@/config/fonts";
-import { Analytics } from "@vercel/analytics/next";
 import ScrollToTop from "@/components/ui/ScrollToTop";
-import * as Sentry from "@sentry/nextjs";
-import { Toaster } from "sonner";
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
@@ -20,6 +22,7 @@ Sentry.init({
     if (process.env.NODE_ENV === "development") {
       return null;
     }
+
     return event;
   },
 });
@@ -50,9 +53,9 @@ export default function RootLayout({
     <html suppressHydrationWarning lang="en">
       <head>
         <script
-          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
           async
           defer
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
         />
       </head>
       <body
@@ -67,7 +70,7 @@ export default function RootLayout({
             <Header />
             <main className="flex-1 w-full max-w-7xl mx-auto px-6">
               {children}
-              <Toaster position="top-right" richColors />
+              <Toaster richColors position="top-right" />
               <Analytics />
             </main>
             <Footer />

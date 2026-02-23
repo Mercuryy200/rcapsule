@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
 export async function GET() {
   try {
     const session = await auth();
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -30,6 +32,7 @@ export async function GET() {
       if (Array.isArray(item.colors)) {
         item.colors.forEach((c) => {
           const colorName = c.toLowerCase().trim();
+
           colorCounts[colorName] = (colorCounts[colorName] || 0) + 1;
           totalColorTags++;
         });
@@ -53,6 +56,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error fetching profile stats:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch stats" },
       { status: 500 },

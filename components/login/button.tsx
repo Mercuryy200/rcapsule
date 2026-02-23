@@ -1,8 +1,6 @@
 "use client";
 import { Button, Link } from "@heroui/react";
-
 import { FaGithub, FaGoogle } from "react-icons/fa";
-
 import { signIn } from "next-auth/react";
 
 import { logout } from "@/lib/actions/auth";
@@ -10,9 +8,9 @@ import { logout } from "@/lib/actions/auth";
 export const SignInButtonGoogle = () => {
   return (
     <Button
-      variant="bordered"
       className="w-full font-medium"
       startContent={<FaGoogle />}
+      variant="bordered"
       onPress={() => signIn("google", { callbackUrl: "/closet" })}
     >
       Google
@@ -23,9 +21,9 @@ export const SignInButtonGoogle = () => {
 export const SignInButtonGithub = () => {
   return (
     <Button
-      variant="bordered"
       className="w-full font-medium"
       startContent={<FaGithub />}
+      variant="bordered"
       onPress={() => signIn("github", { callbackUrl: "/closet" })}
     >
       GitHub

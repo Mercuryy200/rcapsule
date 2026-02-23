@@ -123,8 +123,10 @@ export default function CalendarTracker({
     if (view === "day") return format(currentDate, "MMMM do, yyyy");
     if (view === "week") {
       const { start, end } = getViewRange();
+
       return `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`;
     }
+
     return format(currentDate, "MMMM yyyy");
   };
 
@@ -139,6 +141,7 @@ export default function CalendarTracker({
 
     try {
       const res = await fetch(`/api/calendar?start=${apiStart}&end=${apiEnd}`);
+
       if (!res.ok) throw new Error("Failed to fetch logs");
       setLogs(await res.json());
     } catch (err) {
@@ -166,6 +169,7 @@ export default function CalendarTracker({
   const openEditModal = (entry: any) => {
     setIsEditing(true);
     const entryDate = new Date(entry.metadata.wornAt);
+
     setSelectedDate(entryDate);
     setSelectedOutfitId(entry.data.id);
     setMetadata({
@@ -193,6 +197,7 @@ export default function CalendarTracker({
 
     try {
       let res;
+
       if (isEditing) {
         // For editing, we need the original date from the current view
         res = await fetch("/api/calendar", {
@@ -217,6 +222,7 @@ export default function CalendarTracker({
 
       if (!res.ok) {
         setError(data.error || "Failed to save");
+
         return;
       }
 
@@ -249,6 +255,7 @@ export default function CalendarTracker({
         fetchLogs();
       } else {
         const data = await res.json();
+
         alert(data.error || "Failed to delete");
       }
     } catch (err) {
@@ -259,6 +266,7 @@ export default function CalendarTracker({
   const getDayContent = (day: Date) => {
     const dayLogs = logs.filter((log) => isSameDay(new Date(log.wornAt), day));
     const uniqueEntries = new Map();
+
     dayLogs.forEach((log) => {
       if (log.outfit && !uniqueEntries.has(log.outfit.id)) {
         uniqueEntries.set(log.outfit.id, {
@@ -268,6 +276,7 @@ export default function CalendarTracker({
         });
       }
     });
+
     return Array.from(uniqueEntries.values());
   };
 
@@ -324,11 +333,11 @@ export default function CalendarTracker({
                   {format(day, "d")}
                 </span>
                 <div
+                  className="p-1.5 rounded-full hover:bg-default-200 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={(e) => {
                     e.stopPropagation();
                     openAddModal(day);
                   }}
-                  className="p-1.5 rounded-full hover:bg-default-200 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <PlusIcon className="w-4 h-4 text-default-500" />
                 </div>
@@ -339,10 +348,10 @@ export default function CalendarTracker({
                   {entries.map((entry: any) => (
                     <div key={entry.data.id} className="relative group/avatar">
                       <Avatar
-                        src={entry.data.imageUrl}
-                        size={isWeek ? "lg" : "sm"}
-                        radius="md"
                         className="border border-default-200 shadow-sm"
+                        radius="md"
+                        size={isWeek ? "lg" : "sm"}
+                        src={entry.data.imageUrl}
                       />
                       {isWeek && (
                         <div className="hidden group-hover/avatar:block absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-foreground text-background text-xs p-3 rounded-lg shadow-xl pointer-events-none">
@@ -403,9 +412,9 @@ export default function CalendarTracker({
               >
                 <div className="w-full md:w-48 h-64 bg-background rounded-xl border border-default-100 shrink-0 overflow-hidden">
                   <img
-                    src={entry.data.imageUrl}
                     alt={entry.data.name}
                     className="w-full h-full object-cover"
+                    src={entry.data.imageUrl}
                   />
                 </div>
 
@@ -413,14 +422,14 @@ export default function CalendarTracker({
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
-                        <Chip size="sm" color="primary" variant="dot">
+                        <Chip color="primary" size="sm" variant="dot">
                           Outfit
                         </Chip>
                         {entry.data.timesWorn > 0 && (
                           <Chip
                             size="sm"
-                            variant="flat"
                             startContent={<FireIcon className="w-3 h-3" />}
+                            variant="flat"
                           >
                             Worn {entry.data.timesWorn}x
                           </Chip>
@@ -446,8 +455,8 @@ export default function CalendarTracker({
                       </Button>
                       <Button
                         isIconOnly
-                        size="sm"
                         color="danger"
+                        size="sm"
                         variant="light"
                         onPress={() => handleDelete(entry.data.id, currentDate)}
                       >
@@ -530,27 +539,27 @@ export default function CalendarTracker({
           <div className="flex gap-1 bg-default-100 rounded-full p-1">
             <Button
               isIconOnly
+              radius="full"
               size="sm"
               variant="light"
-              radius="full"
               onPress={handlePrev}
             >
               <ChevronLeftIcon className="w-4 h-4" />
             </Button>
             <Button
               isIconOnly
+              radius="full"
               size="sm"
               variant="light"
-              radius="full"
               onPress={handleNext}
             >
               <ChevronRightIcon className="w-4 h-4" />
             </Button>
             <Button
+              className="px-4 font-bold text-xs"
+              radius="full"
               size="sm"
               variant="light"
-              radius="full"
-              className="px-4 font-bold text-xs"
               onPress={() => {
                 setCurrentDate(new Date());
                 setView("day");
@@ -562,17 +571,17 @@ export default function CalendarTracker({
         </div>
 
         <Tabs
-          selectedKey={view}
-          onSelectionChange={(key) => setView(key as ViewMode)}
-          size="md"
-          radius="full"
-          color="primary"
-          variant="solid"
           classNames={{
             tabList: "bg-default-100 p-1",
             cursor: "bg-background shadow-sm",
             tabContent: "group-data-[selected=true]:text-foreground font-bold",
           }}
+          color="primary"
+          radius="full"
+          selectedKey={view}
+          size="md"
+          variant="solid"
+          onSelectionChange={(key) => setView(key as ViewMode)}
         >
           <Tab
             key="month"
@@ -605,13 +614,13 @@ export default function CalendarTracker({
 
       {/* Modal */}
       <Modal
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        size="5xl"
-        scrollBehavior="inside"
         classNames={{
           base: "h-[90vh] md:h-auto",
         }}
+        isOpen={isOpen}
+        scrollBehavior="inside"
+        size="5xl"
+        onOpenChange={onOpenChange}
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1 border-b border-default-100 py-6">
@@ -636,19 +645,19 @@ export default function CalendarTracker({
                 </p>
 
                 <Select
+                  className="mb-6"
+                  isDisabled={isEditing}
                   label="Search Wardrobe"
                   placeholder="Type to search..."
-                  variant="bordered"
-                  size="lg"
                   selectedKeys={selectedOutfitId ? [selectedOutfitId] : []}
+                  size="lg"
+                  variant="bordered"
                   onChange={(e) => setSelectedOutfitId(e.target.value)}
-                  isDisabled={isEditing}
-                  className="mb-6"
                 >
                   {outfits.map((item) => (
                     <SelectItem key={item.id} textValue={item.name}>
                       <div className="flex items-center gap-3">
-                        <Avatar src={item.imageUrl} size="sm" radius="sm" />
+                        <Avatar radius="sm" size="sm" src={item.imageUrl} />
                         <div className="flex-1">
                           <p className="font-medium">{item.name}</p>
                           {item.timesWorn > 0 && (
@@ -665,11 +674,11 @@ export default function CalendarTracker({
                 <div className="aspect-[3/4] bg-background rounded-xl border-2 border-dashed border-default-200 flex items-center justify-center overflow-hidden relative">
                   {selectedOutfitId ? (
                     <img
+                      alt="Selected outfit"
+                      className="w-full h-full object-cover"
                       src={
                         outfits.find((i) => i.id === selectedOutfitId)?.imageUrl
                       }
-                      alt="Selected outfit"
-                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="text-center p-4">
@@ -694,10 +703,10 @@ export default function CalendarTracker({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Select
                     label="Occasion"
-                    variant="bordered"
                     labelPlacement="outside"
                     placeholder="Where did you go?"
                     selectedKeys={metadata.occasion ? [metadata.occasion] : []}
+                    variant="bordered"
                     onChange={(e) =>
                       setMetadata({ ...metadata, occasion: e.target.value })
                     }
@@ -708,10 +717,10 @@ export default function CalendarTracker({
                   </Select>
                   <Select
                     label="Weather"
-                    variant="bordered"
                     labelPlacement="outside"
                     placeholder="What was it like?"
                     selectedKeys={metadata.weather ? [metadata.weather] : []}
+                    variant="bordered"
                     onChange={(e) =>
                       setMetadata({ ...metadata, weather: e.target.value })
                     }
@@ -725,21 +734,21 @@ export default function CalendarTracker({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input
                     label="Temperature (°C)"
-                    type="number"
-                    variant="bordered"
                     labelPlacement="outside"
                     placeholder="22"
+                    type="number"
                     value={metadata.temperature}
+                    variant="bordered"
                     onChange={(e) =>
                       setMetadata({ ...metadata, temperature: e.target.value })
                     }
                   />
                   <Input
                     label="Location"
-                    variant="bordered"
                     labelPlacement="outside"
                     placeholder="e.g. Downtown, Office"
                     value={metadata.location}
+                    variant="bordered"
                     onChange={(e) =>
                       setMetadata({ ...metadata, location: e.target.value })
                     }
@@ -748,11 +757,11 @@ export default function CalendarTracker({
 
                 <Textarea
                   label="Daily Notes"
-                  placeholder="Did you get any compliments? Was it comfortable?"
-                  variant="bordered"
                   labelPlacement="outside"
                   minRows={4}
+                  placeholder="Did you get any compliments? Was it comfortable?"
                   value={metadata.notes}
+                  variant="bordered"
                   onChange={(e) =>
                     setMetadata({ ...metadata, notes: e.target.value })
                   }
@@ -765,11 +774,11 @@ export default function CalendarTracker({
               Cancel
             </Button>
             <Button
-              color="primary"
               className="font-bold uppercase tracking-widest px-8"
+              color="primary"
+              isDisabled={!selectedOutfitId}
               isLoading={submitting}
               onPress={handleSubmit}
-              isDisabled={!selectedOutfitId}
             >
               {isEditing ? "Save Changes" : "Log to Calendar"}
             </Button>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
@@ -76,6 +77,7 @@ export async function POST(
     return NextResponse.json({ success: true, block });
   } catch (error) {
     console.error("Error blocking user:", error);
+
     return NextResponse.json(
       { error: "Failed to block user" },
       { status: 500 },
@@ -123,6 +125,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error unblocking user:", error);
+
     return NextResponse.json(
       { error: "Failed to unblock user" },
       { status: 500 },
@@ -167,6 +170,7 @@ export async function GET(
     return NextResponse.json({ isBlocked: !!block });
   } catch (error) {
     console.error("Error checking block status:", error);
+
     return NextResponse.json({ isBlocked: false });
   }
 }

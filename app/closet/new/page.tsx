@@ -15,6 +15,7 @@ import {
   Chip,
 } from "@heroui/react";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+
 import {
   colors,
   occasions,
@@ -108,6 +109,7 @@ export default function NewItemPage() {
   const handleSubmit = async () => {
     if (!formData.name || !formData.category) {
       alert("Please fill in Name and Category.");
+
       return;
     }
 
@@ -179,10 +181,10 @@ export default function NewItemPage() {
         <div className="flex items-center gap-4">
           <Button
             isIconOnly
-            variant="light"
-            radius="full"
-            onPress={() => router.back()}
             className="text-default-500 hover:text-foreground"
+            radius="full"
+            variant="light"
+            onPress={() => router.back()}
           >
             <ArrowLeftIcon className="w-5 h-5" />
           </Button>
@@ -198,17 +200,17 @@ export default function NewItemPage() {
 
         {/* Status Toggle */}
         <Tabs
-          selectedKey={formData.status}
-          onSelectionChange={(key) =>
-            setFormData({ ...formData, status: key as "owned" | "wishlist" })
-          }
-          size="sm"
-          radius="sm"
           classNames={{
             tabList: "bg-default-100 p-1",
             cursor: "bg-background shadow-sm",
             tab: "px-4 h-8",
           }}
+          radius="sm"
+          selectedKey={formData.status}
+          size="sm"
+          onSelectionChange={(key) =>
+            setFormData({ ...formData, status: key as "owned" | "wishlist" })
+          }
         >
           <Tab key="owned" title="Owned" />
           <Tab key="wishlist" title="Wishlist" />
@@ -221,12 +223,12 @@ export default function NewItemPage() {
           <div className="relative w-full top-6">
             <div className="relative w-full h-full min-h-[400px] flex flex-col">
               <ImageUpload
-                value={formData.imageUrl}
-                onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+                className="h-full min-h-[400px]"
                 folder="clothes"
                 label="Item Photo"
                 maxSize={10}
-                className="h-full min-h-[400px]"
+                value={formData.imageUrl}
+                onChange={(url) => setFormData({ ...formData, imageUrl: url })}
               />
             </div>
 
@@ -239,8 +241,6 @@ export default function NewItemPage() {
         <div className="lg:col-span-7 flex flex-col gap-6">
           {/* Tabbed Form Sections */}
           <Tabs
-            selectedKey={activeTab}
-            onSelectionChange={(key) => setActiveTab(key as string)}
             classNames={{
               base: "w-full",
               tabList: "w-full bg-default-100 p-1",
@@ -248,19 +248,21 @@ export default function NewItemPage() {
               tab: "h-9 text-xs",
               panel: "pt-6",
             }}
+            selectedKey={activeTab}
+            onSelectionChange={(key) => setActiveTab(key as string)}
           >
             {/* Basic Info Tab */}
             <Tab key="basic" title="Basic Info">
               <div className="space-y-6">
                 <Input
                   isRequired
-                  label="Name"
-                  placeholder="Ex: Vintage Leather Jacket"
-                  labelPlacement="outside"
-                  variant="bordered"
-                  radius="sm"
                   classNames={{ inputWrapper: "border-default-300" }}
+                  label="Name"
+                  labelPlacement="outside"
+                  placeholder="Ex: Vintage Leather Jacket"
+                  radius="sm"
                   value={formData.name}
+                  variant="bordered"
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
@@ -268,26 +270,26 @@ export default function NewItemPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
-                    label="Brand"
-                    placeholder="Ex: Acne Studios"
-                    labelPlacement="outside"
-                    variant="bordered"
-                    radius="sm"
                     classNames={{ inputWrapper: "border-default-300" }}
+                    label="Brand"
+                    labelPlacement="outside"
+                    placeholder="Ex: Acne Studios"
+                    radius="sm"
                     value={formData.brand}
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({ ...formData, brand: e.target.value })
                     }
                   />
                   <Select
                     isRequired
+                    classNames={{ trigger: "border-default-300" }}
                     label="Category"
                     labelPlacement="outside"
-                    variant="bordered"
-                    radius="sm"
                     placeholder="Select category"
-                    classNames={{ trigger: "border-default-300" }}
+                    radius="sm"
                     selectedKeys={formData.category ? [formData.category] : []}
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({ ...formData, category: e.target.value })
                     }
@@ -299,14 +301,14 @@ export default function NewItemPage() {
                 </div>
 
                 <Textarea
-                  label="Description"
-                  placeholder="Add any notes or details about this piece..."
-                  labelPlacement="outside"
-                  variant="bordered"
-                  radius="sm"
-                  minRows={3}
                   classNames={{ inputWrapper: "border-default-300" }}
+                  label="Description"
+                  labelPlacement="outside"
+                  minRows={3}
+                  placeholder="Add any notes or details about this piece..."
+                  radius="sm"
                   value={formData.description}
+                  variant="bordered"
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
@@ -314,14 +316,14 @@ export default function NewItemPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Select
+                    classNames={{ trigger: "border-default-300" }}
                     label="Condition"
                     labelPlacement="outside"
-                    variant="bordered"
                     radius="sm"
-                    classNames={{ trigger: "border-default-300" }}
                     selectedKeys={
                       formData.condition ? [formData.condition] : []
                     }
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({ ...formData, condition: e.target.value })
                     }
@@ -334,13 +336,13 @@ export default function NewItemPage() {
                   </Select>
 
                   <Input
-                    label="Size"
-                    placeholder="Ex: M, 32, 8"
-                    labelPlacement="outside"
-                    variant="bordered"
-                    radius="sm"
                     classNames={{ inputWrapper: "border-default-300" }}
+                    label="Size"
+                    labelPlacement="outside"
+                    placeholder="Ex: M, 32, 8"
+                    radius="sm"
                     value={formData.size}
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({ ...formData, size: e.target.value })
                     }
@@ -355,17 +357,17 @@ export default function NewItemPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Input
-                      label="Current Price"
-                      placeholder="0.00"
-                      type="number"
-                      labelPlacement="outside"
-                      variant="bordered"
-                      radius="sm"
                       classNames={{ inputWrapper: "border-default-300" }}
+                      label="Current Price"
+                      labelPlacement="outside"
+                      placeholder="0.00"
+                      radius="sm"
                       startContent={
                         <span className="text-default-400 text-sm">$</span>
                       }
+                      type="number"
                       value={formData.price}
+                      variant="bordered"
                       onChange={(e) =>
                         setFormData({ ...formData, price: e.target.value })
                       }
@@ -373,17 +375,17 @@ export default function NewItemPage() {
                   </div>
                   <div className="space-y-2">
                     <Input
-                      label="Original Price"
-                      placeholder="0.00"
-                      type="number"
-                      labelPlacement="outside"
-                      variant="bordered"
-                      radius="sm"
                       classNames={{ inputWrapper: "border-default-300" }}
+                      label="Original Price"
+                      labelPlacement="outside"
+                      placeholder="0.00"
+                      radius="sm"
                       startContent={
                         <span className="text-default-400 text-sm">$</span>
                       }
+                      type="number"
                       value={formData.originalPrice}
+                      variant="bordered"
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -396,12 +398,12 @@ export default function NewItemPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Select
+                    classNames={{ trigger: "border-default-300" }}
                     label="Currency"
                     labelPlacement="outside"
-                    variant="bordered"
                     radius="sm"
-                    classNames={{ trigger: "border-default-300" }}
                     selectedKeys={[formData.purchaseCurrency]}
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -415,13 +417,13 @@ export default function NewItemPage() {
                   </Select>
 
                   <Input
-                    type="date"
+                    classNames={{ inputWrapper: "border-default-300" }}
                     label="Purchase Date"
                     labelPlacement="outside"
-                    variant="bordered"
                     radius="sm"
-                    classNames={{ inputWrapper: "border-default-300" }}
+                    type="date"
                     value={formData.purchaseDate}
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -433,13 +435,13 @@ export default function NewItemPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
-                    label="Purchase Location"
-                    placeholder="Store name or location"
-                    labelPlacement="outside"
-                    variant="bordered"
-                    radius="sm"
                     classNames={{ inputWrapper: "border-default-300" }}
+                    label="Purchase Location"
+                    labelPlacement="outside"
+                    placeholder="Store name or location"
+                    radius="sm"
                     value={formData.purchaseLocation}
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -449,15 +451,15 @@ export default function NewItemPage() {
                   />
 
                   <Select
+                    classNames={{ trigger: "border-default-300" }}
                     label="Purchase Type"
                     labelPlacement="outside"
-                    variant="bordered"
-                    radius="sm"
                     placeholder="Select type"
-                    classNames={{ trigger: "border-default-300" }}
+                    radius="sm"
                     selectedKeys={
                       formData.purchaseType ? [formData.purchaseType] : []
                     }
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -479,14 +481,14 @@ export default function NewItemPage() {
             <Tab key="style" title="Style">
               <div className="space-y-6">
                 <Select
+                  classNames={{ trigger: "border-default-300" }}
                   label="Colors"
                   labelPlacement="outside"
-                  variant="bordered"
-                  radius="sm"
                   placeholder="Select colors"
-                  selectionMode="multiple"
-                  classNames={{ trigger: "border-default-300" }}
+                  radius="sm"
                   selectedKeys={new Set(formData.colors)}
+                  selectionMode="multiple"
+                  variant="bordered"
                   onSelectionChange={(keys) => {
                     setFormData({
                       ...formData,
@@ -497,13 +499,13 @@ export default function NewItemPage() {
                   {colors.map((color) => (
                     <SelectItem
                       key={color}
-                      textValue={color}
                       startContent={
                         <div
                           className="w-4 h-4 rounded-full border border-default-200 shadow-sm"
                           style={{ background: colorMap[color] || color }}
                         />
                       }
+                      textValue={color}
                     >
                       {color}
                     </SelectItem>
@@ -512,13 +514,13 @@ export default function NewItemPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Select
+                    classNames={{ trigger: "border-default-300" }}
                     label="Style"
                     labelPlacement="outside"
-                    variant="bordered"
-                    radius="sm"
                     placeholder="Select style"
-                    classNames={{ trigger: "border-default-300" }}
+                    radius="sm"
                     selectedKeys={formData.style ? [formData.style] : []}
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({ ...formData, style: e.target.value })
                     }
@@ -529,15 +531,15 @@ export default function NewItemPage() {
                   </Select>
 
                   <Select
+                    classNames={{ trigger: "border-default-300" }}
                     label="Silhouette"
                     labelPlacement="outside"
-                    variant="bordered"
-                    radius="sm"
                     placeholder="Select silhouette"
-                    classNames={{ trigger: "border-default-300" }}
+                    radius="sm"
                     selectedKeys={
                       formData.silhouette ? [formData.silhouette] : []
                     }
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({ ...formData, silhouette: e.target.value })
                     }
@@ -550,13 +552,13 @@ export default function NewItemPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Select
+                    classNames={{ trigger: "border-default-300" }}
                     label="Pattern"
                     labelPlacement="outside"
-                    variant="bordered"
-                    radius="sm"
                     placeholder="Select pattern"
-                    classNames={{ trigger: "border-default-300" }}
+                    radius="sm"
                     selectedKeys={formData.pattern ? [formData.pattern] : []}
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({ ...formData, pattern: e.target.value })
                     }
@@ -567,13 +569,13 @@ export default function NewItemPage() {
                   </Select>
 
                   <Select
+                    classNames={{ trigger: "border-default-300" }}
                     label="Fit"
                     labelPlacement="outside"
-                    variant="bordered"
-                    radius="sm"
                     placeholder="Select fit"
-                    classNames={{ trigger: "border-default-300" }}
+                    radius="sm"
                     selectedKeys={formData.fit ? [formData.fit] : []}
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({ ...formData, fit: e.target.value })
                     }
@@ -586,13 +588,13 @@ export default function NewItemPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Select
+                    classNames={{ trigger: "border-default-300" }}
                     label="Length"
                     labelPlacement="outside"
-                    variant="bordered"
-                    radius="sm"
                     placeholder="Select length"
-                    classNames={{ trigger: "border-default-300" }}
+                    radius="sm"
                     selectedKeys={formData.length ? [formData.length] : []}
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({ ...formData, length: e.target.value })
                     }
@@ -603,13 +605,13 @@ export default function NewItemPage() {
                   </Select>
 
                   <Select
+                    classNames={{ trigger: "border-default-300" }}
                     label="Neckline"
                     labelPlacement="outside"
-                    variant="bordered"
-                    radius="sm"
                     placeholder="Select neckline"
-                    classNames={{ trigger: "border-default-300" }}
+                    radius="sm"
                     selectedKeys={formData.neckline ? [formData.neckline] : []}
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({ ...formData, neckline: e.target.value })
                     }
@@ -622,14 +624,14 @@ export default function NewItemPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Select
+                    classNames={{ trigger: "border-default-300" }}
                     label="Season"
                     labelPlacement="outside"
-                    variant="bordered"
-                    radius="sm"
                     placeholder="Select seasons"
-                    selectionMode="multiple"
-                    classNames={{ trigger: "border-default-300" }}
+                    radius="sm"
                     selectedKeys={new Set(formData.season)}
+                    selectionMode="multiple"
+                    variant="bordered"
                     onSelectionChange={(keys) =>
                       setFormData({
                         ...formData,
@@ -643,14 +645,14 @@ export default function NewItemPage() {
                   </Select>
 
                   <Select
+                    classNames={{ trigger: "border-default-300" }}
                     label="Occasions"
                     labelPlacement="outside"
-                    variant="bordered"
-                    radius="sm"
                     placeholder="Select occasions"
-                    selectionMode="multiple"
-                    classNames={{ trigger: "border-default-300" }}
+                    radius="sm"
                     selectedKeys={new Set(formData.placesToWear)}
+                    selectionMode="multiple"
+                    variant="bordered"
                     onSelectionChange={(keys) => {
                       setFormData({
                         ...formData,
@@ -670,32 +672,32 @@ export default function NewItemPage() {
             <Tab key="materials" title="Materials">
               <div className="space-y-6">
                 <Textarea
-                  label="Material Composition"
-                  placeholder="Body:\n81% Nylon, 19% Lycra Elastane\n\nLining:\n56% Polyester, 33% Coolmax Polyester, 11% Lycra Elastane"
-                  labelPlacement="outside"
-                  variant="bordered"
-                  radius="sm"
-                  minRows={5}
                   classNames={{ inputWrapper: "border-default-300" }}
+                  description="Specify material composition including percentages and part names (Body, Lining, etc.)"
+                  label="Material Composition"
+                  labelPlacement="outside"
+                  minRows={5}
+                  placeholder="Body:\n81% Nylon, 19% Lycra Elastane\n\nLining:\n56% Polyester, 33% Coolmax Polyester, 11% Lycra Elastane"
+                  radius="sm"
                   value={formData.materials}
+                  variant="bordered"
                   onChange={(e) =>
                     setFormData({
                       ...formData,
                       materials: e.target.value,
                     })
                   }
-                  description="Specify material composition including percentages and part names (Body, Lining, etc.)"
                 />
 
                 <Textarea
-                  label="Care Instructions"
-                  placeholder="Washing, drying, and storage instructions..."
-                  labelPlacement="outside"
-                  variant="bordered"
-                  radius="sm"
-                  minRows={3}
                   classNames={{ inputWrapper: "border-default-300" }}
+                  label="Care Instructions"
+                  labelPlacement="outside"
+                  minRows={3}
+                  placeholder="Washing, drying, and storage instructions..."
+                  radius="sm"
                   value={formData.careInstructions}
+                  variant="bordered"
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -705,14 +707,14 @@ export default function NewItemPage() {
                 />
 
                 <Textarea
-                  label="Sustainability Notes"
-                  placeholder="Certifications, eco-friendly materials, brand values..."
-                  labelPlacement="outside"
-                  variant="bordered"
-                  radius="sm"
-                  minRows={3}
                   classNames={{ inputWrapper: "border-default-300" }}
+                  label="Sustainability Notes"
+                  labelPlacement="outside"
+                  minRows={3}
+                  placeholder="Certifications, eco-friendly materials, brand values..."
+                  radius="sm"
                   value={formData.sustainability}
+                  variant="bordered"
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -728,11 +730,11 @@ export default function NewItemPage() {
               <div className="space-y-4">
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Add a tag..."
-                    variant="bordered"
-                    radius="sm"
                     classNames={{ inputWrapper: "border-default-300" }}
+                    placeholder="Add a tag..."
+                    radius="sm"
                     value={newTag}
+                    variant="bordered"
                     onChange={(e) => setNewTag(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
@@ -751,9 +753,9 @@ export default function NewItemPage() {
                     {formData.tags.map((tag) => (
                       <Chip
                         key={tag}
-                        onClose={() => handleRemoveTag(tag)}
-                        variant="flat"
                         radius="sm"
+                        variant="flat"
+                        onClose={() => handleRemoveTag(tag)}
                       >
                         {tag}
                       </Chip>
@@ -772,19 +774,19 @@ export default function NewItemPage() {
           <div className="pt-6 flex flex-col-reverse sm:flex-row gap-4 border-t border-divider">
             <Button
               fullWidth
-              variant="bordered"
-              radius="sm"
               className="h-12 uppercase tracking-widest font-medium border-default-300 hover:bg-default-100"
+              radius="sm"
+              variant="bordered"
               onPress={() => router.back()}
             >
               Cancel
             </Button>
             <Button
               fullWidth
-              color="primary"
-              radius="sm"
-              isLoading={saving}
               className="h-12 uppercase tracking-widest font-bold shadow-lg shadow-primary/20"
+              color="primary"
+              isLoading={saving}
+              radius="sm"
               onPress={handleSubmit}
             >
               Add to {formData.status === "wishlist" ? "Wishlist" : "Closet"}

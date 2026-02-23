@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+
 import { NextResponse } from "next/server";
 
 export function proxy(req: NextRequest) {
@@ -35,7 +36,9 @@ export function proxy(req: NextRequest) {
     protectedRoutes.some((route) => pathname.startsWith(route))
   ) {
     const loginUrl = new URL("/login", req.url);
+
     loginUrl.searchParams.set("callbackUrl", pathname);
+
     return NextResponse.redirect(loginUrl);
   }
 

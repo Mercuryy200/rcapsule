@@ -6,9 +6,11 @@ import {
   MapPinIcon,
   LinkIcon,
 } from "@heroicons/react/24/outline";
-import { useUser } from "@/contexts/UserContext";
 
 import { SocialIcon } from "../icons";
+
+import { useUser } from "@/contexts/UserContext";
+
 interface ProfileHeaderProps {
   user: {
     name?: string | null;
@@ -56,9 +58,9 @@ export default function ProfileHeader({
       <div className="relative w-full h-48 md:h-64 bg-default-100 overflow-hidden">
         {user.coverImage ? (
           <img
-            src={user.coverImage}
             alt="Cover"
             className="w-full h-full object-cover"
+            src={user.coverImage}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-r from-default-100 to-default-200 flex items-center justify-center">
@@ -69,8 +71,8 @@ export default function ProfileHeader({
         {/* Edit Button (Top Right over Banner) */}
         <Button
           isIconOnly
-          variant="flat"
           className="absolute top-4 right-4 bg-black/20 backdrop-blur-md text-white hover:bg-black/40 z-10"
+          variant="flat"
           onPress={onEdit}
         >
           <Cog6ToothIcon className="w-5 h-5" />
@@ -83,17 +85,17 @@ export default function ProfileHeader({
           {/* Avatar Area */}
           <div className="relative shrink-0">
             <Avatar
-              src={user.image || undefined}
-              className="w-32 h-32 md:w-40 md:h-40 text-large border-4 border-background"
               isBordered
-              radius="full"
+              className="w-32 h-32 md:w-40 md:h-40 text-large border-4 border-background"
               name={user.name || "User"}
+              radius="full"
+              src={user.image || undefined}
             />
             {isPremium && (
               <Chip
-                startContent={<SparklesIcon className="w-3 h-3 text-white" />}
                 className="absolute bottom-2 right-2 border-2 border-background bg-gradient-to-r from-gray-400 to-blue-300 text-white font-bold shadow-sm"
                 size="sm"
+                startContent={<SparklesIcon className="w-3 h-3 text-white" />}
               >
                 PREMIUM
               </Chip>
@@ -152,13 +154,13 @@ export default function ProfileHeader({
               <div className="flex flex-wrap items-center gap-4 text-sm text-primary">
                 {user.website && (
                   <Link
+                    isExternal
+                    className="flex items-center gap-1 hover:underline"
                     href={
                       user.website.startsWith("http")
                         ? user.website
                         : `https://${user.website}`
                     }
-                    isExternal
-                    className="flex items-center gap-1 hover:underline"
                     size="sm"
                   >
                     <LinkIcon className="w-4 h-4" />
@@ -171,8 +173,8 @@ export default function ProfileHeader({
                   {user.instagramHandle && (
                     <Link
                       isExternal
-                      href={`https://instagram.com/${user.instagramHandle}`}
                       className="hover:text-secondary transition-colors"
+                      href={`https://instagram.com/${user.instagramHandle}`}
                     >
                       <SocialIcon type="instagram" />
                     </Link>
@@ -180,8 +182,8 @@ export default function ProfileHeader({
                   {user.tiktokHandle && (
                     <Link
                       isExternal
-                      href={`https://tiktok.com/@${user.tiktokHandle}`}
                       className="hover:text-secondary transition-colors"
+                      href={`https://tiktok.com/@${user.tiktokHandle}`}
                     >
                       <SocialIcon type="tiktok" />
                     </Link>
@@ -189,8 +191,8 @@ export default function ProfileHeader({
                   {user.pinterestHandle && (
                     <Link
                       isExternal
-                      href={`https://pinterest.com/${user.pinterestHandle}`}
                       className="hover:text-secondary transition-colors"
+                      href={`https://pinterest.com/${user.pinterestHandle}`}
                     >
                       <SocialIcon type="pinterest" />
                     </Link>

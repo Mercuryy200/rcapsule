@@ -1,8 +1,9 @@
 // app/api/analytics/route.ts - Fixed version
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
-import * as Sentry from "@sentry/nextjs";
 
 interface ClothesItem {
   id: string;
@@ -41,6 +42,7 @@ export async function GET(req: Request) {
     async (span) => {
       try {
         const session = await auth();
+
         if (!session?.user?.id) {
           return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
@@ -74,6 +76,7 @@ export async function GET(req: Request) {
         Sentry.captureException(error, {
           tags: { api_route: "/api/analytics", method: "GET" },
         });
+
         return NextResponse.json(
           { error: "Failed to calculate analytics" },
           { status: 500 },
@@ -134,6 +137,7 @@ function calculateAnalytics(
 
   clothes.forEach((item) => {
     const cat = item.category || "Uncategorized";
+
     if (!categoryBreakdown[cat]) {
       categoryBreakdown[cat] = { count: 0, value: 0, wears: 0 };
     }
@@ -154,6 +158,7 @@ function calculateAnalytics(
 
   // 4. COLOR ANALYSIS
   const colorCounts: Record<string, number> = {};
+
   clothes.forEach((item) => {
     if (Array.isArray(item.colors)) {
       item.colors.forEach((color: string) => {
@@ -174,6 +179,7 @@ function calculateAnalytics(
 
   // 5. BRAND ANALYSIS
   const brandBreakdown: Record<string, { count: number; value: number }> = {};
+
   clothes.forEach((item) => {
     if (item.brand) {
       if (!brandBreakdown[item.brand]) {
@@ -197,6 +203,7 @@ function calculateAnalytics(
       const daysSincePurchase = Math.floor(
         (Date.now() - purchaseDate.getTime()) / (1000 * 60 * 60 * 24),
       );
+
       return daysSincePurchase > 30 && (item.timesworn || 0) < 3;
     })
     .sort((a, b) => (b.price || 0) - (a.price || 0))
@@ -211,6 +218,7 @@ function calculateAnalytics(
 
   // 7. SEASON DISTRIBUTION
   const seasonDistribution: Record<string, number> = {};
+
   clothes.forEach((item) => {
     if (Array.isArray(item.season)) {
       item.season.forEach((s: string) => {
@@ -221,6 +229,7 @@ function calculateAnalytics(
 
   // 8. STYLE BREAKDOWN
   const styleDistribution: Record<string, number> = {};
+
   clothes.forEach((item) => {
     if (item.style) {
       styleDistribution[item.style] = (styleDistribution[item.style] || 0) + 1;
@@ -229,13 +238,16 @@ function calculateAnalytics(
 
   // 9. CONDITION ANALYSIS
   const conditionBreakdown: Record<string, number> = {};
+
   clothes.forEach((item) => {
     const condition = item.condition || "excellent";
+
     conditionBreakdown[condition] = (conditionBreakdown[condition] || 0) + 1;
   });
 
   // 10. PURCHASE TYPE ANALYSIS
   const purchaseTypeBreakdown: Record<string, number> = {};
+
   clothes.forEach((item) => {
     if (item.purchaseType) {
       purchaseTypeBreakdown[item.purchaseType] =

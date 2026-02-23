@@ -5,7 +5,6 @@ import { useRouter, useParams } from "next/navigation";
 import {
   Button,
   Image,
-  Chip,
   Modal,
   ModalContent,
   ModalHeader,
@@ -20,7 +19,6 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
-  ScrollShadow,
 } from "@heroui/react";
 import {
   ArrowLeftIcon,
@@ -97,12 +95,14 @@ export default function WardrobePage() {
   const fetchWardrobe = async () => {
     try {
       const response = await fetch(`/api/wardrobes/${wardrobeId}`);
+
       if (response.ok) {
         const data = await response.json();
         const safeData = {
           ...data,
           clothes: Array.isArray(data.clothes) ? data.clothes : [],
         };
+
         setWardrobe(safeData);
         setWardrobeFormData({
           title: data.title,
@@ -123,8 +123,10 @@ export default function WardrobePage() {
   const fetchAvailableClothes = async () => {
     try {
       const response = await fetch("/api/clothes?status=owned");
+
       if (response.ok) {
         const data = await response.json();
+
         setAvailableClothes(Array.isArray(data) ? data : []);
       }
     } catch (error) {
@@ -138,6 +140,7 @@ export default function WardrobePage() {
         `/api/wardrobes/${wardrobeId}/clothes/${clothesId}`,
         { method: "DELETE" },
       );
+
       if (response.ok) {
         fetchWardrobe();
         fetchAvailableClothes();
@@ -170,6 +173,7 @@ export default function WardrobePage() {
       const response = await fetch(`/api/wardrobes/${wardrobeId}`, {
         method: "DELETE",
       });
+
       if (response.ok) router.push("/profile");
     } catch (error) {
       console.error(error);
@@ -183,6 +187,7 @@ export default function WardrobePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clothesIds: Array.from(selectedExistingItems) }),
       });
+
       if (response.ok) {
         fetchWardrobe();
         fetchAvailableClothes();
@@ -196,6 +201,7 @@ export default function WardrobePage() {
 
   const toggleItemSelection = (itemId: string) => {
     const newSelection = new Set(selectedExistingItems);
+
     newSelection.has(itemId)
       ? newSelection.delete(itemId)
       : newSelection.add(itemId);
@@ -234,9 +240,9 @@ export default function WardrobePage() {
           <div className="pt-8">
             <Button
               isIconOnly
-              variant="flat"
-              radius="full"
               className="bg-black/30 backdrop-blur-xl text-white border border-white/10 hover:bg-black/50 transition-all"
+              radius="full"
+              variant="flat"
               onPress={() => router.push("/profile")}
             >
               <ArrowLeftIcon className="w-5 h-5" />
@@ -292,9 +298,9 @@ export default function WardrobePage() {
                 <DropdownTrigger>
                   <Button
                     isIconOnly
-                    variant="flat"
-                    radius="full"
                     className="bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 transition-all"
+                    radius="full"
+                    variant="flat"
                   >
                     <EllipsisHorizontalIcon className="w-6 h-6" />
                   </Button>
@@ -338,8 +344,8 @@ export default function WardrobePage() {
             </p>
             <div className="flex gap-4">
               <Button
-                variant="bordered"
                 radius="none"
+                variant="bordered"
                 onPress={() => router.push("/closet/new")}
               >
                 New Item
@@ -362,21 +368,21 @@ export default function WardrobePage() {
                   onClick={() => router.push(`/closet/${item.id}`)}
                 >
                   <Image
-                    src={item.imageUrl || "/images/placeholder.png"}
                     alt={item.name}
-                    radius="none"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     classNames={{ wrapper: "w-full h-full" }}
+                    radius="none"
+                    src={item.imageUrl || "/images/placeholder.png"}
                   />
 
                   <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
                     <Button
                       isIconOnly
-                      size="sm"
-                      color="danger"
-                      variant="solid"
-                      radius="none"
                       className="min-w-8 w-8 h-8 bg-white/10 backdrop-blur text-danger hover:bg-danger hover:text-white border border-danger/20"
+                      color="danger"
+                      radius="none"
+                      size="sm"
+                      variant="solid"
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();
@@ -423,9 +429,9 @@ export default function WardrobePage() {
       {/* --- EDIT WARDROBE MODAL --- */}
       <Modal
         isOpen={wardrobeModal.isOpen}
-        onClose={wardrobeModal.onClose}
         radius="none"
         size="xl"
+        onClose={wardrobeModal.onClose}
       >
         <ModalContent>
           <ModalHeader className="uppercase tracking-widest font-bold">
@@ -435,9 +441,9 @@ export default function WardrobePage() {
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="Title"
-                variant="bordered"
                 radius="none"
                 value={wardrobeFormData.title}
+                variant="bordered"
                 onChange={(e) =>
                   setWardrobeFormData({
                     ...wardrobeFormData,
@@ -447,9 +453,9 @@ export default function WardrobePage() {
               />
               <Input
                 label="Cover Image"
-                variant="bordered"
                 radius="none"
                 value={wardrobeFormData.coverImage}
+                variant="bordered"
                 onChange={(e) =>
                   setWardrobeFormData({
                     ...wardrobeFormData,
@@ -460,9 +466,9 @@ export default function WardrobePage() {
             </div>
             <Textarea
               label="Description"
-              variant="bordered"
               radius="none"
               value={wardrobeFormData.description}
+              variant="bordered"
               onChange={(e) =>
                 setWardrobeFormData({
                   ...wardrobeFormData,
@@ -484,8 +490,8 @@ export default function WardrobePage() {
           </ModalBody>
           <ModalFooter>
             <Button
-              variant="light"
               radius="none"
+              variant="light"
               onPress={wardrobeModal.onClose}
             >
               Cancel
@@ -504,10 +510,10 @@ export default function WardrobePage() {
       {/* --- ADD EXISTING ITEMS MODAL --- */}
       <Modal
         isOpen={addExistingModal.isOpen}
-        onClose={addExistingModal.onClose}
-        size="4xl"
         radius="none"
         scrollBehavior="inside"
+        size="4xl"
+        onClose={addExistingModal.onClose}
       >
         <ModalContent>
           <ModalHeader className="uppercase tracking-widest font-bold">
@@ -522,6 +528,7 @@ export default function WardrobePage() {
               <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {itemsNotInWardrobe.map((item) => {
                   const isSelected = selectedExistingItems.has(item.id);
+
                   return (
                     <div
                       key={item.id}
@@ -529,10 +536,10 @@ export default function WardrobePage() {
                       onClick={() => toggleItemSelection(item.id)}
                     >
                       <Image
-                        src={item.imageUrl || "/images/placeholder.png"}
-                        radius="none"
                         className={`w-full h-full object-cover transition-opacity ${isSelected ? "opacity-80" : "opacity-100"}`}
                         classNames={{ wrapper: "w-full h-full" }}
+                        radius="none"
+                        src={item.imageUrl || "/images/placeholder.png"}
                       />
                       {isSelected && (
                         <div className="absolute top-2 right-2 bg-primary text-white p-1 rounded-full z-10">
@@ -550,16 +557,16 @@ export default function WardrobePage() {
           </ModalBody>
           <ModalFooter>
             <Button
-              variant="light"
               radius="none"
+              variant="light"
               onPress={addExistingModal.onClose}
             >
               Cancel
             </Button>
             <Button
               color="primary"
-              radius="none"
               isDisabled={selectedExistingItems.size === 0}
+              radius="none"
               onPress={handleAddExistingItems}
             >
               Add {selectedExistingItems.size} Piece

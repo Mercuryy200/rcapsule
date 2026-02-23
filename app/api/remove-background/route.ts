@@ -1,11 +1,13 @@
 // app/api/remove-background/route.ts
 import { NextResponse } from "next/server";
+
 import { auth } from "@/auth";
 import { getSupabaseServer } from "@/lib/supabase-server";
 
 export async function POST(req: Request) {
   try {
     const session = await auth();
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -33,10 +35,14 @@ export async function POST(req: Request) {
     if (imageUrl) {
       // Validate URL to prevent SSRF – only allow public HTTPS hosts
       let parsedUrl: URL;
+
       try {
         parsedUrl = new URL(imageUrl);
       } catch {
-        return NextResponse.json({ error: "Invalid image URL" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Invalid image URL" },
+          { status: 400 },
+        );
       }
 
       if (parsedUrl.protocol !== "https:") {
@@ -48,7 +54,11 @@ export async function POST(req: Request) {
 
       // Block private/internal IP ranges and localhost
       const hostname = parsedUrl.hostname.toLowerCase();
-      const blocked = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|::1|0\.0\.0\.0)/.test(hostname);
+      const blocked =
+        /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|::1|0\.0\.0\.0)/.test(
+          hostname,
+        );
+
       if (blocked) {
         return NextResponse.json(
           { error: "Image URL points to a disallowed host" },
@@ -79,6 +89,7 @@ export async function POST(req: Request) {
       const arrayBuffer = await file.arrayBuffer();
       const base64 = Buffer.from(arrayBuffer).toString("base64");
       const mimeType = file.type || "image/jpeg";
+
       base64Image = `data:${mimeType};base64,${base64}`;
     } else {
       return NextResponse.json(
@@ -106,6 +117,7 @@ export async function POST(req: Request) {
 
     if (!lambdaResponse.ok) {
       const error = await lambdaResponse.json();
+
       console.error("Lambda error:", error);
       throw new Error(error.error || "Background removal failed");
     }
@@ -118,6 +130,7 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Remove background error:", error);
+
     return NextResponse.json(
       {
         error:

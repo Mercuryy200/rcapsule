@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+
 import { useUser } from "@/contexts/UserContext";
 
 export default function PricingPage() {
@@ -29,6 +30,7 @@ export default function PricingPage() {
   const handleSubscribe = async (plan: "free" | "premium") => {
     if (plan === "free") {
       router.push("/closet");
+
       return;
     }
 
@@ -59,6 +61,7 @@ export default function PricingPage() {
       setIsLoading(false);
     }
   };
+
   return (
     <div className="wardrobe-page-container min-h-screen">
       <header className="text-center mb-16 pt-8">
@@ -89,10 +92,10 @@ export default function PricingPage() {
           }
         >
           <motion.div
-            className="w-6 h-6 bg-foreground"
             layout
-            transition={{ type: "spring", stiffness: 700, damping: 30 }}
             animate={{ x: billingCycle === "monthly" ? 0 : 24 }}
+            className="w-6 h-6 bg-foreground"
+            transition={{ type: "spring", stiffness: 700, damping: 30 }}
           />
         </div>
 
@@ -108,11 +111,11 @@ export default function PricingPage() {
             Annually
           </span>
           <Chip
-            size="sm"
-            variant="flat"
             classNames={{
               base: "bg-default-100 text-foreground h-5 rounded-none uppercase font-bold text-[9px] tracking-widest",
             }}
+            size="sm"
+            variant="flat"
           >
             Save {savingsPercent}%
           </Chip>
@@ -137,8 +140,8 @@ export default function PricingPage() {
 
           <Button
             className="w-full mb-10 font-bold uppercase tracking-widest text-xs h-14 border-default-200 hover:bg-default-100"
-            variant="bordered"
             radius="none"
+            variant="bordered"
             onPress={() => handleSubscribe("free")}
           >
             Start Curating
@@ -179,10 +182,10 @@ export default function PricingPage() {
             <AnimatePresence mode="wait">
               <motion.span
                 key={billingCycle}
-                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
                 className="text-5xl font-light tracking-tighter"
+                exit={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: 10 }}
               >
                 $
                 {billingCycle === "yearly"
@@ -202,11 +205,11 @@ export default function PricingPage() {
 
           <Button
             className="w-full mb-10 font-bold uppercase tracking-widest text-xs h-14 bg-background text-foreground hover:opacity-90"
-            variant="solid"
-            radius="none"
-            onPress={() => handleSubscribe("premium")}
-            isLoading={isLoading}
             isDisabled={isLoading}
+            isLoading={isLoading}
+            radius="none"
+            variant="solid"
+            onPress={() => handleSubscribe("premium")}
           >
             {isLoading ? "Redirecting to Checkout..." : "Upgrade Membership"}
           </Button>
@@ -278,12 +281,12 @@ export default function PricingPage() {
         <div className="h-px w-20 bg-default-300 mx-auto mb-12" />
 
         <Accordion
-          variant="light"
           itemClasses={{
             title: "text-sm uppercase tracking-widest font-bold text-center",
             content: "text-default-500 font-light text-sm pb-8 text-center",
             trigger: "py-4",
           }}
+          variant="light"
         >
           <AccordionItem
             key="1"

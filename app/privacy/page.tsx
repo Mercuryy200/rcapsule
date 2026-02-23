@@ -44,9 +44,9 @@ export default function PrivacyPage() {
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">3. How We Use Your Data</h2>
         <p className="text-gray-700 leading-relaxed">
-          The data is sent directly to your Capsule database stored on
-          Supabase. It is used solely for the purpose of organizing your digital
-          wardrobe. We do not sell your data to third parties.
+          The data is sent directly to your Capsule database stored on Supabase.
+          It is used solely for the purpose of organizing your digital wardrobe.
+          We do not sell your data to third parties.
         </p>
       </section>
 

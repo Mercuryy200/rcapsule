@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -30,7 +32,7 @@ export async function GET(
             imageUrl
           )
         )
-      `
+      `,
       )
       .eq("id", id)
       .eq("userId", session.user.id)
@@ -54,7 +56,7 @@ export async function GET(
     if (clothes.length === 0) {
       return NextResponse.json(
         { error: "No images found in outfit" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -65,9 +67,10 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching outfit data:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch outfit data" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

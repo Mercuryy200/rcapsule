@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
@@ -45,6 +46,7 @@ export async function GET(
     }
 
     const isOwnProfile = session?.user?.id === user.id;
+
     if (!user.profilePublic && !isOwnProfile) {
       return NextResponse.json(
         { error: "Profile is private" },
@@ -184,6 +186,7 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching public profile:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch profile" },
       { status: 500 },

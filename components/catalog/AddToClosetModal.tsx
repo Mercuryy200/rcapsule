@@ -1,4 +1,6 @@
 "use client";
+import type { GlobalProduct } from "@/lib/types/globalproduct";
+
 import { useState, useEffect } from "react";
 import {
   Modal,
@@ -15,7 +17,7 @@ import {
   Image,
 } from "@heroui/react";
 import { toast } from "sonner";
-import type { GlobalProduct } from "@/lib/types/globalproduct";
+
 import { colors, categories, conditions } from "@/lib/data";
 
 interface AddToClosetModalProps {
@@ -65,6 +67,7 @@ export default function AddToClosetModal({
   const handleSubmit = async () => {
     if (!formData.name || !formData.category) {
       toast.error("Name and category are required");
+
       return;
     }
 
@@ -97,6 +100,7 @@ export default function AddToClosetModal({
         onSuccess();
       } else {
         const error = await response.json();
+
         toast.error(error.error || "Failed to add item");
       }
     } catch (error) {
@@ -112,10 +116,10 @@ export default function AddToClosetModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
       radius="none"
-      size="3xl"
       scrollBehavior="inside"
+      size="3xl"
+      onClose={onClose}
     >
       <ModalContent>
         <ModalHeader className="flex justify-between items-center">
@@ -123,10 +127,10 @@ export default function AddToClosetModal({
             Add to Collection
           </span>
           <Tabs
-            selectedKey={status}
-            onSelectionChange={(key) => setStatus(key as "owned" | "wishlist")}
-            size="sm"
             radius="sm"
+            selectedKey={status}
+            size="sm"
+            onSelectionChange={(key) => setStatus(key as "owned" | "wishlist")}
           >
             <Tab key="owned" title="Owned" />
             <Tab key="wishlist" title="Wishlist" />
@@ -139,14 +143,14 @@ export default function AddToClosetModal({
             <div className="md:col-span-4">
               <div className="aspect-[3/4] bg-content2 overflow-hidden">
                 <Image
+                  alt={product.name}
+                  className="w-full h-full object-contain"
+                  radius="none"
                   src={
                     product.processed_image_url ||
                     product.imageurl ||
                     "/images/placeholder.png"
                   }
-                  alt={product.name}
-                  className="w-full h-full object-contain"
-                  radius="none"
                 />
               </div>
               {product.source && (
@@ -161,33 +165,33 @@ export default function AddToClosetModal({
               <Input
                 isRequired
                 label="Name"
+                radius="sm"
                 value={formData.name}
+                variant="bordered"
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                variant="bordered"
-                radius="sm"
               />
 
               <div className="grid grid-cols-2 gap-4">
                 <Input
                   label="Brand"
+                  radius="sm"
                   value={formData.brand}
+                  variant="bordered"
                   onChange={(e) =>
                     setFormData({ ...formData, brand: e.target.value })
                   }
-                  variant="bordered"
-                  radius="sm"
                 />
                 <Select
                   isRequired
                   label="Category"
+                  radius="sm"
                   selectedKeys={formData.category ? [formData.category] : []}
+                  variant="bordered"
                   onChange={(e) =>
                     setFormData({ ...formData, category: e.target.value })
                   }
-                  variant="bordered"
-                  radius="sm"
                 >
                   {categories.map((cat) => (
                     <SelectItem key={cat} className="capitalize">
@@ -199,28 +203,28 @@ export default function AddToClosetModal({
 
               <div className="grid grid-cols-2 gap-4">
                 <Input
-                  label="Size"
-                  placeholder={product.sizes?.join(", ") || "Enter size"}
-                  value={formData.size}
-                  onChange={(e) =>
-                    setFormData({ ...formData, size: e.target.value })
-                  }
-                  variant="bordered"
-                  radius="sm"
                   description={
                     product.sizes?.length
                       ? `Available: ${product.sizes.join(", ")}`
                       : undefined
                   }
+                  label="Size"
+                  placeholder={product.sizes?.join(", ") || "Enter size"}
+                  radius="sm"
+                  value={formData.size}
+                  variant="bordered"
+                  onChange={(e) =>
+                    setFormData({ ...formData, size: e.target.value })
+                  }
                 />
                 <Select
                   label="Condition"
+                  radius="sm"
                   selectedKeys={[formData.condition]}
+                  variant="bordered"
                   onChange={(e) =>
                     setFormData({ ...formData, condition: e.target.value })
                   }
-                  variant="bordered"
-                  radius="sm"
                 >
                   {conditions.map((cond) => (
                     <SelectItem key={cond} className="capitalize">
@@ -232,16 +236,16 @@ export default function AddToClosetModal({
 
               <Select
                 label="Colors"
-                selectionMode="multiple"
+                radius="sm"
                 selectedKeys={new Set(formData.colors)}
+                selectionMode="multiple"
+                variant="bordered"
                 onSelectionChange={(keys) =>
                   setFormData({
                     ...formData,
                     colors: Array.from(keys) as string[],
                   })
                 }
-                variant="bordered"
-                radius="sm"
               >
                 {colors.map((color) => (
                   <SelectItem key={color} className="capitalize">
@@ -255,26 +259,26 @@ export default function AddToClosetModal({
                 <div className="grid grid-cols-2 gap-4">
                   <Input
                     label="Price"
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value })
-                    }
-                    variant="bordered"
                     radius="sm"
                     startContent={
                       <span className="text-default-400 text-sm">$</span>
                     }
+                    type="number"
+                    value={formData.price}
+                    variant="bordered"
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: e.target.value })
+                    }
                   />
                   <Input
-                    type="date"
                     label="Purchase Date"
+                    radius="sm"
+                    type="date"
                     value={formData.purchaseDate}
+                    variant="bordered"
                     onChange={(e) =>
                       setFormData({ ...formData, purchaseDate: e.target.value })
                     }
-                    variant="bordered"
-                    radius="sm"
                   />
                 </div>
               )}
@@ -283,15 +287,15 @@ export default function AddToClosetModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="light" radius="none" onPress={onClose}>
+          <Button radius="none" variant="light" onPress={onClose}>
             Cancel
           </Button>
           <Button
-            color="primary"
-            radius="none"
             className="uppercase font-bold"
-            onPress={handleSubmit}
+            color="primary"
             isLoading={saving}
+            radius="none"
+            onPress={handleSubmit}
           >
             Add to {status === "wishlist" ? "Wishlist" : "Closet"}
           </Button>

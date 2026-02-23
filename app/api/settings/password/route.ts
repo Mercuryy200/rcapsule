@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+
 import { auth } from "@/auth";
 
 export async function PUT(req: Request) {
@@ -72,6 +73,7 @@ export async function PUT(req: Request) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("Error changing password:", error);
+
     return NextResponse.json(
       { error: error.message || "Failed to change password" },
       { status: 500 },

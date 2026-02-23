@@ -43,8 +43,10 @@ export default function LocationSettings() {
   const fetchLocation = async () => {
     try {
       const res = await fetch("/api/user/location");
+
       if (res.ok) {
         const data = await res.json();
+
         setLocation(data);
         setTempUnit(data.temperatureUnit || "celsius");
         if (data.city) {
@@ -61,6 +63,7 @@ export default function LocationSettings() {
   const handleDetectLocation = async () => {
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser");
+
       return;
     }
 
@@ -118,6 +121,7 @@ export default function LocationSettings() {
   const handleSaveCity = async () => {
     if (!cityInput.trim()) {
       setError("Please enter a city name");
+
       return;
     }
 
@@ -173,7 +177,7 @@ export default function LocationSettings() {
   if (loading) {
     return (
       <div className="w-full flex items-center justify-center py-12">
-        <Spinner size="lg" color="default" />
+        <Spinner color="default" size="lg" />
       </div>
     );
   }
@@ -246,19 +250,19 @@ export default function LocationSettings() {
 
             <div className="mt-8 pt-6 border-t border-default-100">
               <Select
+                classNames={{
+                  trigger: "h-12 border-default-200",
+                  value: "uppercase text-xs font-bold tracking-widest",
+                }}
                 label="Temperature Unit"
-                variant="bordered"
                 radius="none"
                 selectedKeys={[tempUnit]}
+                variant="bordered"
                 onChange={(e) =>
                   handleUpdateTempUnit(
                     e.target.value as "celsius" | "fahrenheit",
                   )
                 }
-                classNames={{
-                  trigger: "h-12 border-default-200",
-                  value: "uppercase text-xs font-bold tracking-widest",
-                }}
               >
                 <SelectItem key="celsius" textValue="celsius">
                   Celsius (°C)
@@ -280,22 +284,22 @@ export default function LocationSettings() {
             </h3>
             <div className="flex flex-col gap-4">
               <Input
-                placeholder="ENTER CITY (E.G. NEW YORK)"
-                value={cityInput}
-                onChange={(e) => setCityInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSaveCity()}
-                variant="bordered"
-                radius="none"
                 classNames={{
                   inputWrapper: "h-12 border-default-200",
                   input: "text-sm uppercase tracking-wide",
                 }}
+                placeholder="ENTER CITY (E.G. NEW YORK)"
+                radius="none"
+                value={cityInput}
+                variant="bordered"
+                onChange={(e) => setCityInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSaveCity()}
               />
               <Button
-                color="primary"
-                radius="none"
                 className="w-full h-12 uppercase font-bold tracking-widest"
+                color="primary"
                 isLoading={saving}
+                radius="none"
                 onPress={handleSaveCity}
               >
                 Save Coordinates
@@ -304,23 +308,23 @@ export default function LocationSettings() {
           </div>
 
           <div className="relative flex items-center py-2">
-            <div className="flex-grow border-t border-default-200"></div>
+            <div className="flex-grow border-t border-default-200" />
             <span className="flex-shrink-0 mx-4 text-xs text-default-300 uppercase tracking-widest">
               Or Use GPS
             </span>
-            <div className="flex-grow border-t border-default-200"></div>
+            <div className="flex-grow border-t border-default-200" />
           </div>
 
           {/* Auto Detect Section */}
           <Button
-            variant="ghost"
+            className="w-full h-12 border-default-300 uppercase font-bold tracking-widest hover:bg-default-100"
+            isLoading={detectingLocation}
             radius="none"
             startContent={
               !detectingLocation && <GlobeAltIcon className="w-5 h-5" />
             }
-            isLoading={detectingLocation}
+            variant="ghost"
             onPress={handleDetectLocation}
-            className="w-full h-12 border-default-300 uppercase font-bold tracking-widest hover:bg-default-100"
           >
             {detectingLocation ? "Locating..." : "Auto-detect Position"}
           </Button>

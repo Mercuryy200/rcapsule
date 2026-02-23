@@ -182,9 +182,9 @@ export const SocialIcon = ({
 
   return (
     <svg
+      className="w-4 h-4 md:w-5 md:h-5"
       fill="currentColor"
       viewBox="0 0 24 24"
-      className="w-4 h-4 md:w-5 md:h-5"
     >
       {icons[type]}
     </svg>

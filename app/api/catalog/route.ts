@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 
 export async function GET(req: Request) {
@@ -17,12 +18,14 @@ export async function GET(req: Request) {
       // Get products with their popularity count (number of users who have them)
       const { data: products, error } = await supabase
         .from("GlobalProduct")
-        .select(`
+        .select(
+          `
           *,
           clothes:Clothes(count)
-        `)
+        `,
+        )
         .or(
-          `name.ilike.%${query}%,brand.ilike.%${query}%,category.ilike.%${query}%`
+          `name.ilike.%${query}%,brand.ilike.%${query}%,category.ilike.%${query}%`,
         )
         .limit(50);
 
@@ -48,10 +51,13 @@ export async function GET(req: Request) {
     // Regular search/browse
     let dbQuery = supabase
       .from("GlobalProduct")
-      .select(`
+      .select(
+        `
         *,
         clothes:Clothes(count)
-      `, { count: "exact" })
+      `,
+        { count: "exact" },
+      )
       .order("createdat", { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -70,7 +76,7 @@ export async function GET(req: Request) {
         case "all":
         default:
           dbQuery = dbQuery.or(
-            `name.ilike.%${query}%,brand.ilike.%${query}%,category.ilike.%${query}%`
+            `name.ilike.%${query}%,brand.ilike.%${query}%,category.ilike.%${query}%`,
           );
           break;
       }
@@ -95,9 +101,10 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error("Error fetching catalog:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch catalog" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

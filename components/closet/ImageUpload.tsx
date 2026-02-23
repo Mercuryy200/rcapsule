@@ -2,15 +2,15 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { Button, Tooltip, Input, Tabs, Tab } from "@heroui/react";
+import { Button, Tooltip, Input } from "@heroui/react";
 import {
   SparklesIcon,
   XMarkIcon,
   CloudArrowUpIcon,
   LinkIcon,
-  PhotoIcon,
   ArrowUpTrayIcon,
 } from "@heroicons/react/24/outline";
+
 import { useUser } from "@/contexts/UserContext";
 
 interface ImageUploadProps {
@@ -45,6 +45,7 @@ export function ImageUpload({
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (!file) return;
 
     setError("");
@@ -56,18 +57,23 @@ export function ImageUpload({
       "image/webp",
       "image/gif",
     ];
+
     if (!validTypes.includes(file.type)) {
       setError("Please upload a JPEG, PNG, WEBP, or GIF image");
+
       return;
     }
 
     const maxSizeBytes = maxSize * 1024 * 1024;
+
     if (file.size > maxSizeBytes) {
       setError(`File size must be less than ${maxSize}MB`);
+
       return;
     }
 
     const reader = new FileReader();
+
     reader.onloadend = () => {
       setPreview(reader.result as string);
     };
@@ -83,6 +89,7 @@ export function ImageUpload({
     // Basic image URL validation
     if (!urlInput.match(/^https?:\/\/.+/)) {
       setError("Please enter a valid URL (http/https)");
+
       return;
     }
 
@@ -96,6 +103,7 @@ export function ImageUpload({
     setUploading(true);
     try {
       const formData = new FormData();
+
       formData.append("file", file);
       formData.append("folder", folder);
 
@@ -106,10 +114,12 @@ export function ImageUpload({
 
       if (!response.ok) {
         const data = await response.json();
+
         throw new Error(data.error || "Upload failed");
       }
 
       const data = await response.json();
+
       onChange(data.url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
@@ -135,6 +145,7 @@ export function ImageUpload({
         // Fallback content type detection
         if (!contentType || contentType === "application/octet-stream") {
           const nameLower = currentFile.name.toLowerCase();
+
           if (nameLower.endsWith(".png")) contentType = "image/png";
           else if (nameLower.endsWith(".webp")) contentType = "image/webp";
           else contentType = "image/jpeg";
@@ -142,6 +153,7 @@ export function ImageUpload({
 
         const blob = new Blob([arrayBuffer], { type: contentType });
         const extension = contentType.split("/")[1] || "jpg";
+
         formData.append("file", blob, `image.${extension}`);
       } else if (preview) {
         // If preview is a URL (not base64)
@@ -156,6 +168,7 @@ export function ImageUpload({
           const properBlob = new Blob([await blob.arrayBuffer()], {
             type: contentType,
           });
+
           formData.append("file", properBlob, `image.${extension}`);
         }
       }
@@ -167,10 +180,12 @@ export function ImageUpload({
 
       if (!response.ok) {
         const data = await response.json();
+
         throw new Error(data.error || "Background removal failed");
       }
 
       const data = await response.json();
+
       setPreview(data.image);
 
       const base64Response = await fetch(data.image);
@@ -211,16 +226,16 @@ export function ImageUpload({
         {!preview && (
           <div className="flex bg-default-100 rounded-lg p-1 gap-1">
             <button
-              onClick={() => setUploadMode("file")}
               className={`p-1.5 rounded-md transition-all ${uploadMode === "file" ? "bg-background shadow-sm text-foreground" : "text-default-400 hover:text-default-600"}`}
               title="Upload File"
+              onClick={() => setUploadMode("file")}
             >
               <ArrowUpTrayIcon className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setUploadMode("url")}
               className={`p-1.5 rounded-md transition-all ${uploadMode === "url" ? "bg-background shadow-sm text-foreground" : "text-default-400 hover:text-default-600"}`}
               title="Paste URL"
+              onClick={() => setUploadMode("url")}
             >
               <LinkIcon className="w-4 h-4" />
             </button>
@@ -233,11 +248,11 @@ export function ImageUpload({
           className={`relative w-full ${className} overflow-hidden border-2 border-default-200 bg-[url('/images/transparent-grid.png')] bg-repeat rounded-lg group`}
         >
           <Image
-            src={preview}
-            alt="Preview"
             fill
-            className="object-contain"
             unoptimized
+            alt="Preview"
+            className="object-contain"
+            src={preview}
           />
 
           {/* Action Buttons */}
@@ -251,12 +266,12 @@ export function ImageUpload({
                 <span>
                   <Button
                     isIconOnly
-                    size="sm"
-                    variant="flat"
                     className={`bg-background/90 backdrop-blur-sm ${!isPremium ? "opacity-50 cursor-not-allowed" : ""}`}
-                    onPress={isPremium ? handleRemoveBackground : undefined}
                     isDisabled={!isPremium || uploading || removingBg}
                     isLoading={removingBg}
+                    size="sm"
+                    variant="flat"
+                    onPress={isPremium ? handleRemoveBackground : undefined}
                   >
                     <SparklesIcon className="w-4 h-4" />
                   </Button>
@@ -267,12 +282,12 @@ export function ImageUpload({
             {/* Remove Image Button */}
             <Button
               isIconOnly
+              className="bg-background/90 backdrop-blur-sm"
               color="danger"
+              isDisabled={uploading || removingBg}
               size="sm"
               variant="flat"
-              className="bg-background/90 backdrop-blur-sm"
               onPress={handleRemove}
-              isDisabled={uploading || removingBg}
             >
               <XMarkIcon className="w-4 h-4" />
             </Button>
@@ -283,10 +298,10 @@ export function ImageUpload({
             <div className="absolute bottom-2 left-2 z-10">
               <Tooltip content="Upgrade to remove backgrounds">
                 <Button
-                  size="sm"
-                  variant="flat"
                   className="bg-background/90 backdrop-blur-sm text-[10px] uppercase tracking-widest font-bold"
+                  size="sm"
                   startContent={<SparklesIcon className="w-3 h-3" />}
+                  variant="flat"
                   onPress={() => (window.location.href = "/pricing")}
                 >
                   Magic Edit
@@ -355,22 +370,22 @@ export function ImageUpload({
                 </p>
                 <div className="flex gap-2">
                   <Input
-                    size="sm"
+                    classNames={{ inputWrapper: "bg-background" }}
                     placeholder="https://example.com/image.png"
+                    radius="none"
+                    size="sm"
                     value={urlInput}
+                    variant="bordered"
                     onChange={(e) => setUrlInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleUrlSubmit()}
-                    variant="bordered"
-                    radius="none"
-                    classNames={{ inputWrapper: "bg-background" }}
                   />
                   <Button
                     isIconOnly
-                    size="sm"
-                    radius="none"
                     color="primary"
-                    onPress={handleUrlSubmit}
                     isDisabled={!urlInput}
+                    radius="none"
+                    size="sm"
+                    onPress={handleUrlSubmit}
                   >
                     <ArrowUpTrayIcon className="w-4 h-4" />
                   </Button>
@@ -386,10 +401,10 @@ export function ImageUpload({
 
       <input
         ref={fileInputRef}
-        type="file"
         accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-        onChange={handleFileSelect}
         className="hidden"
+        type="file"
+        onChange={handleFileSelect}
       />
 
       {error && (

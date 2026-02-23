@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Refund Policy | rcapsule",
@@ -62,8 +61,8 @@ export default function RefundPolicyPage() {
             <li>
               <strong>Email:</strong> Send a request to{" "}
               <a
-                href="mailto:nafouguirima@gmail.com"
                 className="text-primary underline"
+                href="mailto:nafouguirima@gmail.com"
               >
                 nafouguirima@gmail.com
               </a>{" "}
@@ -121,8 +120,8 @@ export default function RefundPolicyPage() {
           <p className="text-default-600 mt-4">
             For these situations, please contact{" "}
             <a
-              href="mailto:nafouguirima@gmail.com"
               className="text-primary underline"
+              href="mailto:nafouguirima@gmail.com"
             >
               nafouguirima@gmail.com
             </a>{" "}
@@ -176,8 +175,8 @@ export default function RefundPolicyPage() {
             <p>
               <strong>Email:</strong>{" "}
               <a
-                href="mailto:nafouguirima@gmail.com"
                 className="text-primary underline"
+                href="mailto:nafouguirima@gmail.com"
               >
                 nafouguirima@gmail.com
               </a>

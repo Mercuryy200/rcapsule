@@ -1,4 +1,6 @@
 "use client";
+import type { Wardrobe } from "@/lib/database.type";
+
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -22,7 +24,6 @@ import {
   LockClosedIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
-import type { Wardrobe } from "@/lib/database.type";
 
 interface WardrobeTabProps {
   wardrobes: (Wardrobe & { clothesCount?: number })[];
@@ -51,6 +52,7 @@ export default function WardrobeTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newWardrobe),
       });
+
       if (res.ok) {
         refreshData();
         onClose();
@@ -79,9 +81,9 @@ export default function WardrobeTab({
           </p>
         </div>
         <Button
-          radius="none"
-          color="primary"
           className="uppercase font-bold tracking-widest w-full md:w-auto"
+          color="primary"
+          radius="none"
           startContent={<PlusIcon className="w-4 h-4" />}
           onPress={onOpen}
         >
@@ -94,25 +96,25 @@ export default function WardrobeTab({
         {wardrobes.map((wardrobe) => (
           <Card
             key={wardrobe.id}
-            shadow="none"
-            radius="none"
-            className="bg-transparent group border border-transparent hover:border-default-200 transition-all"
             isPressable
+            className="bg-transparent group border border-transparent hover:border-default-200 transition-all"
+            radius="none"
+            shadow="none"
             onPress={() => router.push(`/wardrobe/${wardrobe.id}`)}
           >
             <CardBody className="p-0 aspect-[4/3] overflow-hidden relative">
               <Image
                 removeWrapper
-                radius="none"
-                src={wardrobe.coverImage || "/images/placeholder_wardrobe.jpg"}
                 alt={wardrobe.title}
                 className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                radius="none"
+                src={wardrobe.coverImage || "/images/placeholder_wardrobe.jpg"}
               />
               <div className="absolute top-2 right-2 z-10">
                 {wardrobe.isPublic && (
                   <Chip
-                    size="sm"
                     classNames={{ base: "bg-white/90 backdrop-blur" }}
+                    size="sm"
                     startContent={<GlobeAltIcon className="w-3 h-3" />}
                   >
                     Public
@@ -135,11 +137,11 @@ export default function WardrobeTab({
 
       <Modal
         isOpen={isOpen}
-        onClose={onClose}
-        radius="none"
-        size="2xl"
         placement="center" // Better for mobile
+        radius="none"
         scrollBehavior="inside" // Prevents body scroll issues on small screens
+        size="2xl"
+        onClose={onClose}
       >
         <ModalContent>
           <ModalHeader className="uppercase tracking-widest font-bold text-xl">
@@ -151,9 +153,9 @@ export default function WardrobeTab({
               <Input
                 label="Title"
                 placeholder="Summer 2026"
-                variant="bordered"
                 radius="none"
                 value={newWardrobe.title}
+                variant="bordered"
                 onChange={(e) =>
                   setNewWardrobe({ ...newWardrobe, title: e.target.value })
                 }
@@ -161,9 +163,9 @@ export default function WardrobeTab({
               <Input
                 label="Cover Image URL"
                 placeholder="https://..."
-                variant="bordered"
                 radius="none"
                 value={newWardrobe.coverImage}
+                variant="bordered"
                 onChange={(e) =>
                   setNewWardrobe({ ...newWardrobe, coverImage: e.target.value })
                 }
@@ -172,9 +174,9 @@ export default function WardrobeTab({
             <Input
               label="Description"
               placeholder="Vibes for the upcoming trip..."
-              variant="bordered"
               radius="none"
               value={newWardrobe.description}
+              variant="bordered"
               onChange={(e) =>
                 setNewWardrobe({ ...newWardrobe, description: e.target.value })
               }
@@ -201,15 +203,15 @@ export default function WardrobeTab({
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" radius="none" onPress={onClose}>
+            <Button radius="none" variant="light" onPress={onClose}>
               Cancel
             </Button>
             <Button
-              color="primary"
-              radius="none"
               className="uppercase font-bold"
-              onPress={handleCreate}
+              color="primary"
               isLoading={loading}
+              radius="none"
+              onPress={handleCreate}
             >
               Create
             </Button>

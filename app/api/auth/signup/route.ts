@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 
 export async function POST(req: Request) {
@@ -93,7 +94,6 @@ export async function POST(req: Request) {
       .single();
 
     if (dbError) {
-
       const { error: insertError } = await supabase.from("User").insert({
         id: authData.user.id,
         email: authData.user.email!,
@@ -132,6 +132,7 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     console.error("Signup error:", error);
+
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 },

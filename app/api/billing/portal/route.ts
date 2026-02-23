@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+
 import { auth } from "@/auth";
 import { getSupabaseServer } from "@/lib/supabase-server";
 
@@ -10,6 +11,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST() {
   try {
     const session = await auth();
+
     console.log("Session:", session?.user?.id);
 
     if (!session?.user?.id) {
@@ -50,6 +52,7 @@ export async function POST() {
     return NextResponse.json({ url: portalSession.url });
   } catch (error) {
     console.error("Portal error:", error);
+
     return NextResponse.json(
       { error: "Failed to create portal session" },
       { status: 500 },

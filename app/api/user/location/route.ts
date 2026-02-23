@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
@@ -21,6 +22,7 @@ async function geocodeCity(
   if (!response.ok) return null;
 
   const data = await response.json();
+
   if (!data || data.length === 0) return null;
 
   return {
@@ -48,6 +50,7 @@ async function reverseGeocode(
   if (!response.ok) return null;
 
   const data = await response.json();
+
   if (!data || data.length === 0) return null;
 
   return {
@@ -59,6 +62,7 @@ async function reverseGeocode(
 // GET - Fetch current location settings
 export async function GET() {
   const session = await auth();
+
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -90,6 +94,7 @@ export async function GET() {
 // POST - Set location (by city name or coordinates)
 export async function POST(req: Request) {
   const session = await auth();
+
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -108,6 +113,7 @@ export async function POST(req: Request) {
   // If coordinates provided, use them and reverse geocode for city name
   if (lat !== undefined && lon !== undefined) {
     const geoResult = await reverseGeocode(lat, lon);
+
     locationData = {
       location_lat: lat,
       location_lon: lon,
@@ -118,6 +124,7 @@ export async function POST(req: Request) {
   // If city provided, geocode to get coordinates
   else if (city) {
     const geoResult = await geocodeCity(city, country);
+
     if (!geoResult) {
       return NextResponse.json(
         {
@@ -183,6 +190,7 @@ export async function POST(req: Request) {
 // DELETE - Clear location
 export async function DELETE() {
   const session = await auth();
+
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

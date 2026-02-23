@@ -27,11 +27,11 @@ export const AppNavbar = ({ user }: { user: any }) => {
 
   return (
     <HeroUINavbar
+      className="border-b border-divider"
       isMenuOpen={isMenuOpen}
-      onMenuOpenChange={setIsMenuOpen}
       maxWidth="xl"
       position="sticky"
-      className="border-b border-divider"
+      onMenuOpenChange={setIsMenuOpen}
     >
       <NavbarContent className="sm:hidden" justify="start">
         <NavbarMenuToggle
@@ -76,16 +76,16 @@ export const AppNavbar = ({ user }: { user: any }) => {
           </NavbarItem>
         ) : (
           <div className="flex gap-2">
-            <Button as={NextLink} href="/login" variant="light" size="sm">
+            <Button as={NextLink} href="/login" size="sm" variant="light">
               Login
             </Button>
             <Button
               as={NextLink}
-              href="/signup"
-              color="primary"
-              variant="flat"
-              size="sm"
               className="hidden sm:flex"
+              color="primary"
+              href="/signup"
+              size="sm"
+              variant="flat"
             >
               Sign Up
             </Button>

@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
-import {
-  getWeather,
-  getWeatherSummary,
-  type WeatherContext,
-} from "@/lib/services/weather";
+import { getWeather, getWeatherSummary } from "@/lib/services/weather";
 
 export async function GET() {
   const session = await auth();
+
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -56,6 +54,7 @@ export async function GET() {
     });
   } catch (error: any) {
     console.error("Weather API error:", error);
+
     return NextResponse.json(
       {
         error: "Failed to fetch weather",

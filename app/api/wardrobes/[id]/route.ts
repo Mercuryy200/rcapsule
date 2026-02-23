@@ -1,5 +1,6 @@
 //app/api/wardrobes/[id]/route.ts
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
@@ -44,6 +45,7 @@ export async function GET(
     const clothes = (wardrobeRaw.WardrobeClothes || [])
       .map((wc: any) => {
         if (!wc.clothes) return null;
+
         return {
           ...wc.clothes,
           addedToWardrobeAt: wc.addedAt,
@@ -72,6 +74,7 @@ export async function GET(
       if (Array.isArray(item.colors)) {
         item.colors.forEach((color: string) => {
           const normalizedColor = color.toLowerCase().trim();
+
           colorCounts[normalizedColor] =
             (colorCounts[normalizedColor] || 0) + 1;
           totalColorTags++;
@@ -104,6 +107,7 @@ export async function GET(
     return NextResponse.json(wardrobe);
   } catch (error) {
     console.error("Error fetching wardrobe:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch wardrobe" },
       { status: 500 },
@@ -155,6 +159,7 @@ export async function PUT(
     return NextResponse.json(wardrobe);
   } catch (error) {
     console.error("Error updating wardrobe:", error);
+
     return NextResponse.json(
       { error: "Failed to update wardrobe" },
       { status: 500 },
@@ -203,6 +208,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting wardrobe:", error);
+
     return NextResponse.json(
       { error: "Failed to delete wardrobe" },
       { status: 500 },

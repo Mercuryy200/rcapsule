@@ -2,6 +2,7 @@
 import { Link, Input, Button, Divider } from "@heroui/react";
 import { ArrowRight } from "lucide-react";
 import { FaGithub, FaInstagram, FaTwitter } from "react-icons/fa";
+
 import { Logo } from "@/components/logo";
 
 export default function Footer() {
@@ -38,7 +39,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16">
           <div className="lg:col-span-5 flex flex-col gap-6">
-            <Link href="/" className="text-foreground w-fit">
+            <Link className="text-foreground w-fit" href="/">
               <Logo />
             </Link>
             <p className="text-default-500 text-sm leading-relaxed max-w-sm">
@@ -48,15 +49,15 @@ export default function Footer() {
 
             <div className="flex gap-2 max-w-sm mt-2">
               <Input
-                placeholder="Enter your email"
-                size="sm"
-                radius="none"
                 classNames={{
                   inputWrapper:
                     "border-b border-default-400 bg-transparent px-0 shadow-none",
                 }}
+                placeholder="Enter your email"
+                radius="none"
+                size="sm"
               />
-              <Button isIconOnly variant="light" size="sm" radius="full">
+              <Button isIconOnly radius="full" size="sm" variant="light">
                 <ArrowRight size={18} />
               </Button>
             </div>
@@ -72,9 +73,9 @@ export default function Footer() {
                   {section.links.map((link) => (
                     <li key={link.name}>
                       <Link
-                        href={link.href}
-                        color="foreground"
                         className="text-sm hover:text-default-500 transition-colors"
+                        color="foreground"
+                        href={link.href}
                       >
                         {link.name}
                       </Link>
@@ -95,8 +96,8 @@ export default function Footer() {
             </p>
             <span className="hidden sm:inline text-default-300">·</span>
             <Link
-              href="mailto:nafouguirima@gmail.com"
               className="text-xs text-default-400 hover:text-foreground transition-colors"
+              href="mailto:nafouguirima@gmail.com"
             >
               nafouguirima@gmail.com
             </Link>
@@ -104,29 +105,29 @@ export default function Footer() {
 
           <div className="flex gap-6">
             <Link
-              href="https://github.com/Mercuryy200"
               isExternal
               color="foreground"
+              href="https://github.com/Mercuryy200"
             >
               <FaGithub
-                size={20}
                 className="hover:text-default-500 transition-colors"
+                size={20}
               />
             </Link>
-            <Link href="https://twitter.com" isExternal color="foreground">
+            <Link isExternal color="foreground" href="https://twitter.com">
               <FaTwitter
-                size={20}
                 className="hover:text-default-500 transition-colors"
+                size={20}
               />
             </Link>
             <Link
-              href="https://instagram.com/Mercuryy.200"
               isExternal
               color="foreground"
+              href="https://instagram.com/Mercuryy.200"
             >
               <FaInstagram
-                size={20}
                 className="hover:text-default-500 transition-colors"
+                size={20}
               />
             </Link>
           </div>

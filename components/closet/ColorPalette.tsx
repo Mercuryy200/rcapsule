@@ -1,7 +1,6 @@
 "use client";
 
 import { colorMap } from "@/lib/data";
-import { Progress } from "@heroui/react";
 
 interface ColorStat {
   color: string;

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
 export async function POST(req: Request) {
   try {
     const session = await auth();
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -24,6 +26,7 @@ export async function POST(req: Request) {
       "image/webp",
       "image/gif",
     ];
+
     if (!validTypes.includes(file.type)) {
       return NextResponse.json(
         {
@@ -34,6 +37,7 @@ export async function POST(req: Request) {
     }
 
     const maxSize = 5 * 1024 * 1024;
+
     if (file.size > maxSize) {
       return NextResponse.json(
         { error: "File too large. Maximum size is 5MB" },
@@ -60,6 +64,7 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Upload error:", error);
+
       return NextResponse.json(
         { error: "Failed to upload file" },
         { status: 500 },
@@ -76,6 +81,7 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Error uploading file:", error);
+
     return NextResponse.json(
       { error: "Failed to upload file" },
       { status: 500 },
@@ -86,6 +92,7 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const session = await auth();
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -108,6 +115,7 @@ export async function DELETE(req: Request) {
 
     if (error) {
       console.error("Delete error:", error);
+
       return NextResponse.json(
         { error: "Failed to delete file" },
         { status: 500 },
@@ -117,6 +125,7 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting file:", error);
+
     return NextResponse.json(
       { error: "Failed to delete file" },
       { status: 500 },

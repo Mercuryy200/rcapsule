@@ -41,6 +41,7 @@ export default function SignUpForm() {
     if (/^[-_]|[-_]$/.test(value)) {
       return "Cannot start or end with dash or underscore";
     }
+
     return null;
   };
 
@@ -52,6 +53,7 @@ export default function SignUpForm() {
         setUsernameError(validationError);
         setUsernameAvailable(null);
         setIsCheckingUsername(false);
+
         return;
       }
 
@@ -92,7 +94,7 @@ export default function SignUpForm() {
 
   const getUsernameEndContent = () => {
     if (isCheckingUsername) {
-      return <Loader2 size={18} className="animate-spin text-default-400" />;
+      return <Loader2 className="animate-spin text-default-400" size={18} />;
     }
     if (usernameAvailable === true) {
       return <CheckCircleIcon className="w-5 h-5 text-success" />;
@@ -100,6 +102,7 @@ export default function SignUpForm() {
     if (usernameAvailable === false || usernameError) {
       return <XCircleIcon className="w-5 h-5 text-danger" />;
     }
+
     return null;
   };
 
@@ -109,6 +112,7 @@ export default function SignUpForm() {
 
     if (!usernameAvailable) {
       setError("Please choose an available username");
+
       return;
     }
 
@@ -123,6 +127,7 @@ export default function SignUpForm() {
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       setIsLoading(false);
+
       return;
     }
 
@@ -143,6 +148,7 @@ export default function SignUpForm() {
       if (!response.ok) {
         setError(data.error || "Something went wrong");
         setIsLoading(false);
+
         return;
       }
 
@@ -156,9 +162,9 @@ export default function SignUpForm() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-md space-y-8"
+      initial={{ opacity: 0, y: 10 }}
     >
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-extrabold tracking-tighter uppercase italic">
@@ -171,58 +177,52 @@ export default function SignUpForm() {
 
       <Form
         className="flex flex-col gap-4"
-        onSubmit={handleSubmit}
         validationBehavior="native"
+        onSubmit={handleSubmit}
       >
         <Input
           isRequired
+          classNames={{ inputWrapper: "h-12" }}
           label="Full Name"
+          labelPlacement="outside"
           name="name"
           placeholder="Name"
+          startContent={<User className="text-default-400" size={18} />}
           type="text"
           variant="bordered"
-          labelPlacement="outside"
-          startContent={<User size={18} className="text-default-400" />}
-          classNames={{ inputWrapper: "h-12" }}
         />
 
         <Input
           isRequired
-          label="Username"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value.toLowerCase())}
-          variant="bordered"
-          labelPlacement="outside"
-          startContent={<AtSymbolIcon className="w-5 h-5 text-default-400" />}
-          endContent={getUsernameEndContent()}
+          classNames={{ inputWrapper: "h-12" }}
           description="3-30 characters. Letters, numbers, dashes, and underscores only."
+          endContent={getUsernameEndContent()}
           errorMessage={usernameError}
           isInvalid={!!usernameError || usernameAvailable === false}
-          classNames={{ inputWrapper: "h-12" }}
+          label="Username"
+          labelPlacement="outside"
+          placeholder="Username"
+          startContent={<AtSymbolIcon className="w-5 h-5 text-default-400" />}
+          value={username}
+          variant="bordered"
+          onChange={(e) => setUsername(e.target.value.toLowerCase())}
         />
 
         <Input
           isRequired
+          classNames={{ inputWrapper: "h-12" }}
           label="Email"
+          labelPlacement="outside"
           name="email"
           placeholder="Email"
+          startContent={<Mail className="text-default-400" size={18} />}
           type="email"
           variant="bordered"
-          labelPlacement="outside"
-          startContent={<Mail size={18} className="text-default-400" />}
-          classNames={{ inputWrapper: "h-12" }}
         />
 
         <Input
           isRequired
-          label="Password"
-          name="password"
-          placeholder="••••••••"
-          minLength={6}
-          variant="bordered"
-          labelPlacement="outside"
-          startContent={<Lock size={18} className="text-default-400" />}
+          classNames={{ inputWrapper: "h-12" }}
           endContent={
             <button
               className="focus:outline-none"
@@ -236,20 +236,26 @@ export default function SignUpForm() {
               )}
             </button>
           }
+          label="Password"
+          labelPlacement="outside"
+          minLength={6}
+          name="password"
+          placeholder="••••••••"
+          startContent={<Lock className="text-default-400" size={18} />}
           type={isVisible ? "text" : "password"}
-          classNames={{ inputWrapper: "h-12" }}
+          variant="bordered"
         />
 
         <Input
           isRequired
+          classNames={{ inputWrapper: "h-12" }}
           label="Confirm Password"
+          labelPlacement="outside"
           name="confirmPassword"
           placeholder="••••••••"
-          variant="bordered"
-          labelPlacement="outside"
-          startContent={<Lock size={18} className="text-default-400" />}
+          startContent={<Lock className="text-default-400" size={18} />}
           type={isVisible ? "text" : "password"}
-          classNames={{ inputWrapper: "h-12" }}
+          variant="bordered"
         />
         <div className="text-center font-light">
           By signing up, you agree to our{" "}
@@ -274,9 +280,9 @@ export default function SignUpForm() {
         <Button
           className="w-full h-12 font-bold text-md mt-2 shadow-lg shadow-primary/20"
           color="primary"
+          isDisabled={!usernameAvailable || isCheckingUsername}
           isLoading={isLoading}
           type="submit"
-          isDisabled={!usernameAvailable || isCheckingUsername}
         >
           Create Account
         </Button>

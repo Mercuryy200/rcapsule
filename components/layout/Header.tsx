@@ -1,5 +1,6 @@
-import { auth } from "@/auth";
 import { AppNavbar } from "./Navbar";
+
+import { auth } from "@/auth";
 
 export default async function Header() {
   const session = await auth();

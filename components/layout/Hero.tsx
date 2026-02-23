@@ -8,10 +8,10 @@ export default function Hero() {
   return (
     <section className="flex flex-col items-center justify-center min-h-[80vh] gap-8 py-20 px-6 text-center">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
         className="max-w-3xl"
+        initial={{ opacity: 0, y: 20 }}
+        transition={{ duration: 0.8 }}
       >
         <div className="flex justify-center mb-6">
           <span className="px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium flex items-center gap-2 border border-primary/20">
@@ -32,21 +32,21 @@ export default function Hero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button
             as={Link}
-            href="/signup"
-            color="primary"
-            size="lg"
             className="font-bold px-8 h-14 text-lg shadow-lg shadow-primary/20"
+            color="primary"
             endContent={<UserPlus size={20} />}
+            href="/signup"
+            size="lg"
           >
             Get Started for Free
           </Button>
           <Button
             as={Link}
-            href="/login"
-            variant="bordered"
-            size="lg"
             className="font-bold px-8 h-14 text-lg"
+            href="/login"
+            size="lg"
             startContent={<LogIn size={20} />}
+            variant="bordered"
           >
             Sign In
           </Button>
@@ -54,10 +54,10 @@ export default function Hero() {
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.4, duration: 1 }}
         className="relative w-full max-w-5xl mt-10 rounded-2xl border border-default-200 bg-content1 shadow-2xl overflow-hidden"
+        initial={{ opacity: 0, scale: 0.95 }}
+        transition={{ delay: 0.4, duration: 1 }}
       >
         <div className="aspect-video bg-[url('/images/previewCloset.png')] bg-cover bg-center">
           <div className="absolute inset-0 bg-gradient-to-t from-content1 via-transparent to-transparent" />

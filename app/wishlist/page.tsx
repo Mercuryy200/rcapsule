@@ -4,13 +4,14 @@ import { useRouter } from "next/navigation";
 import { useState, useMemo } from "react";
 import { Button } from "@heroui/react";
 import { motion } from "framer-motion";
+import useSWR from "swr";
+
 import ClothingCard from "@/components/closet/ClothingCard";
 import ClothesFilter, {
   FilterOptions,
 } from "@/components/closet/ClothesFilter";
 import WardrobeHeader, { useSearchHistory } from "@/components/WardrobeHeader";
 import { ClothingCardSkeleton } from "@/components/closet/ClothingCardSkeleton";
-import useSWR from "swr";
 
 interface ClothingItem {
   id: string;
@@ -73,6 +74,7 @@ export default function WishlistPage() {
 
   if (status === "unauthenticated") {
     router.push("/login");
+
     return null;
   }
 
@@ -81,11 +83,13 @@ export default function WishlistPage() {
     const brands = clothes
       .map((item) => item.brand)
       .filter((brand): brand is string => !!brand);
+
     return [...new Set(brands)].sort();
   }, [clothes]);
 
   const filteredClothes = useMemo(() => {
     const activeFilterGroups = [];
+
     if (filters.categories.length > 0) activeFilterGroups.push("category");
     if (filters.colors.length > 0) activeFilterGroups.push("color");
     if (filters.seasons.length > 0) activeFilterGroups.push("season");
@@ -126,6 +130,7 @@ export default function WishlistPage() {
         return false;
 
       let matchedAtLeastOneFilter = false;
+
       if (
         filters.colors.length > 0 &&
         item.colors &&
@@ -161,6 +166,7 @@ export default function WishlistPage() {
         )
           return false;
       }
+
       return true;
     });
   }, [clothes, filters]);
@@ -175,12 +181,14 @@ export default function WishlistPage() {
       if (item.category.toLowerCase().includes(lowerQuery)) return true;
       if (item.tags?.some((tag) => tag.toLowerCase().includes(lowerQuery)))
         return true;
+
       return false;
     });
   }, [filteredClothes, searchQuery]);
 
   const sortedClothes = useMemo(() => {
     const sorted = [...searchedClothes];
+
     switch (sortBy) {
       case "name":
         return sorted.sort((a, b) => a.name.localeCompare(b.name));
@@ -202,20 +210,25 @@ export default function WishlistPage() {
     if (!searchQuery) return [];
     const lowerQuery = searchQuery.toLowerCase();
     const terms = new Set<string>();
+
     filteredClothes.forEach((item) => {
       if (item.name.toLowerCase().includes(lowerQuery)) terms.add(item.name);
       if (item.brand?.toLowerCase().includes(lowerQuery)) terms.add(item.brand);
     });
+
     return Array.from(terms).slice(0, 5);
   }, [filteredClothes, searchQuery]);
 
   const clothesByCategory = useMemo(() => {
     const groups: Record<string, ClothingItem[]> = {};
+
     sortedClothes.forEach((item) => {
       const cat = item.category || "Uncategorized";
+
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(item);
     });
+
     return Object.entries(groups).sort(
       ([, itemsA], [, itemsB]) => itemsB.length - itemsA.length,
     );
@@ -233,7 +246,15 @@ export default function WishlistPage() {
   return (
     <div className="wardrobe-page-container min-h-screen">
       <WardrobeHeader
-        title="Wishlist"
+        actionLabel="Add Wish"
+        history={history}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        setShowFilters={setShowFilters}
+        setSortBy={setSortBy}
+        setViewMode={setViewMode}
+        showFilters={showFilters}
+        sortBy={sortBy}
         subtitle={
           isLoading ? (
             <div className="h-5 w-32 bg-default-200 animate-pulse rounded" />
@@ -241,33 +262,25 @@ export default function WishlistPage() {
             <>{sortedClothes.length} Items &bull; Future Buys</>
           )
         }
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onSearchSubmit={handleSearchSubmit}
         suggestions={suggestions}
-        history={history}
-        onClearHistory={clearHistory}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
+        title="Wishlist"
         viewMode={viewMode}
-        setViewMode={setViewMode}
-        showFilters={showFilters}
-        setShowFilters={setShowFilters}
         onAddNew={() => router.push("/closet/new")}
-        actionLabel="Add Wish"
+        onClearHistory={clearHistory}
+        onSearchSubmit={handleSearchSubmit}
       />
 
       <div className="flex gap-8 relative">
         {showFilters && (
           <motion.div
-            initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             className="wardrobe-filters-sidebar"
+            initial={{ opacity: 0, x: -10 }}
           >
             <ClothesFilter
-              onFilterChange={setFilters}
               availableBrands={availableBrands}
               maxPrice={5000}
+              onFilterChange={setFilters}
             />
           </motion.div>
         )}
@@ -288,18 +301,18 @@ export default function WishlistPage() {
               </p>
               {searchQuery && (
                 <Button
-                  variant="light"
-                  radius="none"
                   className="uppercase tracking-widest text-xs mb-4"
+                  radius="none"
+                  variant="light"
                   onPress={() => setSearchQuery("")}
                 >
                   Clear Search
                 </Button>
               )}
               <Button
-                variant="flat"
-                radius="none"
                 className="uppercase tracking-widest text-xs"
+                radius="none"
+                variant="flat"
                 onPress={() => router.push("/closet/new")}
               >
                 Make a Wish
@@ -325,7 +338,7 @@ export default function WishlistPage() {
                     <div key={category} className="space-y-4">
                       <div className="wardrobe-category-header">
                         <h2 className="wardrobe-category-title">{category}</h2>
-                        <div className="h-[1px] flex-1 bg-default-200"></div>
+                        <div className="h-[1px] flex-1 bg-default-200" />
                         <span className="wardrobe-category-count">
                           {items.length}
                         </span>

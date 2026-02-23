@@ -1,5 +1,6 @@
 // app/api/wardrobes/[id]/clothes/route.ts
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
@@ -49,6 +50,7 @@ export async function POST(
     return NextResponse.json(data);
   } catch (error) {
     console.error("Error adding clothes to wardrobe:", error);
+
     return NextResponse.json(
       { error: "Failed to add clothes" },
       { status: 500 },

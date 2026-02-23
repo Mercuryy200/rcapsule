@@ -48,8 +48,9 @@ const SocialIcon = ({
       <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.399.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.951-7.252 4.173 0 7.41 2.967 7.41 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.367 18.62 0 12.017 0z" />
     ),
   };
+
   return (
-    <svg fill="currentColor" viewBox="0 0 24 24" className="w-5 h-5">
+    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
       {icons[type]}
     </svg>
   );
@@ -123,13 +124,16 @@ export default function PublicProfilePage() {
     setLoading(true);
     try {
       const response = await fetch(`/api/users/${username}`);
+
       if (response.status === 404) {
         setNotFound(true);
+
         return;
       }
       if (!response.ok) throw new Error("Failed to fetch profile");
 
       const data = await response.json();
+
       setProfile(data.profile);
       setWardrobes(data.wardrobes || []);
       setOutfits(data.outfits || []);
@@ -149,6 +153,7 @@ export default function PublicProfilePage() {
     setFollowLoading(true);
     const previousState = isFollowing;
     const previousCount = profile?.followerCount || 0;
+
     setIsFollowing(!isFollowing);
     if (profile) {
       setProfile({
@@ -161,6 +166,7 @@ export default function PublicProfilePage() {
       const response = await fetch(`/api/users/${username}/follow`, {
         method: previousState ? "DELETE" : "POST",
       });
+
       if (!response.ok) throw new Error();
     } catch (error) {
       setIsFollowing(previousState);
@@ -172,6 +178,7 @@ export default function PublicProfilePage() {
 
   const handleShare = async () => {
     const url = window.location.href;
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -195,6 +202,7 @@ export default function PublicProfilePage() {
       const response = await fetch(`/api/users/${username}/block`, {
         method: isBlocked ? "DELETE" : "POST",
       });
+
       if (response.ok) setIsBlocked(!isBlocked);
     } catch (error) {
       console.error("Error toggling block:", error);
@@ -223,10 +231,10 @@ export default function PublicProfilePage() {
           </p>
         </div>
         <Button
-          variant="flat"
-          radius="none"
-          onPress={() => router.push("/explore")}
           className="uppercase font-bold tracking-widest"
+          radius="none"
+          variant="flat"
+          onPress={() => router.push("/explore")}
         >
           Return to Explore
         </Button>
@@ -240,10 +248,10 @@ export default function PublicProfilePage() {
       <div className="relative z-0 h-48 md:h-72 w-full bg-default-100 overflow-hidden">
         {profile.coverImage ? (
           <Image
-            src={profile.coverImage}
-            alt="Cover"
             removeWrapper
+            alt="Cover"
             className="w-full h-full object-cover"
+            src={profile.coverImage}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-r from-default-100 to-default-200 z-10" />
@@ -258,11 +266,11 @@ export default function PublicProfilePage() {
             {/* Avatar */}
             <div className="shrink-0 flex justify-center md:block">
               <Avatar
-                src={profile.image || undefined}
-                className="w-32 h-32 md:w-44 md:h-44 text-large ring-4 ring-background z-10"
                 isBordered
-                radius="full"
+                className="w-32 h-32 md:w-44 md:h-44 text-large ring-4 ring-background z-10"
                 name={profile.name || profile.username}
+                radius="full"
+                src={profile.image || undefined}
               />
             </div>
 
@@ -282,13 +290,13 @@ export default function PublicProfilePage() {
                     )}
                     {profile.isFeatured && (
                       <Chip
-                        size="sm"
-                        color="warning"
-                        variant="flat"
                         classNames={{
                           content:
                             "font-bold text-[10px] uppercase tracking-widest",
                         }}
+                        color="warning"
+                        size="sm"
+                        variant="flat"
                       >
                         Featured
                       </Chip>
@@ -316,14 +324,14 @@ export default function PublicProfilePage() {
                     )}
                     {profile.website && (
                       <a
+                        className="flex items-center gap-1 text-primary hover:underline"
                         href={
                           profile.website.startsWith("http")
                             ? profile.website
                             : `https://${profile.website}`
                         }
-                        target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-primary hover:underline"
+                        target="_blank"
                       >
                         <LinkIcon className="w-4 h-4" />
                         {profile.website.replace(/^https?:\/\//, "")}
@@ -336,8 +344,8 @@ export default function PublicProfilePage() {
                     {profile.instagramHandle && (
                       <Link
                         isExternal
-                        href={`https://instagram.com/${profile.instagramHandle}`}
                         className="text-default-400 hover:text-[#E1306C] transition-colors"
+                        href={`https://instagram.com/${profile.instagramHandle}`}
                       >
                         <SocialIcon type="instagram" />
                       </Link>
@@ -345,8 +353,8 @@ export default function PublicProfilePage() {
                     {profile.tiktokHandle && (
                       <Link
                         isExternal
-                        href={`https://tiktok.com/@${profile.tiktokHandle}`}
                         className="text-default-400 hover:text-[#FE2C55] transition-colors"
+                        href={`https://tiktok.com/@${profile.tiktokHandle}`}
                       >
                         <SocialIcon type="tiktok" />
                       </Link>
@@ -354,8 +362,8 @@ export default function PublicProfilePage() {
                     {profile.pinterestHandle && (
                       <Link
                         isExternal
-                        href={`https://pinterest.com/${profile.pinterestHandle}`}
                         className="text-default-400 hover:text-[#E60023] transition-colors"
+                        href={`https://pinterest.com/${profile.pinterestHandle}`}
                       >
                         <SocialIcon type="pinterest" />
                       </Link>
@@ -368,13 +376,13 @@ export default function PublicProfilePage() {
                       {profile.styleTags.map((tag) => (
                         <Chip
                           key={tag}
-                          size="sm"
-                          variant="flat"
                           classNames={{
                             base: "bg-default-100",
                             content:
                               "text-[10px] uppercase tracking-widest text-default-500",
                           }}
+                          size="sm"
+                          variant="flat"
                         >
                           {tag}
                         </Chip>
@@ -387,19 +395,19 @@ export default function PublicProfilePage() {
                 <div className="flex items-center justify-center gap-2 min-w-max">
                   {isOwnProfile ? (
                     <Button
-                      variant="bordered"
-                      radius="none"
                       className="uppercase tracking-widest text-xs font-bold"
+                      radius="none"
+                      variant="bordered"
                       onPress={() => router.push("/settings")}
                     >
                       Edit Profile
                     </Button>
                   ) : (
                     <Button
-                      color={isFollowing ? "default" : "primary"}
-                      variant={isFollowing ? "bordered" : "solid"}
-                      radius="none"
                       className="uppercase tracking-widest text-xs font-bold px-6"
+                      color={isFollowing ? "default" : "primary"}
+                      isLoading={followLoading}
+                      radius="none"
                       startContent={
                         isFollowing ? (
                           <UserMinusIcon className="w-4 h-4" />
@@ -407,7 +415,7 @@ export default function PublicProfilePage() {
                           <UserPlusIcon className="w-4 h-4" />
                         )
                       }
-                      isLoading={followLoading}
+                      variant={isFollowing ? "bordered" : "solid"}
                       onPress={handleFollow}
                     >
                       {isFollowing ? "Following" : "Follow"}
@@ -418,8 +426,8 @@ export default function PublicProfilePage() {
                   <Tooltip content="Share Profile">
                     <Button
                       isIconOnly
-                      variant="flat"
                       radius="none"
+                      variant="flat"
                       onPress={handleShare}
                     >
                       <ShareIcon className="w-5 h-5" />
@@ -430,7 +438,7 @@ export default function PublicProfilePage() {
                   {!isOwnProfile && (
                     <Dropdown>
                       <DropdownTrigger>
-                        <Button isIconOnly variant="flat" radius="none">
+                        <Button isIconOnly radius="none" variant="flat">
                           <EllipsisHorizontalIcon className="w-5 h-5" />
                         </Button>
                       </DropdownTrigger>
@@ -497,9 +505,6 @@ export default function PublicProfilePage() {
         {/* 3. CONTENT TABS */}
         <div className="min-h-[400px]">
           <Tabs
-            selectedKey={activeTab}
-            onSelectionChange={(key) => setActiveTab(key as string)}
-            variant="underlined"
             classNames={{
               tabList: "gap-8 w-full border-b border-divider",
               tab: "uppercase tracking-widest text-xs font-bold px-0 h-12",
@@ -507,6 +512,9 @@ export default function PublicProfilePage() {
               tabContent:
                 "group-data-[selected=true]:text-foreground text-default-400",
             }}
+            selectedKey={activeTab}
+            variant="underlined"
+            onSelectionChange={(key) => setActiveTab(key as string)}
           >
             <Tab key="outfits" title={`Looks (${outfits.length})`} />
             <Tab
@@ -529,16 +537,16 @@ export default function PublicProfilePage() {
                     {outfits.map((outfit) => (
                       <Link
                         key={outfit.id}
-                        href={`/u/${username}/looks/${outfit.slug || outfit.id}`}
                         className="group block"
+                        href={`/u/${username}/looks/${outfit.slug || outfit.id}`}
                       >
                         <div className="relative aspect-[3/4] bg-default-100 overflow-hidden">
                           {outfit.imageUrl ? (
                             <Image
-                              src={outfit.imageUrl}
-                              alt={outfit.name}
                               removeWrapper
+                              alt={outfit.name}
                               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                              src={outfit.imageUrl}
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-default-300 text-xs uppercase">
@@ -576,16 +584,16 @@ export default function PublicProfilePage() {
                     {wardrobes.map((wardrobe) => (
                       <Link
                         key={wardrobe.id}
-                        href={`/u/${username}/collections/${wardrobe.slug || wardrobe.id}`}
                         className="group block"
+                        href={`/u/${username}/collections/${wardrobe.slug || wardrobe.id}`}
                       >
                         <div className="relative aspect-[16/10] bg-default-100 overflow-hidden">
                           {wardrobe.coverImage ? (
                             <Image
-                              src={wardrobe.coverImage}
-                              alt={wardrobe.title}
                               removeWrapper
+                              alt={wardrobe.title}
                               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                              src={wardrobe.coverImage}
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-default-50 text-default-300 text-2xl font-serif italic">

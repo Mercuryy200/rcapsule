@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
@@ -27,6 +28,7 @@ export async function GET() {
 
     if (error) {
       console.error("Supabase error fetching user:", error);
+
       return NextResponse.json(
         { error: "Failed to fetch user data" },
         { status: 500 },
@@ -40,6 +42,7 @@ export async function GET() {
     return NextResponse.json(user);
   } catch (error) {
     console.error("Error in /api/user/me:", error);
+
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

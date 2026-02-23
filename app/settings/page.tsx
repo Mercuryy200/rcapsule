@@ -20,13 +20,13 @@ import {
   AdjustmentsHorizontalIcon,
   CreditCardIcon,
   SparklesIcon,
-  GlobeAltIcon,
   ChatBubbleLeftRightIcon,
   CurrencyDollarIcon,
   EyeSlashIcon,
   AtSymbolIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
+
 import { useUser } from "@/contexts/UserContext";
 import { ImageUpload } from "@/components/closet/ImageUpload";
 import LocationInput from "@/components/settings/LocationInput";
@@ -81,8 +81,10 @@ export default function SettingsPage() {
   const fetchSettings = async () => {
     try {
       const res = await fetch("/api/settings/profile");
+
       if (res.ok) {
         const data = await res.json();
+
         setFormData({
           name: data.name || "",
           username: data.username || "",
@@ -157,6 +159,7 @@ export default function SettingsPage() {
         setMessage({ text: "Settings saved successfully.", type: "success" });
       } else {
         const errorData = await response.json();
+
         setMessage({
           text: errorData.error || "Failed to save settings.",
           type: "error",
@@ -175,6 +178,7 @@ export default function SettingsPage() {
     try {
       const response = await fetch("/api/billing/portal", { method: "POST" });
       const data = await response.json();
+
       if (data.url) window.location.href = data.url;
       else
         setMessage({ text: "Failed to open billing portal.", type: "error" });
@@ -188,6 +192,7 @@ export default function SettingsPage() {
   const handleChangePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setMessage({ text: "Passwords do not match.", type: "error" });
+
       return;
     }
     if (passwordData.newPassword.length < 6) {
@@ -195,6 +200,7 @@ export default function SettingsPage() {
         text: "Password must be at least 6 characters.",
         type: "error",
       });
+
       return;
     }
 
@@ -218,6 +224,7 @@ export default function SettingsPage() {
         });
       } else {
         const data = await response.json();
+
         setMessage({
           text: data.error || "Failed to change password.",
           type: "error",
@@ -237,6 +244,7 @@ export default function SettingsPage() {
   // Format subscription end date
   const formatDate = (dateString?: string) => {
     if (!dateString) return null;
+
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -252,8 +260,8 @@ export default function SettingsPage() {
       <div className="flex items-center gap-4 mb-12">
         <Button
           isIconOnly
-          variant="light"
           radius="full"
+          variant="light"
           onPress={() => router.back()}
         >
           <ArrowLeftIcon className="w-5 h-5" />
@@ -298,12 +306,12 @@ export default function SettingsPage() {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-3 text-left px-4 py-3 text-xs uppercase tracking-widest font-bold transition-all border-l-2 ${
                   activeTab === tab.id
                     ? "border-primary text-primary bg-primary/5"
                     : "border-transparent text-default-400 hover:text-foreground"
                 }`}
+                onClick={() => setActiveTab(tab.id)}
               >
                 <tab.icon className="w-4 h-4" />
                 {tab.label}
@@ -332,17 +340,17 @@ export default function SettingsPage() {
                   </span>
                   <div className="flex items-center gap-4">
                     <Avatar
-                      src={formData.image || undefined}
+                      isBordered
                       className="w-24 h-24 text-large"
                       name={formData.name}
-                      isBordered
+                      src={formData.image || undefined}
                     />
                     <div className="flex-1">
                       <ImageUpload
-                        value={formData.image}
-                        onChange={(url) => updateField("image", url)}
                         folder="profile"
                         label="Change Avatar"
+                        value={formData.image}
+                        onChange={(url) => updateField("image", url)}
                       />
                     </div>
                   </div>
@@ -367,10 +375,10 @@ export default function SettingsPage() {
                     )}
                     <div className="flex-1">
                       <ImageUpload
-                        value={formData.coverImage}
-                        onChange={(url) => updateField("coverImage", url)}
                         folder="profile_covers"
                         label="Change Cover"
+                        value={formData.coverImage}
+                        onChange={(url) => updateField("coverImage", url)}
                       />
                     </div>
                   </div>
@@ -381,19 +389,19 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
                   label="Display Name"
-                  variant="bordered"
                   radius="none"
                   value={formData.name}
+                  variant="bordered"
                   onChange={(e) => updateField("name", e.target.value)}
                 />
                 <Input
                   isReadOnly
-                  label="Username"
-                  variant="bordered"
-                  radius="none"
-                  value={formData.username}
-                  startContent={<span className="text-default-400">@</span>}
                   isDisabled={true}
+                  label="Username"
+                  radius="none"
+                  startContent={<span className="text-default-400">@</span>}
+                  value={formData.username}
+                  variant="bordered"
                 />
 
                 <LocationInput
@@ -401,33 +409,33 @@ export default function SettingsPage() {
                   onChange={(value) => updateField("location", value)}
                 />
                 <Textarea
-                  label="Bio"
-                  variant="bordered"
-                  radius="none"
                   className="md:col-span-2"
+                  label="Bio"
                   placeholder="Tell us a bit about your style..."
+                  radius="none"
                   value={formData.bio}
+                  variant="bordered"
                   onChange={(e) => updateField("bio", e.target.value)}
                 />
                 <Input
-                  label="Website"
-                  variant="bordered"
-                  radius="none"
                   className="md:col-span-2"
+                  label="Website"
+                  radius="none"
                   startContent={
                     <span className="text-default-400 text-xs">https://</span>
                   }
                   value={formData.website}
+                  variant="bordered"
                   onChange={(e) => updateField("website", e.target.value)}
                 />
               </div>
 
               <div className="flex justify-end pt-4">
                 <Button
-                  color="primary"
-                  radius="none"
                   className="uppercase font-bold tracking-widest px-8"
+                  color="primary"
                   isLoading={loading}
+                  radius="none"
                   onPress={handleSaveSettings}
                 >
                   Save Profile
@@ -453,7 +461,6 @@ export default function SettingsPage() {
               <div className="max-w-xl space-y-6">
                 <Input
                   label="Instagram"
-                  variant="bordered"
                   radius="none"
                   startContent={
                     <span className="text-default-400 w-20 text-xs">
@@ -461,13 +468,13 @@ export default function SettingsPage() {
                     </span>
                   }
                   value={formData.instagramHandle}
+                  variant="bordered"
                   onChange={(e) =>
                     updateField("instagramHandle", e.target.value)
                   }
                 />
                 <Input
                   label="TikTok"
-                  variant="bordered"
                   radius="none"
                   startContent={
                     <span className="text-default-400 w-20 text-xs">
@@ -475,11 +482,11 @@ export default function SettingsPage() {
                     </span>
                   }
                   value={formData.tiktokHandle}
+                  variant="bordered"
                   onChange={(e) => updateField("tiktokHandle", e.target.value)}
                 />
                 <Input
                   label="Pinterest"
-                  variant="bordered"
                   radius="none"
                   startContent={
                     <span className="text-default-400 w-20 text-xs">
@@ -487,6 +494,7 @@ export default function SettingsPage() {
                     </span>
                   }
                   value={formData.pinterestHandle}
+                  variant="bordered"
                   onChange={(e) =>
                     updateField("pinterestHandle", e.target.value)
                   }
@@ -494,10 +502,10 @@ export default function SettingsPage() {
 
                 <div className="flex justify-end pt-4">
                   <Button
-                    color="primary"
-                    radius="none"
                     className="uppercase font-bold tracking-widest px-8"
+                    color="primary"
                     isLoading={loading}
+                    radius="none"
                     onPress={handleSaveSettings}
                   >
                     Save Links
@@ -585,19 +593,19 @@ export default function SettingsPage() {
                     Style Profile
                   </h3>
                   <Select
+                    classNames={{ trigger: "min-h-12" }}
                     label="Style Tags"
                     placeholder="Identify your aesthetics"
-                    selectionMode="multiple"
-                    variant="bordered"
                     radius="none"
                     selectedKeys={formData.styleTags}
+                    selectionMode="multiple"
+                    variant="bordered"
                     onSelectionChange={(keys) =>
                       updateField(
                         "styleTags",
                         new Set(keys as unknown as string[]),
                       )
                     }
-                    classNames={{ trigger: "min-h-12" }}
                   >
                     {STYLE_TAGS.map((style) => (
                       <SelectItem key={style.value} textValue={style.value}>
@@ -614,10 +622,10 @@ export default function SettingsPage() {
 
               <div className="flex justify-end pt-8">
                 <Button
-                  color="primary"
-                  radius="none"
                   className="uppercase font-bold tracking-widest px-8 shadow-lg shadow-primary/20"
+                  color="primary"
                   isLoading={loading}
+                  radius="none"
                   onPress={handleSaveSettings}
                 >
                   Save Preferences
@@ -662,10 +670,10 @@ export default function SettingsPage() {
                     )}
                   </div>
                   <Button
-                    variant="bordered"
-                    radius="none"
                     className="uppercase font-bold tracking-widest"
                     isLoading={portalLoading}
+                    radius="none"
+                    variant="bordered"
                     onPress={handleManageSubscription}
                   >
                     Manage Subscription
@@ -687,10 +695,10 @@ export default function SettingsPage() {
                       </p>
                     </div>
                     <Button
+                      className="uppercase font-bold tracking-widest px-12"
                       color="primary"
                       radius="none"
                       size="lg"
-                      className="uppercase font-bold tracking-widest px-12"
                       onPress={() => router.push("/pricing")}
                     >
                       Upgrade
@@ -713,23 +721,23 @@ export default function SettingsPage() {
 
               <div className="max-w-md space-y-6">
                 <Input
-                  label="Email"
-                  variant="bordered"
-                  radius="none"
-                  value={session?.user?.email || ""}
                   isReadOnly
                   className="opacity-60"
                   endContent={
                     <CheckCircleIcon className="w-5 h-5 text-success" />
                   }
+                  label="Email"
+                  radius="none"
+                  value={session?.user?.email || ""}
+                  variant="bordered"
                 />
                 <Divider />
                 <Input
-                  type="password"
                   label="Current Password"
-                  variant="bordered"
                   radius="none"
+                  type="password"
                   value={passwordData.currentPassword}
+                  variant="bordered"
                   onChange={(e) =>
                     setPasswordData({
                       ...passwordData,
@@ -738,11 +746,11 @@ export default function SettingsPage() {
                   }
                 />
                 <Input
-                  type="password"
                   label="New Password"
-                  variant="bordered"
                   radius="none"
+                  type="password"
                   value={passwordData.newPassword}
+                  variant="bordered"
                   onChange={(e) =>
                     setPasswordData({
                       ...passwordData,
@@ -751,11 +759,11 @@ export default function SettingsPage() {
                   }
                 />
                 <Input
-                  type="password"
                   label="Confirm New Password"
-                  variant="bordered"
                   radius="none"
+                  type="password"
                   value={passwordData.confirmPassword}
+                  variant="bordered"
                   onChange={(e) =>
                     setPasswordData({
                       ...passwordData,
@@ -766,10 +774,10 @@ export default function SettingsPage() {
 
                 <div className="pt-4">
                   <Button
-                    color="primary"
-                    radius="none"
                     className="uppercase font-bold tracking-widest"
+                    color="primary"
                     isLoading={loading}
+                    radius="none"
                     onPress={handleChangePassword}
                   >
                     Update Password

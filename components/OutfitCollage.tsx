@@ -43,10 +43,12 @@ export function OutfitCollage({
 
       if (!response.ok) {
         const error = await response.json();
+
         throw new Error(error.error || "Failed to fetch outfit data");
       }
 
       const data = await response.json();
+
       setItems(data.clothes || []);
 
       if (autoGenerate && data.clothes?.length > 0) {
@@ -64,6 +66,7 @@ export function OutfitCollage({
   const loadImage = (url: string): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {
       const img = new window.Image();
+
       img.crossOrigin = "anonymous";
 
       img.onload = () => resolve(img);
@@ -78,6 +81,7 @@ export function OutfitCollage({
 
     if (!canvasRef.current || clothingItems.length === 0) {
       alert("No images to generate collage");
+
       return;
     }
 
@@ -87,11 +91,13 @@ export function OutfitCollage({
     try {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
+
       if (!ctx) throw new Error("Could not get canvas context");
 
       // Canvas dimensions
       const collageWidth = 1200;
       const collageHeight = 1200;
+
       canvas.width = collageWidth;
       canvas.height = collageHeight;
 
@@ -174,6 +180,7 @@ export function OutfitCollage({
 
           try {
             const formData = new FormData();
+
             formData.append("file", blob, `outfit-${outfitId}-collage.png`);
             formData.append("folder", "outfits");
 
@@ -184,10 +191,12 @@ export function OutfitCollage({
 
             if (!uploadResponse.ok) {
               const error = await uploadResponse.json();
+
               throw new Error(error.error || "Upload failed");
             }
 
             const uploadData = await uploadResponse.json();
+
             setCollageUrl(uploadData.url);
 
             // Update outfit with collage URL
@@ -259,11 +268,11 @@ export function OutfitCollage({
                 className="relative aspect-square rounded-lg overflow-hidden border-2 border-default-200 bg-default-50"
               >
                 <Image
-                  src={item.url}
-                  alt={item.name}
                   fill
-                  className="object-contain p-2"
                   unoptimized
+                  alt={item.name}
+                  className="object-contain p-2"
+                  src={item.url}
                 />
               </div>
             ))}
@@ -274,25 +283,25 @@ export function OutfitCollage({
           <label className="block text-sm font-medium mb-2">Layout Style</label>
           <div className="flex gap-2">
             <Button
+              color={layout === "grid" ? "primary" : "default"}
               size="sm"
               variant={layout === "grid" ? "solid" : "bordered"}
-              color={layout === "grid" ? "primary" : "default"}
               onPress={() => setLayout("grid")}
             >
               Grid
             </Button>
             <Button
+              color={layout === "horizontal" ? "primary" : "default"}
               size="sm"
               variant={layout === "horizontal" ? "solid" : "bordered"}
-              color={layout === "horizontal" ? "primary" : "default"}
               onPress={() => setLayout("horizontal")}
             >
               Horizontal
             </Button>
             <Button
+              color={layout === "vertical" ? "primary" : "default"}
               size="sm"
               variant={layout === "vertical" ? "solid" : "bordered"}
-              color={layout === "vertical" ? "primary" : "default"}
               onPress={() => setLayout("vertical")}
             >
               Vertical
@@ -301,11 +310,11 @@ export function OutfitCollage({
         </div>
 
         <Button
+          className="w-full"
           color="primary"
+          isLoading={generating}
           size="lg"
           onPress={() => generateCollage()}
-          isLoading={generating}
-          className="w-full"
         >
           {generating ? "Generating Collage..." : "🎨 Generate Outfit Collage"}
         </Button>
@@ -315,11 +324,11 @@ export function OutfitCollage({
             <h4 className="text-sm font-medium">Generated Collage:</h4>
             <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-success">
               <Image
-                src={collageUrl}
-                alt="Generated collage"
                 fill
-                className="object-contain"
                 unoptimized
+                alt="Generated collage"
+                className="object-contain"
+                src={collageUrl}
               />
             </div>
             <p className="text-xs text-success">✓ Saved to outfit</p>

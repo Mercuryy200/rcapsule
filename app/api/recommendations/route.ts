@@ -1,5 +1,6 @@
 // app/api/recommendations/route.ts
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 import { getWeather } from "@/lib/services/weather";
@@ -28,6 +29,7 @@ interface AIRecommendation {
 
 export async function GET(req: Request) {
   const session = await auth();
+
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -41,6 +43,7 @@ export async function GET(req: Request) {
   try {
     // 1. Rate limit check
     const today = new Date();
+
     today.setHours(0, 0, 0, 0);
 
     // Note: Table name is plural in your SQL
@@ -119,6 +122,7 @@ export async function GET(req: Request) {
 
     // 5. Get recently worn items (last 7 days)
     const sevenDaysAgo = new Date();
+
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const { data: recentWearLogs } = await supabase
@@ -152,6 +156,7 @@ export async function GET(req: Request) {
       );
     } else {
       const single = await getOutfitRecommendation(clothes, context);
+
       recommendations = [single];
     }
 
@@ -198,6 +203,7 @@ export async function GET(req: Request) {
     });
   } catch (error: any) {
     console.error("Recommendation error:", error);
+
     return NextResponse.json(
       {
         error: "Failed to generate recommendation",
@@ -211,6 +217,7 @@ export async function GET(req: Request) {
 // POST - Generate recommendation with custom parameters
 export async function POST(req: Request) {
   const session = await auth();
+
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -223,6 +230,7 @@ export async function POST(req: Request) {
   try {
     // 1. Rate limit check
     const today = new Date();
+
     today.setHours(0, 0, 0, 0);
 
     const { count: usageCount } = await supabase
@@ -253,6 +261,7 @@ export async function POST(req: Request) {
 
     // 3. Get weather
     let weather;
+
     if (customWeather) {
       weather = customWeather;
     } else if (prefs?.location_lat && prefs?.location_lon) {
@@ -286,6 +295,7 @@ export async function POST(req: Request) {
 
     // 5. Get recently worn
     const sevenDaysAgo = new Date();
+
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const { data: recentWearLogs } = await supabase
@@ -355,6 +365,7 @@ export async function POST(req: Request) {
     });
   } catch (error: any) {
     console.error("Recommendation error:", error);
+
     return NextResponse.json(
       {
         error: "Failed to generate recommendation",

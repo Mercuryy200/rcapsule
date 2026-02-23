@@ -30,6 +30,7 @@ function LoginFormContent() {
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
+
     try {
       const result = await signIn("credentials", {
         email,
@@ -59,9 +60,9 @@ function LoginFormContent() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-md space-y-8"
+      initial={{ opacity: 0, y: 10 }}
     >
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-extrabold tracking-tighter uppercase italic">
@@ -80,29 +81,23 @@ function LoginFormContent() {
 
       <Form
         className="flex flex-col gap-4"
-        onSubmit={handleSubmit}
         validationBehavior="native"
+        onSubmit={handleSubmit}
       >
         <Input
           isRequired
+          classNames={{ inputWrapper: "h-12" }}
           label="Email"
+          labelPlacement="outside"
           name="email"
           placeholder="AnnaVogue@email.com"
+          startContent={<Mail className="text-default-400" size={18} />}
           type="email"
           variant="bordered"
-          labelPlacement="outside"
-          startContent={<Mail size={18} className="text-default-400" />}
-          classNames={{ inputWrapper: "h-12" }}
         />
         <Input
           isRequired
-          label="Password"
-          name="password"
-          placeholder="••••••••"
-          variant="bordered"
-          labelPlacement="outside"
           classNames={{ inputWrapper: "h-12" }}
-          startContent={<Lock size={18} className="text-default-400" />}
           endContent={
             <button
               className="focus:outline-none"
@@ -116,13 +111,19 @@ function LoginFormContent() {
               )}
             </button>
           }
+          label="Password"
+          labelPlacement="outside"
+          name="password"
+          placeholder="••••••••"
+          startContent={<Lock className="text-default-400" size={18} />}
           type={isVisible ? "text" : "password"}
+          variant="bordered"
         />
         <div className="flex justify-end w-full px-1">
           <Link
+            className="text-default-500 hover:text-primary transition-colors"
             href="/forgot-password"
             size="sm"
-            className="text-default-500 hover:text-primary transition-colors"
           >
             Forgot password?
           </Link>

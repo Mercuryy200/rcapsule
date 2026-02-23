@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button, Input, Textarea } from "@heroui/react";
 import { EnvelopeIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+
 import { supabase } from "@/lib/supabase";
 
 export default function ContactPage() {
@@ -58,8 +59,8 @@ export default function ContactPage() {
                   Email Us
                 </p>
                 <a
-                  href="mailto:nafouguirima@gmail.com"
                   className="font-medium hover:underline"
+                  href="mailto:nafouguirima@gmail.com"
                 >
                   nafouguirima@gmail.com
                 </a>
@@ -90,62 +91,62 @@ export default function ContactPage() {
                 We've received your message and saved it to our database.
               </p>
               <Button
+                className="mt-4 uppercase tracking-wider font-bold text-xs"
                 variant="light"
                 onPress={() => setSucceeded(false)}
-                className="mt-4 uppercase tracking-wider font-bold text-xs"
               >
                 Send another
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
-                  name="name"
-                  label="Name"
-                  variant="bordered"
-                  radius="sm"
                   isRequired
                   classNames={{ inputWrapper: "border-default-300" }}
+                  label="Name"
+                  name="name"
+                  radius="sm"
+                  variant="bordered"
                 />
                 <Input
-                  name="email"
-                  label="Email"
-                  type="email"
-                  variant="bordered"
-                  radius="sm"
                   isRequired
                   classNames={{ inputWrapper: "border-default-300" }}
+                  label="Email"
+                  name="email"
+                  radius="sm"
+                  type="email"
+                  variant="bordered"
                 />
               </div>
 
               <Input
-                name="subject"
-                label="Subject"
-                variant="bordered"
-                radius="sm"
                 isRequired
                 classNames={{ inputWrapper: "border-default-300" }}
+                label="Subject"
+                name="subject"
+                radius="sm"
+                variant="bordered"
               />
 
               <Textarea
-                name="message"
-                label="Message"
-                placeholder="Tell us what's on your mind..."
-                variant="bordered"
-                radius="sm"
-                minRows={4}
                 isRequired
                 classNames={{ inputWrapper: "border-default-300" }}
+                label="Message"
+                minRows={4}
+                name="message"
+                placeholder="Tell us what's on your mind..."
+                radius="sm"
+                variant="bordered"
               />
 
               <Button
-                type="submit"
                 fullWidth
-                color="primary"
-                radius="sm"
                 className="font-bold uppercase tracking-widest h-12 shadow-lg shadow-primary/20"
+                color="primary"
                 isLoading={submitting}
+                radius="sm"
+                type="submit"
               >
                 Send Message
               </Button>

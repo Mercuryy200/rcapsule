@@ -16,7 +16,6 @@ import {
   PopoverTrigger,
   PopoverContent,
   Divider,
-  Switch,
 } from "@heroui/react";
 import {
   XMarkIcon,
@@ -40,7 +39,6 @@ import {
   HandRaisedIcon,
   CursorArrowRaysIcon,
   Square2StackIcon,
-  ArrowPathIcon,
   CheckIcon,
 } from "@heroicons/react/24/outline";
 
@@ -140,11 +138,14 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
     (newItems: CanvasItem[]) => {
       setHistory((prev) => {
         const newHistory = prev.slice(0, historyIndex + 1);
+
         newHistory.push(JSON.parse(JSON.stringify(newItems)));
         if (newHistory.length > maxHistory) {
           newHistory.shift();
+
           return newHistory;
         }
+
         return newHistory;
       });
       setHistoryIndex((prev) => Math.min(prev + 1, maxHistory - 1));
@@ -218,6 +219,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
@@ -229,6 +231,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
     if (!item.imageUrl) return;
 
     const img = new Image();
+
     img.crossOrigin = "anonymous";
     img.src = item.imageUrl;
 
@@ -260,6 +263,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
       };
 
       const newItems = [...canvasItems, newItem];
+
       setCanvasItems(newItems);
       saveToHistory(newItems);
       setSelectedId(newItem.uniqueId);
@@ -275,6 +279,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
     const newItems = canvasItems.map((item) =>
       item.uniqueId === uniqueId ? { ...item, ...data } : item,
     );
+
     setCanvasItems(newItems);
     if (saveHistory) {
       saveToHistory(newItems);
@@ -284,6 +289,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
   // Snap to grid helper
   const snapValue = (value: number) => {
     if (!snapToGrid) return value;
+
     return Math.round(value / gridSize) * gridSize;
   };
 
@@ -291,20 +297,24 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
   const bringToFront = (uniqueId: string) => {
     setSelectedId(uniqueId);
     const maxZ = Math.max(...canvasItems.map((i) => i.zIndex), 0);
+
     updateItem(uniqueId, { zIndex: maxZ + 1 });
   };
 
   // Send to back
   const sendToBack = (uniqueId: string) => {
     const minZ = Math.min(...canvasItems.map((i) => i.zIndex), 0);
+
     updateItem(uniqueId, { zIndex: minZ - 1 });
   };
 
   // Move layer up/down
   const moveLayerUp = (uniqueId: string) => {
     const item = canvasItems.find((i) => i.uniqueId === uniqueId);
+
     if (!item) return;
     const higherItems = canvasItems.filter((i) => i.zIndex > item.zIndex);
+
     if (higherItems.length === 0) return;
     const nextItem = higherItems.reduce((a, b) =>
       a.zIndex < b.zIndex ? a : b,
@@ -313,24 +323,30 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
       if (i.uniqueId === uniqueId) return { ...i, zIndex: nextItem.zIndex };
       if (i.uniqueId === nextItem.uniqueId)
         return { ...i, zIndex: item.zIndex };
+
       return i;
     });
+
     setCanvasItems(newItems);
     saveToHistory(newItems);
   };
 
   const moveLayerDown = (uniqueId: string) => {
     const item = canvasItems.find((i) => i.uniqueId === uniqueId);
+
     if (!item) return;
     const lowerItems = canvasItems.filter((i) => i.zIndex < item.zIndex);
+
     if (lowerItems.length === 0) return;
     const prevItem = lowerItems.reduce((a, b) => (a.zIndex > b.zIndex ? a : b));
     const newItems = canvasItems.map((i) => {
       if (i.uniqueId === uniqueId) return { ...i, zIndex: prevItem.zIndex };
       if (i.uniqueId === prevItem.uniqueId)
         return { ...i, zIndex: item.zIndex };
+
       return i;
     });
+
     setCanvasItems(newItems);
     saveToHistory(newItems);
   };
@@ -338,6 +354,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
   // Duplicate item
   const duplicateItem = (uniqueId: string) => {
     const item = canvasItems.find((i) => i.uniqueId === uniqueId);
+
     if (!item) return;
     const newItem: CanvasItem = {
       ...item,
@@ -347,6 +364,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
       zIndex: Math.max(...canvasItems.map((i) => i.zIndex)) + 1,
     };
     const newItems = [...canvasItems, newItem];
+
     setCanvasItems(newItems);
     saveToHistory(newItems);
     setSelectedId(newItem.uniqueId);
@@ -355,6 +373,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
   // Remove item
   const removeItem = (uniqueId: string) => {
     const newItems = canvasItems.filter((i) => i.uniqueId !== uniqueId);
+
     setCanvasItems(newItems);
     saveToHistory(newItems);
     setSelectedId(null);
@@ -408,6 +427,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       const delta = e.deltaY > 0 ? -0.1 : 0.1;
+
       setCanvasZoom((prev) => Math.min(Math.max(prev + delta, 0.25), 3));
     }
   };
@@ -423,6 +443,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
     const scaleX = (container.width - 40) / canvasSize.width;
     const scaleY = (container.height - 40) / canvasSize.height;
     const scale = Math.min(scaleX, scaleY, 1);
+
     setCanvasZoom(scale);
     setCanvasOffset({ x: 0, y: 0 });
   };
@@ -489,6 +510,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
             cropTarget.naturalHeight - cropSelection.height,
           ),
         );
+
         setCropSelection((prev) =>
           prev ? { ...prev, x: newX, y: newY } : null,
         );
@@ -516,6 +538,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
           case "sw":
             const newWidthSW = Math.max(minSize, cropSelection.width - deltaX);
             const newXSW = cropSelection.x + (cropSelection.width - newWidthSW);
+
             if (newXSW >= 0) {
               newCrop.x = newXSW;
               newCrop.width = newWidthSW;
@@ -542,6 +565,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
             );
             const newYNE =
               cropSelection.y + (cropSelection.height - newHeightNE);
+
             if (newYNE >= 0) {
               newCrop.y = newYNE;
               newCrop.height = newHeightNE;
@@ -550,6 +574,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
           case "nw":
             const newWidthNW = Math.max(minSize, cropSelection.width - deltaX);
             const newXNW = cropSelection.x + (cropSelection.width - newWidthNW);
+
             if (newXNW >= 0) {
               newCrop.x = newXNW;
               newCrop.width = newWidthNW;
@@ -560,6 +585,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
             );
             const newYNW =
               cropSelection.y + (cropSelection.height - newHeightNW);
+
             if (newYNW >= 0) {
               newCrop.y = newYNW;
               newCrop.height = newHeightNW;
@@ -591,6 +617,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
     if (isCropDragging) {
       window.addEventListener("mousemove", handleCropMouseMove);
       window.addEventListener("mouseup", handleCropMouseUp);
+
       return () => {
         window.removeEventListener("mousemove", handleCropMouseMove);
         window.removeEventListener("mouseup", handleCropMouseUp);
@@ -664,6 +691,7 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
       canvas.toBlob(async (blob) => {
         if (blob) {
           const file = new File([blob], "collage.png", { type: "image/png" });
+
           await onSave(file);
         }
       }, "image/png");
@@ -713,11 +741,11 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
         <div className="flex items-center gap-1">
           <Tooltip content="Select (V)">
             <Button
-              size="sm"
-              variant={toolMode === "select" ? "solid" : "light"}
+              isIconOnly
               color={toolMode === "select" ? "primary" : "default"}
               radius="none"
-              isIconOnly
+              size="sm"
+              variant={toolMode === "select" ? "solid" : "light"}
               onPress={() => setToolMode("select")}
             >
               <CursorArrowRaysIcon className="w-4 h-4" />
@@ -725,26 +753,26 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
           </Tooltip>
           <Tooltip content="Pan (Space / Middle Click)">
             <Button
-              size="sm"
-              variant={toolMode === "pan" ? "solid" : "light"}
+              isIconOnly
               color={toolMode === "pan" ? "primary" : "default"}
               radius="none"
-              isIconOnly
+              size="sm"
+              variant={toolMode === "pan" ? "solid" : "light"}
               onPress={() => setToolMode("pan")}
             >
               <HandRaisedIcon className="w-4 h-4" />
             </Button>
           </Tooltip>
 
-          <Divider orientation="vertical" className="h-6 mx-2" />
+          <Divider className="h-6 mx-2" orientation="vertical" />
 
           <Tooltip content="Undo (Ctrl+Z)">
             <Button
-              size="sm"
-              variant="light"
-              radius="none"
               isIconOnly
               isDisabled={historyIndex <= 0}
+              radius="none"
+              size="sm"
+              variant="light"
               onPress={undo}
             >
               <ArrowUturnLeftIcon className="w-4 h-4" />
@@ -752,11 +780,11 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
           </Tooltip>
           <Tooltip content="Redo (Ctrl+Y)">
             <Button
-              size="sm"
-              variant="light"
-              radius="none"
               isIconOnly
               isDisabled={historyIndex >= history.length - 1}
+              radius="none"
+              size="sm"
+              variant="light"
               onPress={redo}
             >
               <ArrowUturnRightIcon className="w-4 h-4" />
@@ -767,10 +795,10 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
         {/* Center: Zoom */}
         <div className="flex items-center gap-2">
           <Button
+            isIconOnly
+            radius="none"
             size="sm"
             variant="light"
-            radius="none"
-            isIconOnly
             onPress={() => setCanvasZoom((z) => Math.max(z - 0.1, 0.25))}
           >
             <MinusIcon className="w-4 h-4" />
@@ -779,20 +807,20 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
             {Math.round(canvasZoom * 100)}%
           </span>
           <Button
+            isIconOnly
+            radius="none"
             size="sm"
             variant="light"
-            radius="none"
-            isIconOnly
             onPress={() => setCanvasZoom((z) => Math.min(z + 0.1, 3))}
           >
             <PlusIcon className="w-4 h-4" />
           </Button>
           <Tooltip content="Fit to View">
             <Button
+              isIconOnly
+              radius="none"
               size="sm"
               variant="light"
-              radius="none"
-              isIconOnly
               onPress={fitToView}
             >
               <ArrowsPointingInIcon className="w-4 h-4" />
@@ -800,10 +828,10 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
           </Tooltip>
           <Tooltip content="Reset View">
             <Button
+              isIconOnly
+              radius="none"
               size="sm"
               variant="light"
-              radius="none"
-              isIconOnly
               onPress={resetView}
             >
               <ViewfinderCircleIcon className="w-4 h-4" />
@@ -817,10 +845,10 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
           <Popover placement="bottom">
             <PopoverTrigger>
               <Button
+                className="text-xs"
+                radius="none"
                 size="sm"
                 variant="flat"
-                radius="none"
-                className="text-xs"
               >
                 {canvasSize.width}×{canvasSize.height}
               </Button>
@@ -833,10 +861,10 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                 {CANVAS_PRESETS.map((preset) => (
                   <Button
                     key={preset.name}
+                    className="w-full justify-start text-xs"
+                    radius="none"
                     size="sm"
                     variant="light"
-                    radius="none"
-                    className="w-full justify-start text-xs"
                     onPress={() =>
                       setCanvasSize({
                         width: preset.width,
@@ -853,10 +881,10 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
 
           <Tooltip content="Toggle Grid">
             <Button
+              isIconOnly
+              radius="none"
               size="sm"
               variant={showGrid ? "flat" : "light"}
-              radius="none"
-              isIconOnly
               onPress={() => setShowGrid(!showGrid)}
             >
               <Square2StackIcon className="w-4 h-4" />
@@ -865,12 +893,12 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
 
           <Tooltip content="Clear Canvas">
             <Button
+              isIconOnly
+              color="danger"
+              isDisabled={canvasItems.length === 0}
+              radius="none"
               size="sm"
               variant="light"
-              color="danger"
-              radius="none"
-              isIconOnly
-              isDisabled={canvasItems.length === 0}
               onPress={clearCanvas}
             >
               <TrashIcon className="w-4 h-4" />
@@ -878,16 +906,16 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
           </Tooltip>
 
           <Button
-            size="sm"
-            color="primary"
-            radius="none"
             className="uppercase font-bold tracking-widest text-[10px]"
-            onPress={handleSave}
-            isLoading={isSaving}
+            color="primary"
             isDisabled={canvasItems.length === 0}
+            isLoading={isSaving}
+            radius="none"
+            size="sm"
             startContent={
               !isSaving && <ArrowDownTrayIcon className="w-4 h-4" />
             }
+            onPress={handleSave}
           >
             Save
           </Button>
@@ -913,9 +941,9 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={item.imageUrl || ""}
                   alt={item.name || "Item"}
                   className="w-full h-full object-contain"
+                  src={item.imageUrl || ""}
                 />
               </div>
             </Tooltip>
@@ -929,9 +957,9 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
             toolMode === "pan" || isPanning ? "cursor-grab" : "cursor-default"
           } ${isPanning ? "cursor-grabbing" : ""}`}
           onMouseDown={handleCanvasMouseDown}
+          onMouseLeave={handleCanvasMouseUp}
           onMouseMove={handleCanvasMouseMove}
           onMouseUp={handleCanvasMouseUp}
-          onMouseLeave={handleCanvasMouseUp}
           onWheel={handleWheel}
         >
           {/* Canvas wrapper for transform */}
@@ -972,27 +1000,12 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                 .map((item) => (
                   <Rnd
                     key={item.uniqueId}
-                    size={{ width: item.width, height: item.height }}
-                    position={{ x: item.x, y: item.y }}
-                    onDragStop={(e, d) => {
-                      updateItem(item.uniqueId, {
-                        x: snapValue(d.x),
-                        y: snapValue(d.y),
-                      });
-                    }}
-                    onResizeStop={(e, direction, ref, delta, position) => {
-                      updateItem(item.uniqueId, {
-                        width: snapValue(parseInt(ref.style.width)),
-                        height: snapValue(parseInt(ref.style.height)),
-                        x: snapValue(position.x),
-                        y: snapValue(position.y),
-                      });
-                    }}
-                    onMouseDown={(e) => {
-                      if (toolMode === "select" && !item.locked) {
-                        bringToFront(item.uniqueId);
-                      }
-                    }}
+                    bounds="parent"
+                    className={`${
+                      selectedId === item.uniqueId
+                        ? "ring-2 ring-primary ring-offset-1"
+                        : ""
+                    } ${item.locked ? "cursor-not-allowed" : ""}`}
                     disableDragging={item.locked || toolMode !== "select"}
                     enableResizing={
                       selectedId === item.uniqueId && !item.locked
@@ -1008,17 +1021,32 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                           }
                         : false
                     }
+                    lockAspectRatio={true}
+                    position={{ x: item.x, y: item.y }}
+                    size={{ width: item.width, height: item.height }}
                     style={{
                       zIndex: item.zIndex,
                       opacity: item.opacity,
                     }}
-                    className={`${
-                      selectedId === item.uniqueId
-                        ? "ring-2 ring-primary ring-offset-1"
-                        : ""
-                    } ${item.locked ? "cursor-not-allowed" : ""}`}
-                    lockAspectRatio={true}
-                    bounds="parent"
+                    onDragStop={(e, d) => {
+                      updateItem(item.uniqueId, {
+                        x: snapValue(d.x),
+                        y: snapValue(d.y),
+                      });
+                    }}
+                    onMouseDown={(e) => {
+                      if (toolMode === "select" && !item.locked) {
+                        bringToFront(item.uniqueId);
+                      }
+                    }}
+                    onResizeStop={(e, direction, ref, delta, position) => {
+                      updateItem(item.uniqueId, {
+                        width: snapValue(parseInt(ref.style.width)),
+                        height: snapValue(parseInt(ref.style.height)),
+                        x: snapValue(position.x),
+                        y: snapValue(position.y),
+                      });
+                    }}
                   >
                     <div
                       className="w-full h-full relative overflow-hidden"
@@ -1026,11 +1054,11 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={item.imageUrl}
                         alt="collage-item"
-                        style={getImageStyle(item)}
                         className="pointer-events-none"
                         crossOrigin="anonymous"
+                        src={item.imageUrl}
+                        style={getImageStyle(item)}
                       />
 
                       {/* Selection controls */}
@@ -1092,10 +1120,10 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
               <div className="grid grid-cols-4 gap-1">
                 <Tooltip content="Crop">
                   <Button
+                    isIconOnly
+                    radius="none"
                     size="sm"
                     variant="flat"
-                    radius="none"
-                    isIconOnly
                     onPress={() => openCropModal(selectedItem)}
                   >
                     <ScissorsIcon className="w-4 h-4" />
@@ -1103,10 +1131,10 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                 </Tooltip>
                 <Tooltip content="Duplicate">
                   <Button
+                    isIconOnly
+                    radius="none"
                     size="sm"
                     variant="flat"
-                    radius="none"
-                    isIconOnly
                     onPress={() => duplicateItem(selectedItem.uniqueId)}
                   >
                     <DocumentDuplicateIcon className="w-4 h-4" />
@@ -1114,11 +1142,11 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                 </Tooltip>
                 <Tooltip content={selectedItem.locked ? "Unlock" : "Lock"}>
                   <Button
-                    size="sm"
-                    variant={selectedItem.locked ? "solid" : "flat"}
+                    isIconOnly
                     color={selectedItem.locked ? "warning" : "default"}
                     radius="none"
-                    isIconOnly
+                    size="sm"
+                    variant={selectedItem.locked ? "solid" : "flat"}
                     onPress={() =>
                       updateItem(selectedItem.uniqueId, {
                         locked: !selectedItem.locked,
@@ -1134,10 +1162,10 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                 </Tooltip>
                 <Tooltip content={selectedItem.visible ? "Hide" : "Show"}>
                   <Button
+                    isIconOnly
+                    radius="none"
                     size="sm"
                     variant="flat"
-                    radius="none"
-                    isIconOnly
                     onPress={() =>
                       updateItem(selectedItem.uniqueId, {
                         visible: !selectedItem.visible,
@@ -1164,10 +1192,10 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
               <div className="flex gap-1">
                 <Tooltip content="Bring Forward">
                   <Button
+                    isIconOnly
+                    radius="none"
                     size="sm"
                     variant="flat"
-                    radius="none"
-                    isIconOnly
                     onPress={() => moveLayerUp(selectedItem.uniqueId)}
                   >
                     <ChevronUpIcon className="w-4 h-4" />
@@ -1175,10 +1203,10 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                 </Tooltip>
                 <Tooltip content="Send Backward">
                   <Button
+                    isIconOnly
+                    radius="none"
                     size="sm"
                     variant="flat"
-                    radius="none"
-                    isIconOnly
                     onPress={() => moveLayerDown(selectedItem.uniqueId)}
                   >
                     <ChevronDownIcon className="w-4 h-4" />
@@ -1186,10 +1214,10 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                 </Tooltip>
                 <Tooltip content="Bring to Front">
                   <Button
+                    isIconOnly
+                    radius="none"
                     size="sm"
                     variant="flat"
-                    radius="none"
-                    isIconOnly
                     onPress={() => bringToFront(selectedItem.uniqueId)}
                   >
                     <ArrowsPointingOutIcon className="w-4 h-4" />
@@ -1197,10 +1225,10 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                 </Tooltip>
                 <Tooltip content="Send to Back">
                   <Button
+                    isIconOnly
+                    radius="none"
                     size="sm"
                     variant="flat"
-                    radius="none"
-                    isIconOnly
                     onPress={() => sendToBack(selectedItem.uniqueId)}
                   >
                     <ArrowsPointingInIcon className="w-4 h-4" />
@@ -1222,10 +1250,11 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                 </span>
               </div>
               <Slider
+                className="max-w-full"
+                maxValue={1}
+                minValue={0.1}
                 size="sm"
                 step={0.05}
-                minValue={0.1}
-                maxValue={1}
                 value={selectedItem.opacity}
                 onChange={(val) =>
                   updateItem(
@@ -1237,7 +1266,6 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                 onChangeEnd={(val) =>
                   updateItem(selectedItem.uniqueId, { opacity: val as number })
                 }
-                className="max-w-full"
               />
             </div>
 
@@ -1248,11 +1276,11 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
               </p>
               <div className="flex gap-2">
                 <Button
-                  size="sm"
-                  variant={selectedItem.flipX ? "solid" : "flat"}
+                  className="flex-1 text-[10px]"
                   color={selectedItem.flipX ? "primary" : "default"}
                   radius="none"
-                  className="flex-1 text-[10px]"
+                  size="sm"
+                  variant={selectedItem.flipX ? "solid" : "flat"}
                   onPress={() =>
                     updateItem(selectedItem.uniqueId, {
                       flipX: !selectedItem.flipX,
@@ -1262,11 +1290,11 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                   Horizontal
                 </Button>
                 <Button
-                  size="sm"
-                  variant={selectedItem.flipY ? "solid" : "flat"}
+                  className="flex-1 text-[10px]"
                   color={selectedItem.flipY ? "primary" : "default"}
                   radius="none"
-                  className="flex-1 text-[10px]"
+                  size="sm"
+                  variant={selectedItem.flipY ? "solid" : "flat"}
                   onPress={() =>
                     updateItem(selectedItem.uniqueId, {
                       flipY: !selectedItem.flipY,
@@ -1282,12 +1310,12 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
 
             {/* Delete */}
             <Button
-              size="sm"
-              color="danger"
-              variant="flat"
-              radius="none"
               fullWidth
+              color="danger"
+              radius="none"
+              size="sm"
               startContent={<TrashIcon className="w-4 h-4" />}
+              variant="flat"
               onPress={() => removeItem(selectedItem.uniqueId)}
             >
               Remove
@@ -1299,10 +1327,10 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
       {/* CROP MODAL */}
       <Modal
         isOpen={cropModal.isOpen}
-        onClose={cropModal.onClose}
-        size="3xl"
         radius="none"
         scrollBehavior="inside"
+        size="3xl"
+        onClose={cropModal.onClose}
       >
         <ModalContent>
           <ModalHeader className="uppercase tracking-widest font-bold text-sm">
@@ -1315,10 +1343,10 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     ref={cropImageRef}
-                    src={cropTarget.imageUrl}
                     alt="Crop preview"
                     className="max-w-full max-h-[400px] object-contain"
                     crossOrigin="anonymous"
+                    src={cropTarget.imageUrl}
                     style={{ opacity: 0.5 }}
                   />
 
@@ -1370,19 +1398,19 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
               </div>
               <div className="flex gap-2">
                 <Button
+                  radius="none"
                   size="sm"
                   variant="flat"
-                  radius="none"
                   onPress={resetCrop}
                 >
                   Reset
                 </Button>
                 {cropTarget?.cropData && (
                   <Button
-                    size="sm"
-                    variant="flat"
                     color="warning"
                     radius="none"
+                    size="sm"
+                    variant="flat"
                     onPress={removeCrop}
                   >
                     Remove Crop
@@ -1392,14 +1420,14 @@ export default function CollageBuilder({ items, onSave }: CollageBuilderProps) {
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" radius="none" onPress={cropModal.onClose}>
+            <Button radius="none" variant="light" onPress={cropModal.onClose}>
               Cancel
             </Button>
             <Button
               color="primary"
               radius="none"
-              onPress={applyCrop}
               startContent={<CheckIcon className="w-4 h-4" />}
+              onPress={applyCrop}
             >
               Apply Crop
             </Button>

@@ -17,12 +17,14 @@ export function useSearchHistory() {
 
   useEffect(() => {
     const stored = localStorage.getItem("wardrobe_search_history");
+
     if (stored) setHistory(JSON.parse(stored));
   }, []);
 
   const addSearch = (term: string) => {
     if (!term.trim()) return;
     const newHistory = [term, ...history.filter((h) => h !== term)].slice(0, 5);
+
     setHistory(newHistory);
     localStorage.setItem("wardrobe_search_history", JSON.stringify(newHistory));
   };
@@ -87,6 +89,7 @@ export default function WardrobeHeader({
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
+
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
@@ -108,10 +111,9 @@ export default function WardrobeHeader({
       {/* Controls Section */}
       <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-end gap-4 w-full md:w-auto relative">
         {/* Search Bar */}
-        <div className="relative w-full sm:w-64" ref={searchContainerRef}>
+        <div ref={searchContainerRef} className="relative w-full sm:w-64">
           <Input
-            variant="underlined"
-            radius="none"
+            isClearable
             classNames={{
               inputWrapper:
                 "border-b border-default-200 shadow-none px-0 h-10 hover:border-default-400 after:bg-black dark:after:bg-white",
@@ -119,15 +121,16 @@ export default function WardrobeHeader({
                 "text-sm font-light placeholder:text-default-400 placeholder:uppercase placeholder:tracking-widest placeholder:text-[10px]",
             }}
             placeholder="Search Collection"
+            radius="none"
             startContent={
               <MagnifyingGlassIcon className="w-4 h-4 text-default-400" />
             }
             value={searchQuery}
-            onValueChange={setSearchQuery}
+            variant="underlined"
+            onClear={() => setSearchQuery("")}
             onFocus={() => setIsSearchFocused(true)}
             onKeyDown={handleKeyDown}
-            isClearable
-            onClear={() => setSearchQuery("")}
+            onValueChange={setSearchQuery}
           />
 
           {/* Autocomplete Dropdown */}
@@ -135,10 +138,10 @@ export default function WardrobeHeader({
             {isSearchFocused &&
               (searchQuery.length > 0 || history.length > 0) && (
                 <motion.div
-                  initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 5 }}
                   className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-black border border-default-200 shadow-xl z-50 p-2"
+                  exit={{ opacity: 0, y: 5 }}
+                  initial={{ opacity: 0, y: 5 }}
                 >
                   {/* Suggestions */}
                   {searchQuery.length > 0 && suggestions.length > 0 && (
@@ -172,8 +175,8 @@ export default function WardrobeHeader({
                           Recent
                         </p>
                         <button
-                          onClick={onClearHistory}
                           className="text-[10px] text-default-400 hover:text-red-500 uppercase tracking-wide"
+                          onClick={onClearHistory}
                         >
                           Clear
                         </button>
@@ -206,12 +209,7 @@ export default function WardrobeHeader({
 
         {/* Sort Select */}
         <Select
-          variant="underlined"
-          radius="none"
           aria-label="Sort by"
-          placeholder="SORT BY"
-          selectedKeys={[sortBy]}
-          onChange={(e) => setSortBy(e.target.value)}
           className="w-full sm:w-40"
           classNames={{
             trigger:
@@ -219,6 +217,11 @@ export default function WardrobeHeader({
             value: "text-sm font-light uppercase tracking-widest",
             selectorIcon: "text-default-400",
           }}
+          placeholder="SORT BY"
+          radius="none"
+          selectedKeys={[sortBy]}
+          variant="underlined"
+          onChange={(e) => setSortBy(e.target.value)}
         >
           <SelectItem
             key="recent"
@@ -257,22 +260,22 @@ export default function WardrobeHeader({
         {/* Buttons */}
         <div className="flex gap-3 items-center mt-2 sm:mt-0 ml-auto sm:ml-0">
           <ButtonGroup
-            variant="flat"
             className="bg-transparent border border-default-200"
             radius="none"
+            variant="flat"
           >
             <Button
               isIconOnly
-              radius="none"
               className={`w-10 h-10 bg-transparent ${viewMode === "grid" ? "text-primary" : "text-default-300"}`}
+              radius="none"
               onPress={() => setViewMode("grid")}
             >
               <Squares2X2Icon className="w-4 h-4" />
             </Button>
             <Button
               isIconOnly
-              radius="none"
               className={`w-10 h-10 bg-transparent ${viewMode === "gallery" ? "text-primary" : "text-default-300"}`}
+              radius="none"
               onPress={() => setViewMode("gallery")}
             >
               <ViewColumnsIcon className="w-4 h-4" />
@@ -280,19 +283,19 @@ export default function WardrobeHeader({
           </ButtonGroup>
 
           <Button
-            variant="bordered"
-            radius="none"
             className="border-default-200 font-medium uppercase text-xs tracking-wider"
+            radius="none"
             startContent={<FunnelIcon className="w-4 h-4" />}
+            variant="bordered"
             onPress={() => setShowFilters(!showFilters)}
           >
             {showFilters ? "Hide" : "Filter"}
           </Button>
 
           <Button
+            className="font-medium uppercase text-[10px] tracking-[0.15em] h-10 px-6 shadow-none rounded-none"
             color="primary"
             radius="none"
-            className="font-medium uppercase text-[10px] tracking-[0.15em] h-10 px-6 shadow-none rounded-none"
             startContent={<PlusIcon className="w-3 h-3" />}
             onPress={onAddNew}
           >

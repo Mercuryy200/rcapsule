@@ -1,16 +1,18 @@
 "use server";
-import { auth } from "@/auth";
 import Image from "next/image";
+
+import { auth } from "@/auth";
 export default async function AvatarIcon() {
   const session = await auth();
+
   {
     session?.user?.image && (
       <Image
-        src={session.user.image}
         alt={session.user.name ?? "User Avatar"}
-        width="48"
         height="48"
+        src={session.user.image}
         style={{ borderRadius: "50%" }}
+        width="48"
       />
     );
   }

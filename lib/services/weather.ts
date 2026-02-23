@@ -43,6 +43,7 @@ function mapCondition(code: number): WeatherCondition {
   if (code >= 700 && code < 800) return "foggy"; // Atmosphere (fog, mist)
   if (code === 800) return "clear"; // Clear
   if (code > 800) return "cloudy"; // Clouds
+
   return "clear";
 }
 

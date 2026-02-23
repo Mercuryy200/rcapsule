@@ -28,10 +28,12 @@ export default function SaveButton({
   const handleSave = async () => {
     if (!session) {
       router.push("/login");
+
       return;
     }
 
     const previousSaved = isSaved;
+
     setIsSaved(!isSaved);
     setIsLoading(true);
 
@@ -60,12 +62,12 @@ export default function SaveButton({
     <Tooltip content={isSaved ? "Unsave" : "Save"}>
       <Button
         isIconOnly
-        variant="flat"
+        className={`${isSaved ? "text-primary" : "text-default-500"} transition-colors`}
+        isLoading={isLoading}
         radius="none"
         size={size}
-        isLoading={isLoading}
+        variant="flat"
         onPress={handleSave}
-        className={`${isSaved ? "text-primary" : "text-default-500"} transition-colors`}
       >
         {!isLoading &&
           (isSaved ? (

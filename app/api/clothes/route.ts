@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
-import * as Sentry from "@sentry/nextjs";
 
 export async function GET(req: Request) {
   return await Sentry.startSpan(
@@ -12,6 +13,7 @@ export async function GET(req: Request) {
     async (span) => {
       try {
         const session = await auth();
+
         if (!session?.user?.id) {
           return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
@@ -102,6 +104,7 @@ export async function GET(req: Request) {
             statusFilter: statusFilter,
           },
         });
+
         return NextResponse.json(
           { error: "Failed to fetch clothes" },
           { status: 500 },
@@ -229,6 +232,7 @@ export async function POST(req: Request) {
         userId: session?.user?.id,
       },
     });
+
     return NextResponse.json(
       { error: "Failed to create clothing" },
       { status: 500 },

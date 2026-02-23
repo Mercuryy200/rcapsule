@@ -1,4 +1,6 @@
 "use client";
+import type { Wardrobe } from "@/lib/database.type";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -27,7 +29,6 @@ import {
   Squares2X2Icon,
   ListBulletIcon,
 } from "@heroicons/react/24/outline";
-import type { Wardrobe } from "@/lib/database.type";
 
 export default function CollectionsPage() {
   const { status } = useSession();
@@ -65,8 +66,10 @@ export default function CollectionsPage() {
   const fetchWardrobes = async () => {
     try {
       const res = await fetch("/api/wardrobes");
+
       if (res.ok) {
         const data = await res.json();
+
         setWardrobes(data);
       }
     } catch (error) {
@@ -86,6 +89,7 @@ export default function CollectionsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newWardrobe),
       });
+
       if (res.ok) {
         fetchWardrobes();
         onClose();
@@ -140,17 +144,17 @@ export default function CollectionsPage() {
         {/* Search */}
         <div className="w-full md:w-auto flex-1 md:max-w-sm">
           <Input
+            classNames={{
+              inputWrapper: "h-10",
+            }}
             placeholder="Search collections..."
-            variant="bordered"
             radius="none"
             startContent={
               <MagnifyingGlassIcon className="w-4 h-4 text-default-400" />
             }
             value={searchQuery}
+            variant="bordered"
             onChange={(e) => setSearchQuery(e.target.value)}
-            classNames={{
-              inputWrapper: "h-10",
-            }}
           />
         </div>
 
@@ -160,8 +164,6 @@ export default function CollectionsPage() {
             {(["all", "public", "private"] as const).map((f) => (
               <Chip
                 key={f}
-                size="sm"
-                variant={filter === f ? "solid" : "bordered"}
                 classNames={{
                   base: `cursor-pointer rounded-none ${
                     filter === f
@@ -170,6 +172,8 @@ export default function CollectionsPage() {
                   }`,
                   content: "font-bold text-[10px] uppercase tracking-widest",
                 }}
+                size="sm"
+                variant={filter === f ? "solid" : "bordered"}
                 onClick={() => setFilter(f)}
               >
                 {f}
@@ -181,20 +185,20 @@ export default function CollectionsPage() {
           <div className="hidden md:flex border border-default-200">
             <Button
               isIconOnly
+              className={viewMode === "grid" ? "bg-default-100" : ""}
+              radius="none"
               size="sm"
               variant="light"
-              radius="none"
-              className={viewMode === "grid" ? "bg-default-100" : ""}
               onPress={() => setViewMode("grid")}
             >
               <Squares2X2Icon className="w-4 h-4" />
             </Button>
             <Button
               isIconOnly
+              className={viewMode === "list" ? "bg-default-100" : ""}
+              radius="none"
               size="sm"
               variant="light"
-              radius="none"
-              className={viewMode === "list" ? "bg-default-100" : ""}
               onPress={() => setViewMode("list")}
             >
               <ListBulletIcon className="w-4 h-4" />
@@ -203,9 +207,9 @@ export default function CollectionsPage() {
 
           {/* Create Button */}
           <Button
-            radius="none"
-            color="primary"
             className="uppercase font-bold tracking-widest text-xs"
+            color="primary"
+            radius="none"
             startContent={<PlusIcon className="w-4 h-4" />}
             onPress={onOpen}
           >
@@ -254,9 +258,9 @@ export default function CollectionsPage() {
                 Create your first collection to organize your wardrobe
               </p>
               <Button
-                radius="none"
-                color="primary"
                 className="uppercase font-bold tracking-widest"
+                color="primary"
+                radius="none"
                 startContent={<PlusIcon className="w-4 h-4" />}
                 onPress={onOpen}
               >
@@ -278,30 +282,30 @@ export default function CollectionsPage() {
           {filteredWardrobes.map((wardrobe) => (
             <Card
               key={wardrobe.id}
-              shadow="none"
-              radius="none"
-              className="bg-transparent group border border-transparent hover:border-default-200 transition-all"
               isPressable
+              className="bg-transparent group border border-transparent hover:border-default-200 transition-all"
+              radius="none"
+              shadow="none"
               onPress={() => router.push(`/wardrobe/${wardrobe.id}`)}
             >
               <CardBody className="p-0 aspect-[4/3] overflow-hidden relative">
                 <Image
                   removeWrapper
+                  alt={wardrobe.title}
+                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                   radius="none"
                   src={
                     wardrobe.coverImage || "/images/placeholder_wardrobe.jpg"
                   }
-                  alt={wardrobe.title}
-                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-3 right-3 z-10">
                   <Chip
-                    size="sm"
                     classNames={{
                       base: "bg-background/80 backdrop-blur-sm rounded-none",
                       content:
                         "text-[10px] font-bold uppercase tracking-widest",
                     }}
+                    size="sm"
                     startContent={
                       wardrobe.isPublic ? (
                         <GlobeAltIcon className="w-3 h-3" />
@@ -338,12 +342,12 @@ export default function CollectionsPage() {
               <div className="w-24 h-24 shrink-0 overflow-hidden">
                 <Image
                   removeWrapper
+                  alt={wardrobe.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   radius="none"
                   src={
                     wardrobe.coverImage || "/images/placeholder_wardrobe.jpg"
                   }
-                  alt={wardrobe.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
               <div className="flex-1 flex flex-col justify-center">
@@ -352,12 +356,11 @@ export default function CollectionsPage() {
                     {wardrobe.title}
                   </h3>
                   <Chip
-                    size="sm"
-                    variant="flat"
                     classNames={{
                       base: "rounded-none h-5",
                       content: "text-[9px] font-bold uppercase tracking-widest",
                     }}
+                    size="sm"
                     startContent={
                       wardrobe.isPublic ? (
                         <GlobeAltIcon className="w-3 h-3" />
@@ -365,6 +368,7 @@ export default function CollectionsPage() {
                         <LockClosedIcon className="w-3 h-3" />
                       )
                     }
+                    variant="flat"
                   >
                     {wardrobe.isPublic ? "Public" : "Private"}
                   </Chip>
@@ -387,11 +391,11 @@ export default function CollectionsPage() {
       {/* Create Modal */}
       <Modal
         isOpen={isOpen}
-        onClose={onClose}
-        radius="none"
-        size="2xl"
         placement="center"
+        radius="none"
         scrollBehavior="inside"
+        size="2xl"
+        onClose={onClose}
       >
         <ModalContent>
           <ModalHeader className="uppercase tracking-widest font-bold text-xl">
@@ -400,22 +404,22 @@ export default function CollectionsPage() {
           <ModalBody className="gap-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <Input
+                isRequired
                 label="Title"
                 placeholder="Summer 2026"
-                variant="bordered"
                 radius="none"
                 value={newWardrobe.title}
+                variant="bordered"
                 onChange={(e) =>
                   setNewWardrobe({ ...newWardrobe, title: e.target.value })
                 }
-                isRequired
               />
               <Input
                 label="Cover Image URL"
                 placeholder="https://..."
-                variant="bordered"
                 radius="none"
                 value={newWardrobe.coverImage}
+                variant="bordered"
                 onChange={(e) =>
                   setNewWardrobe({ ...newWardrobe, coverImage: e.target.value })
                 }
@@ -424,9 +428,9 @@ export default function CollectionsPage() {
             <Input
               label="Description"
               placeholder="Vibes for the upcoming trip..."
-              variant="bordered"
               radius="none"
               value={newWardrobe.description}
+              variant="bordered"
               onChange={(e) =>
                 setNewWardrobe({ ...newWardrobe, description: e.target.value })
               }
@@ -460,16 +464,16 @@ export default function CollectionsPage() {
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" radius="none" onPress={onClose}>
+            <Button radius="none" variant="light" onPress={onClose}>
               Cancel
             </Button>
             <Button
-              color="primary"
-              radius="none"
               className="uppercase font-bold"
-              onPress={handleCreate}
-              isLoading={createLoading}
+              color="primary"
               isDisabled={!newWardrobe.title.trim()}
+              isLoading={createLoading}
+              radius="none"
+              onPress={handleCreate}
             >
               Create
             </Button>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
@@ -57,6 +58,7 @@ export async function GET(req: Request) {
     return NextResponse.json(sanitizedUser);
   } catch (error) {
     console.error("Error fetching profile settings:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch profile settings" },
       { status: 500 },
@@ -124,6 +126,7 @@ export async function PUT(req: Request) {
     return NextResponse.json(user);
   } catch (error) {
     console.error("Error updating profile:", error);
+
     return NextResponse.json(
       { error: "Failed to update profile" },
       { status: 500 },

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
-import * as Sentry from "@sentry/nextjs";
 
 export async function GET(
   req: Request,
@@ -9,6 +9,7 @@ export async function GET(
 ) {
   try {
     const session = await auth();
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -49,6 +50,7 @@ export async function GET(
     return NextResponse.json(clothing);
   } catch (error) {
     console.error("Error fetching clothing:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch clothing" },
       { status: 500 },
@@ -62,6 +64,7 @@ export async function PUT(
 ) {
   try {
     const session = await auth();
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -168,6 +171,7 @@ export async function PUT(
     return NextResponse.json(clothingWithWardrobes || updatedClothing[0]);
   } catch (error) {
     console.error("Error updating clothing:", error);
+
     return NextResponse.json(
       { error: "Failed to update clothing" },
       { status: 500 },
@@ -181,12 +185,14 @@ export async function DELETE(
 ) {
   try {
     const session = await auth();
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
     const supabase = getSupabaseServer();
+
     await supabase.from("WardrobeClothes").delete().eq("clothesId", id);
     await supabase.from("OutfitClothes").delete().eq("clothesId", id);
 
@@ -207,6 +213,7 @@ export async function DELETE(
     return NextResponse.json({ message: "Deleted successfully" });
   } catch (error) {
     console.error("Error deleting clothing:", error);
+
     return NextResponse.json(
       { error: "Failed to delete clothing" },
       { status: 500 },

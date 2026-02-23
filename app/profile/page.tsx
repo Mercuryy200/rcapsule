@@ -1,5 +1,7 @@
 "use client";
 
+import type { Clothes, Wardrobe, Outfit } from "@/lib/database.type";
+
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
@@ -20,7 +22,6 @@ import {
   LockClosedIcon,
 } from "@heroicons/react/24/outline";
 
-import type { Clothes, Wardrobe, Outfit } from "@/lib/database.type";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import { useUser } from "@/contexts/UserContext";
 
@@ -109,6 +110,7 @@ export default function ProfilePage() {
       if (Array.isArray(item.colors)) {
         item.colors.forEach((c) => {
           const colorName = c.toLowerCase().trim();
+
           colorCounts[colorName] = (colorCounts[colorName] || 0) + 1;
           totalColorTags++;
         });
@@ -145,20 +147,19 @@ export default function ProfilePage() {
   return (
     <div className="w-full pb-20">
       <ProfileHeader
-        user={user || {}}
         stats={{
           items: dashboardStats.items,
           wardrobes: dashboardStats.wardrobes,
           outfits: dashboardStats.outfits,
           totalValue: dashboardStats.totalValue,
         }}
+        user={user || {}}
         onEdit={() => router.push("/settings")}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <Tabs
           aria-label="Profile Options"
-          variant="underlined"
           classNames={{
             tabList:
               "gap-8 w-full relative rounded-none p-0 border-b border-divider mb-8",
@@ -167,6 +168,7 @@ export default function ProfilePage() {
             tabContent:
               "group-data-[selected=true]:text-foreground text-default-500 uppercase tracking-widest font-bold text-xs",
           }}
+          variant="underlined"
         >
           {/* OVERVIEW TAB */}
           <Tab key="overview" title="Overview">
@@ -175,23 +177,23 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatsCard
                   label="Total Valuation"
-                  value={`$${dashboardStats.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
                   subtext="Asset value"
+                  value={`$${dashboardStats.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
                 />
                 <StatsCard
                   label="Avg. Cost / Item"
-                  value={`$${dashboardStats.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
                   subtext="Spending habit"
+                  value={`$${dashboardStats.avgPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
                 />
                 <StatsCard
                   label="Total Pieces"
-                  value={dashboardStats.items}
                   subtext="Collection size"
+                  value={dashboardStats.items}
                 />
                 <StatsCard
                   label="Outfits Created"
-                  value={dashboardStats.outfits}
                   subtext="Styling combinations"
+                  value={dashboardStats.outfits}
                 />
               </div>
 
@@ -228,6 +230,7 @@ export default function ProfilePage() {
                           if (item.brand) {
                             acc[item.brand] = (acc[item.brand] || 0) + 1;
                           }
+
                           return acc;
                         },
                         {} as Record<string, number>,
@@ -281,9 +284,9 @@ export default function ProfilePage() {
                     >
                       {item.imageUrl ? (
                         <img
-                          src={item.imageUrl}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           alt={item.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          src={item.imageUrl}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-default-300 text-xs uppercase">
@@ -352,11 +355,11 @@ export default function ProfilePage() {
                     </p>
                   </div>
                   <Button
-                    variant="light"
+                    className="uppercase font-bold text-[10px] tracking-widest text-default-500"
                     size="sm"
                     startContent={<MapPinIcon className="w-4 h-4" />}
+                    variant="light"
                     onPress={onLocOpen}
-                    className="uppercase font-bold text-[10px] tracking-widest text-default-500"
                   >
                     Location Settings
                   </Button>
@@ -368,8 +371,8 @@ export default function ProfilePage() {
                     {/* Weather Context - Left Side */}
                     <div className="md:col-span-1">
                       <WeatherWidget
-                        onLocationNotSet={onLocOpen}
                         compact={false}
+                        onLocationNotSet={onLocOpen}
                       />
                     </div>
 
@@ -379,10 +382,10 @@ export default function ProfilePage() {
                           Ready to dress?
                         </p>
                         <Button
-                          size="lg"
-                          radius="none"
-                          color="primary"
                           className="uppercase font-bold tracking-widest px-12 py-6 shadow-xl"
+                          color="primary"
+                          radius="none"
+                          size="lg"
                           startContent={<SparklesIcon className="w-5 h-5" />}
                           onPress={() => setShowRecommendation(true)}
                         >
@@ -395,8 +398,8 @@ export default function ProfilePage() {
                   <div className="relative">
                     <div className="flex items-center justify-between mb-4">
                       <button
-                        onClick={() => setShowRecommendation(false)}
                         className="text-[10px] uppercase font-bold tracking-widest text-default-400 hover:text-danger flex items-center gap-1 transition-colors"
+                        onClick={() => setShowRecommendation(false)}
                       >
                         <XMarkIcon className="w-3 h-3" /> Close Curator
                       </button>
@@ -441,9 +444,9 @@ export default function ProfilePage() {
                 </div>
 
                 <Button
-                  size="lg"
-                  radius="none"
                   className="bg-foreground text-background uppercase font-bold tracking-widest px-12"
+                  radius="none"
+                  size="lg"
                   onPress={() => router.push("/pricing")}
                 >
                   Upgrade to Premium
@@ -467,13 +470,13 @@ export default function ProfilePage() {
 
       {/* LOCATION MODAL */}
       <Modal
-        isOpen={isLocOpen}
-        onOpenChange={onLocChange}
-        size="2xl"
         classNames={{
           base: "bg-background border border-default-200 rounded-none p-10",
           closeButton: "hover:bg-default-100 active:bg-default-200",
         }}
+        isOpen={isLocOpen}
+        size="2xl"
+        onOpenChange={onLocChange}
       >
         <ModalContent>
           <ModalBody className="p-0">

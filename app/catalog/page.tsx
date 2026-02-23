@@ -1,7 +1,9 @@
 "use client";
+import type { GlobalProduct } from "@/lib/types/globalproduct";
+
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button, Input, useDisclosure, Image } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import useSWR from "swr";
@@ -15,7 +17,6 @@ import {
 import ProductCard from "@/components/catalog/ProductCard";
 import ProductCardSkeleton from "@/components/catalog/ProductCardSkeleton";
 import AddToClosetModal from "@/components/catalog/AddToClosetModal";
-import type { GlobalProduct } from "@/lib/types/globalproduct";
 
 interface CatalogResponse {
   products: GlobalProduct[];
@@ -35,7 +36,7 @@ export default function CatalogPage() {
 
   // Selected product for modal
   const [selectedProduct, setSelectedProduct] = useState<GlobalProduct | null>(
-    null
+    null,
   );
 
   // Search State
@@ -50,6 +51,7 @@ export default function CatalogPage() {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery);
     }, 300);
+
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -59,7 +61,7 @@ export default function CatalogPage() {
       debouncedQuery && !hasSearched
         ? `/api/catalog?q=${encodeURIComponent(debouncedQuery)}&suggestions=true`
         : null,
-      fetcher
+      fetcher,
     );
 
   // Fetch full results after search
@@ -68,7 +70,7 @@ export default function CatalogPage() {
       hasSearched && searchQuery
         ? `/api/catalog?q=${encodeURIComponent(searchQuery)}&filter=${activeFilter}`
         : null,
-      fetcher
+      fetcher,
     );
 
   const suggestions = suggestionsData?.products || [];
@@ -117,6 +119,7 @@ export default function CatalogPage() {
   const handleAddToCloset = (product: GlobalProduct) => {
     if (status !== "authenticated") {
       router.push("/login");
+
       return;
     }
     setSelectedProduct(product);
@@ -148,18 +151,18 @@ export default function CatalogPage() {
         {!showResults ? (
           <motion.div
             key="search-hero"
-            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.4 }}
             className="flex flex-col items-center justify-center min-h-[70vh] px-6"
+            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
           >
             {/* Editorial Title */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.6 }}
               className="text-center mb-12"
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ delay: 0.1, duration: 0.6 }}
             >
               <h1 className="text-5xl md:text-7xl font-extralight tracking-[0.2em] uppercase mb-4">
                 Catalog
@@ -171,62 +174,62 @@ export default function CatalogPage() {
 
             {/* Search Container */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
               className="w-full max-w-2xl relative"
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
             >
               {/* Search Input */}
               <div className="relative">
                 <Input
                   ref={inputRef}
-                  value={searchQuery}
-                  onValueChange={setSearchQuery}
-                  onFocus={() => setIsInputFocused(true)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Search products, brands, categories..."
-                  variant="bordered"
-                  radius="none"
-                  size="lg"
                   classNames={{
                     inputWrapper:
                       "h-16 md:h-20 border-default-300 hover:border-default-500 focus-within:border-foreground transition-colors bg-transparent group-data-[focus=true]:border-foreground",
                     input:
                       "text-lg md:text-xl font-light tracking-wide placeholder:text-default-300 placeholder:font-extralight placeholder:tracking-widest",
                   }}
-                  startContent={
-                    <MagnifyingGlassIcon className="w-5 h-5 md:w-6 md:h-6 text-default-400 ml-2" />
-                  }
                   endContent={
                     searchQuery && (
                       <Button
                         isIconOnly
-                        variant="light"
+                        className="mr-2"
                         radius="none"
                         size="sm"
+                        variant="light"
                         onPress={handleClearSearch}
-                        className="mr-2"
                       >
                         <XMarkIcon className="w-5 h-5" />
                       </Button>
                     )
                   }
+                  placeholder="Search products, brands, categories..."
+                  radius="none"
+                  size="lg"
+                  startContent={
+                    <MagnifyingGlassIcon className="w-5 h-5 md:w-6 md:h-6 text-default-400 ml-2" />
+                  }
+                  value={searchQuery}
+                  variant="bordered"
+                  onFocus={() => setIsInputFocused(true)}
+                  onKeyDown={handleKeyDown}
+                  onValueChange={setSearchQuery}
                 />
               </div>
 
               {/* Search Button */}
               <motion.div
-                initial={{ opacity: 0 }}
                 animate={{ opacity: searchQuery ? 1 : 0 }}
                 className="flex justify-end mt-4"
+                initial={{ opacity: 0 }}
               >
                 <Button
+                  className="uppercase tracking-[0.2em] font-medium px-12"
                   color="primary"
+                  isDisabled={!searchQuery.trim()}
                   radius="none"
                   size="lg"
-                  className="uppercase tracking-[0.2em] font-medium px-12"
                   onPress={handleSearch}
-                  isDisabled={!searchQuery.trim()}
                 >
                   Search
                 </Button>
@@ -236,31 +239,31 @@ export default function CatalogPage() {
               <AnimatePresence>
                 {searchQuery && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
                     className="flex justify-center gap-1 mt-6"
+                    exit={{ opacity: 0, y: -10 }}
+                    initial={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    {(["all", "product", "brand", "category"] as FilterTab[]).map(
-                      (filter) => (
-                        <Button
-                          key={filter}
-                          variant={activeFilter === filter ? "solid" : "light"}
-                          color={activeFilter === filter ? "primary" : "default"}
-                          radius="none"
-                          size="sm"
-                          className={`uppercase tracking-[0.15em] text-xs font-medium px-6 ${
-                            activeFilter === filter
-                              ? ""
-                              : "text-default-500 hover:text-foreground"
-                          }`}
-                          onPress={() => handleFilterChange(filter)}
-                        >
-                          {filter}
-                        </Button>
-                      )
-                    )}
+                    {(
+                      ["all", "product", "brand", "category"] as FilterTab[]
+                    ).map((filter) => (
+                      <Button
+                        key={filter}
+                        className={`uppercase tracking-[0.15em] text-xs font-medium px-6 ${
+                          activeFilter === filter
+                            ? ""
+                            : "text-default-500 hover:text-foreground"
+                        }`}
+                        color={activeFilter === filter ? "primary" : "default"}
+                        radius="none"
+                        size="sm"
+                        variant={activeFilter === filter ? "solid" : "light"}
+                        onPress={() => handleFilterChange(filter)}
+                      >
+                        {filter}
+                      </Button>
+                    ))}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -269,11 +272,11 @@ export default function CatalogPage() {
               <AnimatePresence>
                 {showSuggestions && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.2 }}
                     className="absolute top-full left-0 right-0 mt-2 bg-background border border-default-200 shadow-2xl z-50 max-h-[60vh] overflow-y-auto"
+                    exit={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
                   >
                     <div className="p-4 border-b border-default-100">
                       <div className="flex items-center gap-2 text-default-400">
@@ -293,23 +296,23 @@ export default function CatalogPage() {
                         {suggestions.map((product, index) => (
                           <motion.button
                             key={product.id}
-                            initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05 }}
                             className="w-full p-4 flex items-center gap-4 hover:bg-default-50 transition-colors text-left group"
+                            initial={{ opacity: 0, x: -10 }}
+                            transition={{ delay: index * 0.05 }}
                             onClick={() => handleSuggestionClick(product)}
                           >
                             {/* Product Image */}
                             <div className="w-16 h-20 bg-default-100 flex-shrink-0 overflow-hidden">
                               <Image
+                                alt={product.name}
+                                className="w-full h-full object-contain"
+                                radius="none"
                                 src={
                                   product.processed_image_url ||
                                   product.imageurl ||
                                   "/images/placeholder.png"
                                 }
-                                alt={product.name}
-                                className="w-full h-full object-contain"
-                                radius="none"
                               />
                             </div>
 
@@ -327,16 +330,17 @@ export default function CatalogPage() {
                             </div>
 
                             {/* Popularity Badge */}
-                            {product.popularityCount && product.popularityCount > 0 && (
-                              <div className="flex-shrink-0 text-right">
-                                <p className="text-xs font-medium">
-                                  {product.popularityCount}
-                                </p>
-                                <p className="text-[9px] uppercase tracking-wider text-default-400">
-                                  in closets
-                                </p>
-                              </div>
-                            )}
+                            {product.popularityCount &&
+                              product.popularityCount > 0 && (
+                                <div className="flex-shrink-0 text-right">
+                                  <p className="text-xs font-medium">
+                                    {product.popularityCount}
+                                  </p>
+                                  <p className="text-[9px] uppercase tracking-wider text-default-400">
+                                    in closets
+                                  </p>
+                                </div>
+                              )}
                           </motion.button>
                         ))}
                       </div>
@@ -350,23 +354,23 @@ export default function CatalogPage() {
           /* Results View */
           <motion.div
             key="results"
-            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
             className="wardrobe-page-container"
+            initial={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
           >
             {/* Results Header */}
             <header className="pt-8 pb-12">
               <motion.div
-                initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
                 className="flex flex-col md:flex-row md:items-end justify-between gap-6"
+                initial={{ opacity: 0, y: -20 }}
+                transition={{ delay: 0.1 }}
               >
                 <div>
                   <button
-                    onClick={handleClearSearch}
                     className="text-[10px] uppercase tracking-[0.2em] text-default-400 hover:text-foreground transition-colors mb-4 flex items-center gap-2"
+                    onClick={handleClearSearch}
                   >
                     <span>&larr;</span>
                     <span>Back to search</span>
@@ -387,69 +391,69 @@ export default function CatalogPage() {
                     (filter) => (
                       <Button
                         key={filter}
-                        variant={activeFilter === filter ? "solid" : "bordered"}
-                        color={activeFilter === filter ? "primary" : "default"}
-                        radius="none"
-                        size="sm"
                         className={`uppercase tracking-[0.1em] text-xs ${
                           activeFilter !== filter ? "border-default-200" : ""
                         }`}
+                        color={activeFilter === filter ? "primary" : "default"}
+                        radius="none"
+                        size="sm"
+                        variant={activeFilter === filter ? "solid" : "bordered"}
                         onPress={() => handleFilterChange(filter)}
                       >
                         {filter}
                       </Button>
-                    )
+                    ),
                   )}
                 </div>
               </motion.div>
 
               {/* Search Bar in Results */}
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
                 className="mt-8 max-w-xl"
+                initial={{ opacity: 0, y: 10 }}
+                transition={{ delay: 0.2 }}
               >
                 <Input
-                  value={searchQuery}
-                  onValueChange={(val) => {
-                    setSearchQuery(val);
-                    if (!val) {
-                      setHasSearched(false);
-                    }
-                  }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Refine your search..."
-                  variant="underlined"
-                  radius="none"
                   classNames={{
                     inputWrapper:
                       "border-b border-default-200 hover:border-default-400 after:bg-foreground",
                     input:
                       "text-base font-light placeholder:text-default-300 placeholder:font-extralight",
                   }}
-                  startContent={
-                    <MagnifyingGlassIcon className="w-4 h-4 text-default-400" />
-                  }
                   endContent={
                     <Button
                       isIconOnly
-                      variant="light"
                       radius="none"
                       size="sm"
+                      variant="light"
                       onPress={handleClearSearch}
                     >
                       <XMarkIcon className="w-4 h-4" />
                     </Button>
                   }
+                  placeholder="Refine your search..."
+                  radius="none"
+                  startContent={
+                    <MagnifyingGlassIcon className="w-4 h-4 text-default-400" />
+                  }
+                  value={searchQuery}
+                  variant="underlined"
+                  onKeyDown={handleKeyDown}
+                  onValueChange={(val) => {
+                    setSearchQuery(val);
+                    if (!val) {
+                      setHasSearched(false);
+                    }
+                  }}
                 />
               </motion.div>
             </header>
 
             {/* Results Grid */}
             <motion.div
-              initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              initial={{ opacity: 0 }}
               transition={{ delay: 0.3 }}
             >
               {resultsLoading ? (
@@ -457,8 +461,8 @@ export default function CatalogPage() {
                   {[...Array(8)].map((_, i) => (
                     <motion.div
                       key={i}
-                      initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, y: 20 }}
                       transition={{ delay: i * 0.05 }}
                     >
                       <ProductCardSkeleton />
@@ -467,17 +471,17 @@ export default function CatalogPage() {
                 </div>
               ) : results.length === 0 ? (
                 <motion.div
-                  initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="flex flex-col items-center justify-center py-32"
+                  initial={{ opacity: 0 }}
                 >
                   <p className="text-xl font-extralight italic text-default-400 mb-6">
                     No products found for &ldquo;{searchQuery}&rdquo;
                   </p>
                   <Button
-                    variant="bordered"
-                    radius="none"
                     className="uppercase tracking-[0.15em] text-xs border-default-300"
+                    radius="none"
+                    variant="bordered"
                     onPress={handleClearSearch}
                   >
                     Try a different search
@@ -488,8 +492,8 @@ export default function CatalogPage() {
                   {results.map((product, index) => (
                     <motion.div
                       key={product.id}
-                      initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, y: 30 }}
                       transition={{
                         delay: index * 0.05,
                         duration: 0.4,
@@ -512,8 +516,8 @@ export default function CatalogPage() {
       {/* Add to Closet Modal */}
       <AddToClosetModal
         isOpen={isOpen}
-        onClose={onClose}
         product={selectedProduct}
+        onClose={onClose}
         onSuccess={handleAddSuccess}
       />
     </div>

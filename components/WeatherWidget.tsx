@@ -1,5 +1,7 @@
 "use client";
 
+import type { WeatherContext } from "@/lib/services/weather";
+
 import { useState, useEffect } from "react";
 import { Button, Spinner } from "@heroui/react";
 import {
@@ -10,7 +12,6 @@ import {
   ExclamationTriangleIcon,
   Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
-import type { WeatherContext } from "@/lib/services/weather";
 
 interface WeatherResponse {
   weather: WeatherContext;
@@ -29,14 +30,14 @@ const weatherIcons: Record<string, React.ReactNode> = {
     <svg
       className="w-10 h-10 text-default-700 stroke-1"
       fill="none"
-      viewBox="0 0 24 24"
       stroke="currentColor"
+      viewBox="0 0 24 24"
     >
       <path
+        d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={1}
-        d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
       />
     </svg>
   ),
@@ -44,14 +45,14 @@ const weatherIcons: Record<string, React.ReactNode> = {
     <svg
       className="w-10 h-10 text-default-400 stroke-1"
       fill="none"
-      viewBox="0 0 24 24"
       stroke="currentColor"
+      viewBox="0 0 24 24"
     >
       <path
+        d="M12 3v18m-6-6l6 6 6-6m-12-6l6-6 6 6"
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={1}
-        d="M12 3v18m-6-6l6 6 6-6m-12-6l6-6 6 6"
       />
     </svg>
   ),
@@ -59,14 +60,14 @@ const weatherIcons: Record<string, React.ReactNode> = {
     <svg
       className="w-10 h-10 text-default-900 stroke-1"
       fill="none"
-      viewBox="0 0 24 24"
       stroke="currentColor"
+      viewBox="0 0 24 24"
     >
       <path
+        d="M13 10V3L4 14h7v7l9-11h-7z"
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={1}
-        d="M13 10V3L4 14h7v7l9-11h-7z"
       />
     </svg>
   ),
@@ -74,14 +75,14 @@ const weatherIcons: Record<string, React.ReactNode> = {
     <svg
       className="w-10 h-10 text-default-600 stroke-1"
       fill="none"
-      viewBox="0 0 24 24"
       stroke="currentColor"
+      viewBox="0 0 24 24"
     >
       <path
+        d="M14 5l7 7m0 0l-7 7m7-7H3"
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={1}
-        d="M14 5l7 7m0 0l-7 7m7-7H3"
       />
     </svg>
   ),
@@ -115,6 +116,7 @@ export default function WeatherWidget({
         if (result.code === "LOCATION_NOT_SET") {
           setLocationNotSet(true);
           onLocationNotSet?.();
+
           return;
         }
         throw new Error(result.message || "Failed to fetch weather");
@@ -138,7 +140,7 @@ export default function WeatherWidget({
       <div
         className={`${compact ? "w-full p-2" : "w-full md:w-80 h-64"} border border-default-200 flex flex-col items-center justify-center bg-content1`}
       >
-        <Spinner size="sm" color="default" />
+        <Spinner color="default" size="sm" />
         {!compact && (
           <span className="mt-4 text-[10px] uppercase tracking-widest text-default-400">
             Analyzing Atmosphere...
@@ -166,11 +168,11 @@ export default function WeatherWidget({
           )}
         </div>
         <Button
-          size="sm"
-          radius="none"
-          variant="solid"
           className="uppercase font-bold text-[10px] tracking-widest"
+          radius="none"
+          size="sm"
           startContent={<Cog6ToothIcon className="w-3 h-3" />}
+          variant="solid"
           onPress={onLocationNotSet}
         >
           Configure
@@ -193,8 +195,8 @@ export default function WeatherWidget({
         </div>
         {!compact && <p className="text-[10px] text-danger-600">{error}</p>}
         <button
-          onClick={fetchWeather}
           className="text-[10px] underline uppercase tracking-widest text-danger-700 text-left mt-1 hover:text-danger-900"
+          onClick={fetchWeather}
         >
           Retry Connection
         </button>
@@ -254,8 +256,8 @@ export default function WeatherWidget({
           </p>
         </div>
         <button
-          onClick={fetchWeather}
           className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-default-100"
+          onClick={fetchWeather}
         >
           <ArrowPathIcon className="w-4 h-4 text-default-400" />
         </button>

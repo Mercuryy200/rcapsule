@@ -33,6 +33,7 @@ export default function LikeButton({
   const handleLike = async () => {
     if (!session) {
       router.push("/login");
+
       return;
     }
 
@@ -68,13 +69,13 @@ export default function LikeButton({
   return (
     <Tooltip content={isLiked ? "Unlike" : "Like"}>
       <Button
+        className={`${isLiked ? "text-danger" : "text-default-500"} transition-colors`}
         isIconOnly={!showCount}
-        variant="flat"
+        isLoading={isLoading}
         radius="none"
         size={size}
-        isLoading={isLoading}
+        variant="flat"
         onPress={handleLike}
-        className={`${isLiked ? "text-danger" : "text-default-500"} transition-colors`}
       >
         {!isLoading && (
           <>

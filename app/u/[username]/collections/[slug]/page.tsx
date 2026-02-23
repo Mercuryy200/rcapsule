@@ -21,6 +21,7 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
+
 import LikeButton from "@/components/social/LikeButton";
 import SaveButton from "@/components/social/SaveButton";
 
@@ -93,12 +94,14 @@ export default function PublicCollectionPage() {
 
       if (response.status === 404 || response.status === 403) {
         setNotFound(true);
+
         return;
       }
 
       if (!response.ok) throw new Error("Failed to fetch collection");
 
       const data = await response.json();
+
       setCollection(data.collection);
       setOwner(data.owner);
       setClothes(data.clothes || []);
@@ -115,6 +118,7 @@ export default function PublicCollectionPage() {
 
   const handleShare = async () => {
     const url = window.location.href;
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -147,10 +151,10 @@ export default function PublicCollectionPage() {
           </p>
         </div>
         <Button
-          variant="flat"
-          radius="none"
-          onPress={() => router.push(`/u/${username}`)}
           className="uppercase font-bold tracking-widest"
+          radius="none"
+          variant="flat"
+          onPress={() => router.push(`/u/${username}`)}
         >
           Back to Profile
         </Button>
@@ -173,15 +177,15 @@ export default function PublicCollectionPage() {
           {/* BREADCRUMB & BACK */}
           <div className="pt-8 flex items-center justify-between">
             <Breadcrumbs
-              separator={<ChevronRightIcon className="w-4 h-4" />}
               classNames={{
                 list: "bg-black/30 backdrop-blur-xl px-4 py-2 rounded-full border border-white/10",
               }}
+              separator={<ChevronRightIcon className="w-4 h-4" />}
             >
               <BreadcrumbItem>
                 <Link
-                  href={`/u/${username}`}
                   className="text-white/80 hover:text-white text-xs uppercase tracking-wider"
+                  href={`/u/${username}`}
                 >
                   @{username}
                 </Link>
@@ -200,9 +204,9 @@ export default function PublicCollectionPage() {
 
             <Button
               isIconOnly
-              variant="flat"
-              radius="full"
               className="bg-black/30 backdrop-blur-xl text-white border border-white/10 hover:bg-black/50"
+              radius="full"
+              variant="flat"
               onPress={() => router.push(`/u/${username}`)}
             >
               <ArrowLeftIcon className="w-5 h-5" />
@@ -236,13 +240,13 @@ export default function PublicCollectionPage() {
                     {collection.styleTags.slice(0, 3).map((tag) => (
                       <Chip
                         key={tag}
-                        size="sm"
-                        variant="flat"
                         classNames={{
                           base: "bg-white/10 backdrop-blur-xl border border-white/20",
                           content:
                             "text-white text-[10px] uppercase tracking-widest font-bold",
                         }}
+                        size="sm"
+                        variant="flat"
                       >
                         {tag}
                       </Chip>
@@ -266,13 +270,13 @@ export default function PublicCollectionPage() {
               {/* OWNER & ACTIONS */}
               <div className="flex items-center justify-between flex-wrap gap-6">
                 <Link
-                  href={`/u/${owner.username}`}
                   className="flex items-center gap-3 group"
+                  href={`/u/${owner.username}`}
                 >
                   <Avatar
-                    src={owner.image || undefined}
-                    name={owner.name || owner.username}
                     className="w-12 h-12 ring-2 ring-white/20"
+                    name={owner.name || owner.username}
+                    src={owner.image || undefined}
                   />
                   <div>
                     <p className="text-white font-bold text-sm group-hover:underline">
@@ -285,28 +289,28 @@ export default function PublicCollectionPage() {
                 {!isOwnCollection && (
                   <div className="flex items-center gap-2">
                     <LikeButton
-                      targetType="wardrobe"
-                      targetId={collection.id}
-                      initialLiked={isLiked}
                       initialCount={collection.likeCount}
-                      size="md"
+                      initialLiked={isLiked}
                       showCount={true}
+                      size="md"
+                      targetId={collection.id}
+                      targetType="wardrobe"
                     />
 
                     <SaveButton
-                      targetType="wardrobe"
-                      targetId={collection.id}
                       initialSaved={isSaved}
                       size="md"
+                      targetId={collection.id}
+                      targetType="wardrobe"
                     />
 
                     <Tooltip content="Share Collection">
                       <Button
                         isIconOnly
-                        variant="flat"
+                        className="bg-white/10 backdrop-blur-xl border border-white/20 text-white"
                         radius="none"
                         size="md"
-                        className="bg-white/10 backdrop-blur-xl border border-white/20 text-white"
+                        variant="flat"
                         onPress={handleShare}
                       >
                         <ShareIcon className="w-5 h-5" />
@@ -317,9 +321,9 @@ export default function PublicCollectionPage() {
 
                 {isOwnCollection && (
                   <Button
-                    variant="bordered"
-                    radius="none"
                     className="border-white/20 text-white hover:bg-white/10 uppercase font-bold tracking-widest"
+                    radius="none"
+                    variant="bordered"
                     onPress={() => router.push(`/wardrobes/${collection.id}`)}
                   >
                     Edit Collection
@@ -345,24 +349,24 @@ export default function PublicCollectionPage() {
               <div key={item.id} className="group">
                 <div className="aspect-[3/4] bg-content2 relative overflow-hidden mb-4">
                   <Image
-                    src={item.imageUrl || "/images/placeholder.png"}
                     alt={item.name}
-                    radius="none"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     classNames={{ wrapper: "w-full h-full" }}
+                    radius="none"
+                    src={item.imageUrl || "/images/placeholder.png"}
                   />
 
                   {item.status === "wishlist" && (
                     <div className="absolute top-2 right-2">
                       <Chip
-                        size="sm"
-                        variant="flat"
-                        color="danger"
                         classNames={{
                           base: "bg-danger-50/90 backdrop-blur-sm",
                           content:
                             "text-danger font-semibold text-[10px] uppercase tracking-wider px-1",
                         }}
+                        color="danger"
+                        size="sm"
+                        variant="flat"
                       >
                         Wishlist
                       </Chip>
@@ -374,8 +378,11 @@ export default function PublicCollectionPage() {
                     item.status !== "wishlist" && (
                       <div className="absolute top-2 left-2">
                         <Chip
-                          size="sm"
-                          variant="flat"
+                          classNames={{
+                            base: "backdrop-blur-sm",
+                            content:
+                              "text-[10px] uppercase tracking-wider font-semibold px-1 capitalize",
+                          }}
                           color={
                             item.condition === "new"
                               ? "success"
@@ -385,11 +392,8 @@ export default function PublicCollectionPage() {
                                   ? "warning"
                                   : "default"
                           }
-                          classNames={{
-                            base: "backdrop-blur-sm",
-                            content:
-                              "text-[10px] uppercase tracking-wider font-semibold px-1 capitalize",
-                          }}
+                          size="sm"
+                          variant="flat"
                         >
                           {item.condition}
                         </Chip>
@@ -401,13 +405,13 @@ export default function PublicCollectionPage() {
                     item.status !== "wishlist" && (
                       <div className="absolute bottom-2 left-2">
                         <Chip
-                          size="sm"
-                          variant="flat"
                           classNames={{
                             base: "bg-default-50/90 backdrop-blur-sm",
                             content:
                               "text-default-700 text-[10px] uppercase tracking-wider font-semibold px-1",
                           }}
+                          size="sm"
+                          variant="flat"
                         >
                           Worn {item.timesworn}x
                         </Chip>

@@ -50,8 +50,8 @@ export function ProfileDropdown({ user }: { user: any }) {
 
         <DropdownItem
           key="logout"
-          color="danger"
           className="text-danger"
+          color="danger"
           onPress={() => logout()}
         >
           Log Out

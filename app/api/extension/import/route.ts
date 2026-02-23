@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
@@ -18,15 +19,18 @@ function corsHeaders(origin: string) {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
   };
+
   if (allowedOrigin) {
     headers["Access-Control-Allow-Origin"] = allowedOrigin;
     headers["Access-Control-Allow-Credentials"] = "true";
   }
+
   return headers;
 }
 
 export async function OPTIONS(req: Request) {
   const origin = req.headers.get("origin") || "";
+
   return new NextResponse(null, { status: 200, headers: corsHeaders(origin) });
 }
 
@@ -35,6 +39,7 @@ export async function POST(req: Request) {
 
   try {
     const session = await auth();
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -135,6 +140,7 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Clothes insert error:", error);
+
       return NextResponse.json(
         { error: "Database Error", details: error.message },
         { status: 500, headers: corsHeaders(origin) },
@@ -147,6 +153,7 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     console.error("Server Error:", error);
+
     return NextResponse.json(
       { error: "Server Exception", details: String(error) },
       { status: 500, headers: corsHeaders(req.headers.get("origin") || "") },

@@ -81,10 +81,10 @@ export default function FeaturesPage() {
       <div className="flex justify-center">
         <Button
           as={Link}
-          href="/closet"
-          size="lg"
-          radius="full"
           className="bg-foreground text-background font-bold uppercase tracking-widest px-12"
+          href="/closet"
+          radius="full"
+          size="lg"
         >
           Start Digitizing
         </Button>

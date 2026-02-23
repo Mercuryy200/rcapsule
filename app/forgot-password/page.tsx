@@ -45,9 +45,9 @@ export default function ForgotPasswordPage() {
   return (
     <div className="flex h-screen items-center justify-center p-4">
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md space-y-8"
+        initial={{ opacity: 0, y: 10 }}
       >
         <div className="text-center space-y-2">
           <h2 className="text-3xl font-extrabold tracking-tighter uppercase italic">
@@ -63,9 +63,9 @@ export default function ForgotPasswordPage() {
             <p>{message}</p>
             <Button
               as={Link}
+              className="mt-2 text-success-700 font-bold"
               href="/login"
               variant="light"
-              className="mt-2 text-success-700 font-bold"
             >
               Back to Login
             </Button>
@@ -73,19 +73,19 @@ export default function ForgotPasswordPage() {
         ) : (
           <Form
             className="flex flex-col gap-4"
-            onSubmit={handleSubmit}
             validationBehavior="native"
+            onSubmit={handleSubmit}
           >
             <Input
               isRequired
+              classNames={{ inputWrapper: "h-12" }}
               label="Email"
+              labelPlacement="outside"
               name="email"
               placeholder="AnnaVogue@email.com"
+              startContent={<Mail className="text-default-400" size={18} />}
               type="email"
               variant="bordered"
-              labelPlacement="outside"
-              startContent={<Mail size={18} className="text-default-400" />}
-              classNames={{ inputWrapper: "h-12" }}
             />
 
             {error && (
@@ -104,8 +104,8 @@ export default function ForgotPasswordPage() {
             </Button>
 
             <Link
-              href="/login"
               className="text-center w-full text-default-500 text-sm flex items-center justify-center gap-2 mt-4 hover:text-default-800"
+              href="/login"
             >
               <ArrowLeft size={16} /> Back to Login
             </Link>

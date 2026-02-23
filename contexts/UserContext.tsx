@@ -1,8 +1,9 @@
 "use client";
+import type { User } from "@/lib/database.type";
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import * as Sentry from "@sentry/nextjs";
-import type { User } from "@/lib/database.type";
 
 interface UserContextType {
   user: User | null;
@@ -28,13 +29,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       Sentry.setUser(null);
       setLoading(false);
+
       return;
     }
 
     try {
       const response = await fetch("/api/user/me");
+
       if (response.ok) {
         const data: User = await response.json();
+
         setUser(data);
         Sentry.setUser({
           id: data.id,
@@ -69,6 +73,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
 
     window.addEventListener("refreshUser", handleRefresh);
+
     return () => window.removeEventListener("refreshUser", handleRefresh);
   }, [status, session?.user?.id]);
 

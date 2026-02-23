@@ -41,18 +41,18 @@ export default function Error({
 
         <div className="flex gap-4 justify-center">
           <Button
+            className="font-bold uppercase tracking-widest"
             color="primary"
             radius="none"
-            className="font-bold uppercase tracking-widest"
             onPress={reset}
           >
             Try Again
           </Button>
 
           <Button
-            variant="bordered"
-            radius="none"
             className="font-medium uppercase tracking-wider"
+            radius="none"
+            variant="bordered"
             onPress={() => (window.location.href = "/")}
           >
             Go Home
@@ -60,13 +60,14 @@ export default function Error({
         </div>
 
         <button
+          className="text-xs text-default-400 hover:text-default-600 underline"
           onClick={() => {
             const eventId = Sentry.lastEventId();
+
             if (eventId) {
               Sentry.showReportDialog({ eventId });
             }
           }}
-          className="text-xs text-default-400 hover:text-default-600 underline"
         >
           Report feedback
         </button>

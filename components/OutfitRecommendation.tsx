@@ -3,9 +3,6 @@
 import { useState, useEffect } from "react";
 import {
   Button,
-  Chip,
-  Avatar,
-  Skeleton,
   Modal,
   ModalContent,
   ModalHeader,
@@ -22,7 +19,6 @@ import {
   ArrowPathIcon,
   SunIcon,
   CheckIcon,
-  XMarkIcon,
   InformationCircleIcon,
   CalendarDaysIcon,
   Cog6ToothIcon,
@@ -89,6 +85,7 @@ export default function OutfitRecommendation({
 
     try {
       const params = new URLSearchParams();
+
       if (occasion) params.set("occasion", occasion);
       params.set("count", "1");
 
@@ -176,13 +173,13 @@ export default function OutfitRecommendation({
           </h3>
         </div>
         <div className="space-y-4 animate-pulse">
-          <div className="h-4 bg-default-100 w-3/4"></div>
+          <div className="h-4 bg-default-100 w-3/4" />
           <div className="flex gap-4">
-            <div className="w-24 h-32 bg-default-100"></div>
-            <div className="w-24 h-32 bg-default-100"></div>
-            <div className="w-24 h-32 bg-default-100"></div>
+            <div className="w-24 h-32 bg-default-100" />
+            <div className="w-24 h-32 bg-default-100" />
+            <div className="w-24 h-32 bg-default-100" />
           </div>
-          <div className="h-16 bg-default-50 w-full"></div>
+          <div className="h-16 bg-default-50 w-full" />
         </div>
       </div>
     );
@@ -205,10 +202,10 @@ export default function OutfitRecommendation({
 
           {errorCode === "LOCATION_NOT_SET" && (
             <Button
-              size="sm"
-              radius="none"
               className="uppercase font-bold tracking-widest"
               color="primary"
+              radius="none"
+              size="sm"
               startContent={<Cog6ToothIcon className="w-4 h-4" />}
               onPress={onLocationNotSet}
             >
@@ -230,14 +227,14 @@ export default function OutfitRecommendation({
 
           {!errorCode && (
             <Button
-              size="sm"
-              variant="bordered"
-              radius="none"
               className="uppercase font-bold tracking-widest border-default-400"
-              startContent={<ArrowPathIcon className="w-4 h-4" />}
-              onPress={handleRefresh}
-              isLoading={loading}
               isDisabled={remaining === 0}
+              isLoading={loading}
+              radius="none"
+              size="sm"
+              startContent={<ArrowPathIcon className="w-4 h-4" />}
+              variant="bordered"
+              onPress={handleRefresh}
             >
               Retry
             </Button>
@@ -275,20 +272,20 @@ export default function OutfitRecommendation({
 
           <div className="flex items-center gap-2">
             <Select
-              size="sm"
-              variant="bordered"
-              radius="none"
-              placeholder="SELECT OCCASION"
-              selectedKeys={selectedOccasion ? [selectedOccasion] : []}
-              onChange={(e) => handleOccasionChange(e.target.value)}
               className="w-40"
               classNames={{
                 trigger: "border-default-200 h-10",
                 value: "uppercase text-[10px] font-bold tracking-widest",
               }}
+              placeholder="SELECT OCCASION"
+              radius="none"
+              selectedKeys={selectedOccasion ? [selectedOccasion] : []}
+              size="sm"
               startContent={
                 <CalendarDaysIcon className="w-4 h-4 text-default-400" />
               }
+              variant="bordered"
+              onChange={(e) => handleOccasionChange(e.target.value)}
             >
               {occasions.map((o) => (
                 <SelectItem
@@ -302,13 +299,13 @@ export default function OutfitRecommendation({
 
             <Button
               isIconOnly
+              className="h-10 w-10 border border-default-200"
+              isDisabled={remaining === 0}
+              isLoading={loading}
+              radius="none"
               size="sm"
               variant="ghost"
-              radius="none"
-              className="h-10 w-10 border border-default-200"
               onPress={handleRefresh}
-              isLoading={loading}
-              isDisabled={remaining === 0}
             >
               <ArrowPathIcon className="w-4 h-4" />
             </Button>
@@ -322,6 +319,7 @@ export default function OutfitRecommendation({
             {currentRecommendation.items.map((item) => (
               <Tooltip
                 key={item.id}
+                className="rounded-none uppercase text-xs tracking-wide"
                 content={
                   <div className="p-2 max-w-xs">
                     <p className="font-bold uppercase tracking-wide text-xs">
@@ -332,14 +330,13 @@ export default function OutfitRecommendation({
                     </p>
                   </div>
                 }
-                className="rounded-none uppercase text-xs tracking-wide"
               >
                 <div className="relative group cursor-pointer w-28 md:w-32 aspect-[3/4] border border-default-200 bg-content2 hover:border-default-900 transition-colors">
                   {item.imageUrl ? (
                     <img
-                      src={item.imageUrl}
                       alt={item.name}
                       className="w-full h-full object-cover p-1"
+                      src={item.imageUrl}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[10px] uppercase text-default-300">
@@ -383,9 +380,9 @@ export default function OutfitRecommendation({
               {data.recommendations.length > 1 && (
                 <div className="flex items-center gap-4 pt-4">
                   <button
-                    onClick={handlePrevOutfit}
-                    disabled={currentIndex === 0}
                     className="p-1 hover:text-primary disabled:opacity-30 transition-colors"
+                    disabled={currentIndex === 0}
+                    onClick={handlePrevOutfit}
                   >
                     <ChevronLeftIcon className="w-4 h-4" />
                   </button>
@@ -404,9 +401,9 @@ export default function OutfitRecommendation({
                   </div>
 
                   <button
-                    onClick={handleNextOutfit}
-                    disabled={currentIndex === data.recommendations.length - 1}
                     className="p-1 hover:text-primary disabled:opacity-30 transition-colors"
+                    disabled={currentIndex === data.recommendations.length - 1}
+                    onClick={handleNextOutfit}
                   >
                     <ChevronRightIcon className="w-4 h-4" />
                   </button>
@@ -428,9 +425,9 @@ export default function OutfitRecommendation({
             </Button>
             <Button
               isIconOnly
-              variant="bordered"
-              radius="none"
               className="h-12 w-12 border-default-300"
+              radius="none"
+              variant="bordered"
               onPress={onOpen}
             >
               <InformationCircleIcon className="w-5 h-5" />
@@ -441,15 +438,15 @@ export default function OutfitRecommendation({
 
       {/* DETAIL MODAL */}
       <Modal
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        size="2xl"
         classNames={{
           base: "rounded-none border border-default-200",
           header: "border-b border-default-100",
           footer: "border-t border-default-100",
           closeButton: "hover:bg-default-100 active:bg-default-200",
         }}
+        isOpen={isOpen}
+        size="2xl"
+        onOpenChange={onOpenChange}
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1 py-6">
@@ -468,9 +465,9 @@ export default function OutfitRecommendation({
                   <div className="aspect-[3/4] mx-auto mb-3 border border-default-200 p-1 bg-content2 relative">
                     {item.imageUrl && (
                       <img
-                        src={item.imageUrl}
-                        className="w-full h-full object-cover"
                         alt={item.name}
+                        className="w-full h-full object-cover"
+                        src={item.imageUrl}
                       />
                     )}
                   </div>
@@ -518,19 +515,19 @@ export default function OutfitRecommendation({
           </ModalBody>
           <ModalFooter className="py-4">
             <Button
-              variant="light"
-              radius="none"
-              onPress={onOpenChange}
               className="uppercase font-bold tracking-widest text-xs"
+              radius="none"
+              variant="light"
+              onPress={onOpenChange}
             >
               Close
             </Button>
             <Button
+              className="uppercase font-bold tracking-widest text-xs px-8"
               color="primary"
+              isLoading={isLogging}
               radius="none"
               onPress={handleLogOutfit}
-              isLoading={isLogging}
-              className="uppercase font-bold tracking-widest text-xs px-8"
             >
               Confirm Log
             </Button>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
@@ -99,6 +100,7 @@ export async function GET(
     const clothes = (wardrobeClothes || [])
       .map((wc: any) => {
         if (!wc.clothes) return null;
+
         return {
           ...wc.clothes,
           addedToWardrobeAt: wc.addedAt,
@@ -159,6 +161,7 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching public collection:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch collection" },
       { status: 500 },

@@ -1,6 +1,6 @@
 "use client";
 import { Card, CardBody, CardFooter, Image, Chip, Button } from "@heroui/react";
-import { HeartIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { CheckIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
 interface ClothingItem {
@@ -69,9 +69,9 @@ export default function ClothingCard({ item, onClick }: ClothingCardProps) {
       >
         <Image
           alt={item.name}
-          src={item.imageUrl || "/images/placeholder.png"}
           className="w-full h-full object-contain transform transition-transform duration-500 group-hover:scale-105"
           radius="none"
+          src={item.imageUrl || "/images/placeholder.png"}
           width="100%"
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 z-10" />
@@ -83,13 +83,13 @@ export default function ClothingCard({ item, onClick }: ClothingCardProps) {
             onClick={(e) => e.stopPropagation()} // Prevent card click
           >
             <Button
-              size="sm"
-              color="success"
-              variant="flat"
               isIconOnly
-              isLoading={isUpdating}
-              onPress={handleMarkAsPurchased}
               className="backdrop-blur-sm bg-success-50/90 hover:bg-success-100"
+              color="success"
+              isLoading={isUpdating}
+              size="sm"
+              variant="flat"
+              onPress={handleMarkAsPurchased}
             >
               {!isUpdating && <CheckIcon className="w-4 h-4" />}
             </Button>
@@ -100,8 +100,11 @@ export default function ClothingCard({ item, onClick }: ClothingCardProps) {
         {!isWishlist && item.condition && item.condition !== "excellent" && (
           <div className="absolute top-2 left-2 z-20">
             <Chip
-              size="sm"
-              variant="flat"
+              classNames={{
+                base: "backdrop-blur-sm",
+                content:
+                  "text-[10px] uppercase tracking-wider font-semibold px-1 capitalize",
+              }}
               color={
                 item.condition === "new"
                   ? "success"
@@ -111,11 +114,8 @@ export default function ClothingCard({ item, onClick }: ClothingCardProps) {
                       ? "warning"
                       : "default"
               }
-              classNames={{
-                base: "backdrop-blur-sm",
-                content:
-                  "text-[10px] uppercase tracking-wider font-semibold px-1 capitalize",
-              }}
+              size="sm"
+              variant="flat"
             >
               {item.condition}
             </Chip>
@@ -126,13 +126,13 @@ export default function ClothingCard({ item, onClick }: ClothingCardProps) {
         {!isWishlist && item.timesworn !== undefined && item.timesworn > 0 && (
           <div className="absolute bottom-2 left-2 z-20">
             <Chip
-              size="sm"
-              variant="flat"
               classNames={{
                 base: "bg-default-50/90 backdrop-blur-sm",
                 content:
                   "text-default-700 text-[10px] uppercase tracking-wider font-semibold px-1",
               }}
+              size="sm"
+              variant="flat"
             >
               Worn {item.timesworn}x
             </Chip>

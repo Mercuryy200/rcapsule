@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
@@ -85,6 +86,7 @@ export async function POST(
     return NextResponse.json({ success: true, follow });
   } catch (error) {
     console.error("Error following user:", error);
+
     return NextResponse.json(
       { error: "Failed to follow user" },
       { status: 500 },
@@ -134,6 +136,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error unfollowing user:", error);
+
     return NextResponse.json(
       { error: "Failed to unfollow user" },
       { status: 500 },
@@ -178,6 +181,7 @@ export async function GET(
     return NextResponse.json({ isFollowing: !!follow });
   } catch (error) {
     console.error("Error checking follow status:", error);
+
     return NextResponse.json({ isFollowing: false });
   }
 }

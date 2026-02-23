@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
           layer,
           clothes:Clothes (*)
         )
-      `
+      `,
       )
       .eq("userId", session.user.id)
       .order("createdAt", { ascending: false });
@@ -43,9 +44,10 @@ export async function GET(req: Request) {
     return NextResponse.json(transformedOutfits);
   } catch (error) {
     console.error("Error fetching outfits:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch outfits" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -87,7 +89,7 @@ export async function POST(req: Request) {
           outfitId: outfit.id,
           clothesId,
           layer: index,
-        })
+        }),
       );
 
       const { error: clothesError } = await supabase
@@ -120,9 +122,10 @@ export async function POST(req: Request) {
     return NextResponse.json(outfit, { status: 201 });
   } catch (error) {
     console.error("Error creating outfit:", error);
+
     return NextResponse.json(
       { error: "Failed to create outfit" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

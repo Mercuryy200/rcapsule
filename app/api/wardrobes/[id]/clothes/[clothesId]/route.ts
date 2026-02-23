@@ -1,5 +1,6 @@
 // app/api/wardrobes/[id]/clothes/[clothesId]/route.ts
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
@@ -43,6 +44,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error removing clothes from wardrobe:", error);
+
     return NextResponse.json(
       { error: "Failed to remove clothes" },
       { status: 500 },

@@ -1,12 +1,14 @@
 "use client";
 import React from "react";
 import { Form, Input, Button, Link } from "@heroui/react";
-import { SignInButtonGithub } from "./button";
 import { useSearchParams } from "next/navigation";
+
+import { SignInButtonGithub } from "./button";
 
 export const LoginForm = () => {
   const searchParams = useSearchParams();
   const signupSuccess = searchParams?.get("signup") === "success";
+
   return (
     <div className="p-5 flex flex-col items-center">
       <Form className="w-1/2 flex flex-col gap-4 ">
@@ -29,10 +31,10 @@ export const LoginForm = () => {
           type="email"
         />
         <div className="flex w-full gap-2">
-          <Button color="primary" type="submit" className="w-1/2">
+          <Button className="w-1/2" color="primary" type="submit">
             Submit
           </Button>
-          <Button type="reset" variant="flat" className="w-1/2">
+          <Button className="w-1/2" type="reset" variant="flat">
             Reset
           </Button>
         </div>
@@ -44,7 +46,7 @@ export const LoginForm = () => {
         )}
         <div className="text-center text-sm mt-4">
           Don't have an account?{" "}
-          <Link href="/signup" className="text-primary hover:underline">
+          <Link className="text-primary hover:underline" href="/signup">
             Sign up
           </Link>
         </div>

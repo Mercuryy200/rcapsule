@@ -115,12 +115,12 @@ export default function ClothesFilter({
           Refine
         </h3>
         <Button
-          onPress={handleClearFilters}
-          variant="light"
-          size="sm"
-          radius="none"
           className="text-xs uppercase tracking-wider text-default-400 data-[hover=true]:text-foreground"
+          radius="none"
+          size="sm"
           startContent={<XMarkIcon className="w-3 h-3" />}
+          variant="light"
+          onPress={handleClearFilters}
         >
           Clear All
         </Button>
@@ -128,26 +128,26 @@ export default function ClothesFilter({
 
       <ScrollShadow hideScrollBar className="flex-1 -mr-2 pr-2">
         <Accordion
-          selectionMode="multiple"
           defaultExpandedKeys={["price"]}
           itemClasses={itemClasses}
+          selectionMode="multiple"
           showDivider={false}
         >
           <AccordionItem key="category" aria-label="Category" title="Category">
             <CheckboxGroup
+              classNames={{ wrapper: "gap-3" }}
               value={selectedCategories}
               onValueChange={setSelectedCategories}
-              classNames={{ wrapper: "gap-3" }}
             >
               {categories.map((category) => (
                 <Checkbox
                   key={category}
-                  value={category}
-                  size="sm"
-                  radius="none"
                   classNames={{
                     label: "text-sm text-default-500 capitalize ml-1",
                   }}
+                  radius="none"
+                  size="sm"
+                  value={category}
                 >
                   {category}
                 </Checkbox>
@@ -158,19 +158,19 @@ export default function ClothesFilter({
           <AccordionItem key="price" aria-label="Price" title="Price Range">
             <div className="px-2 pt-2">
               <Slider
-                step={10}
-                maxValue={maxPrice}
-                minValue={0}
-                value={priceRange}
-                formatOptions={{ style: "currency", currency: "USD" }}
-                onChange={(value) => setPriceRange(value as [number, number])}
-                size="sm"
-                color="foreground"
                 classNames={{
                   thumb: "bg-foreground w-4 h-4 after:bg-foreground",
                   track: "bg-default-200 h-1",
                   filler: "bg-foreground",
                 }}
+                color="foreground"
+                formatOptions={{ style: "currency", currency: "USD" }}
+                maxValue={maxPrice}
+                minValue={0}
+                size="sm"
+                step={10}
+                value={priceRange}
+                onChange={(value) => setPriceRange(value as [number, number])}
               />
               <div className="flex justify-between mt-4 text-xs font-medium text-default-500">
                 <span>${priceRange[0]}</span>
@@ -181,20 +181,20 @@ export default function ClothesFilter({
 
           <AccordionItem key="color" aria-label="Color" title="Color">
             <CheckboxGroup
+              classNames={{ wrapper: "gap-3 grid grid-cols-2" }}
+              orientation="horizontal"
               value={selectedColors}
               onValueChange={setSelectedColors}
-              orientation="horizontal"
-              classNames={{ wrapper: "gap-3 grid grid-cols-2" }}
             >
               {colors.map((color) => (
                 <Checkbox
                   key={color}
-                  value={color}
-                  size="sm"
-                  radius="none"
                   classNames={{
                     label: "text-small text-default-500 capitalize ml-1",
                   }}
+                  radius="none"
+                  size="sm"
+                  value={color}
                 >
                   <div className="flex items-center gap-2">
                     <div
@@ -211,17 +211,17 @@ export default function ClothesFilter({
           {availableBrands.length > 0 ? (
             <AccordionItem key="brand" aria-label="Brand" title="Brand">
               <CheckboxGroup
+                classNames={{ wrapper: "gap-3" }}
                 value={selectedBrands}
                 onValueChange={setSelectedBrands}
-                classNames={{ wrapper: "gap-3" }}
               >
                 {availableBrands.map((brand) => (
                   <Checkbox
                     key={brand}
-                    value={brand}
-                    size="sm"
-                    radius="none"
                     classNames={{ label: "text-sm text-default-500 ml-1" }}
+                    radius="none"
+                    size="sm"
+                    value={brand}
                   >
                     {brand}
                   </Checkbox>
@@ -232,19 +232,19 @@ export default function ClothesFilter({
 
           <AccordionItem key="style" aria-label="Style" title="Style">
             <CheckboxGroup
+              classNames={{ wrapper: "gap-3" }}
               value={selectedStyles}
               onValueChange={setSelectedStyles}
-              classNames={{ wrapper: "gap-3" }}
             >
               {styles.map((style) => (
                 <Checkbox
                   key={style}
-                  value={style}
-                  size="sm"
-                  radius="none"
                   classNames={{
                     label: "text-sm text-default-500 capitalize ml-1",
                   }}
+                  radius="none"
+                  size="sm"
+                  value={style}
                 >
                   {style}
                 </Checkbox>
@@ -258,19 +258,19 @@ export default function ClothesFilter({
             title="Condition"
           >
             <CheckboxGroup
+              classNames={{ wrapper: "gap-3" }}
               value={selectedConditions}
               onValueChange={setSelectedConditions}
-              classNames={{ wrapper: "gap-3" }}
             >
               {conditions.map((condition) => (
                 <Checkbox
                   key={condition}
-                  value={condition}
-                  size="sm"
-                  radius="none"
                   classNames={{
                     label: "text-sm text-default-500 capitalize ml-1",
                   }}
+                  radius="none"
+                  size="sm"
+                  value={condition}
                 >
                   {condition}
                 </Checkbox>
@@ -280,19 +280,19 @@ export default function ClothesFilter({
 
           <AccordionItem key="occasion" aria-label="Occasion" title="Occasion">
             <CheckboxGroup
+              classNames={{ wrapper: "gap-3" }}
               value={selectedOccasions}
               onValueChange={setSelectedOccasions}
-              classNames={{ wrapper: "gap-3" }}
             >
               {occasions.map((occasion) => (
                 <Checkbox
                   key={occasion}
-                  value={occasion}
-                  size="sm"
-                  radius="none"
                   classNames={{
                     label: "text-sm text-default-500 capitalize ml-1",
                   }}
+                  radius="none"
+                  size="sm"
+                  value={occasion}
                 >
                   {occasion}
                 </Checkbox>
@@ -302,19 +302,19 @@ export default function ClothesFilter({
 
           <AccordionItem key="season" aria-label="Season" title="Season">
             <CheckboxGroup
+              classNames={{ wrapper: "gap-3" }}
               value={selectedSeasons}
               onValueChange={setSelectedSeasons}
-              classNames={{ wrapper: "gap-3" }}
             >
               {seasons.map((season) => (
                 <Checkbox
                   key={season}
-                  value={season}
-                  size="sm"
-                  radius="none"
                   classNames={{
                     label: "text-sm text-default-500 capitalize ml-1",
                   }}
+                  radius="none"
+                  size="sm"
+                  value={season}
                 >
                   {season}
                 </Checkbox>
@@ -327,9 +327,9 @@ export default function ClothesFilter({
       <div className="pt-6 mt-auto">
         <Button
           fullWidth
+          className="font-bold uppercase tracking-widest h-12 text-xs shadow-lg shadow-primary/20"
           color="primary"
           radius="none"
-          className="font-bold uppercase tracking-widest h-12 text-xs shadow-lg shadow-primary/20"
           onPress={handleApplyFilters}
         >
           View Results

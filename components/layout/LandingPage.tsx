@@ -15,21 +15,21 @@ import {
 
 const ChromeIcon = ({ size = 24, className = "" }) => (
   <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
+    className={className}
     fill="none"
+    height={size}
     stroke="currentColor"
-    strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className={className}
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+    width={size}
   >
     <circle cx="12" cy="12" r="10" />
     <circle cx="12" cy="12" r="4" />
-    <line x1="21.17" y1="8" x2="12" y2="8" />
-    <line x1="3.95" y1="6.06" x2="8.54" y2="14" />
-    <line x1="10.88" y1="21.94" x2="15.46" y2="14" />
+    <line x1="21.17" x2="12" y1="8" y2="8" />
+    <line x1="3.95" x2="8.54" y1="6.06" y2="14" />
+    <line x1="10.88" x2="15.46" y1="21.94" y2="14" />
   </svg>
 );
 
@@ -62,15 +62,15 @@ export default function LandingPage() {
         />
 
         <motion.div
-          initial="hidden"
           animate="visible"
-          variants={staggerContainer}
           className="max-w-5xl mx-auto z-10"
+          initial="hidden"
+          variants={staggerContainer}
         >
           {/* Headline */}
           <motion.h1
-            variants={fadeInUp}
             className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter italic leading-[0.9] mb-6 md:mb-8"
+            variants={fadeInUp}
           >
             The Operating System <br />
             <span className="text-gray-500">For Your Wardrobe</span>
@@ -78,8 +78,8 @@ export default function LandingPage() {
 
           {/* Subhead */}
           <motion.p
-            variants={fadeInUp}
             className="text-base md:text-lg lg:text-xl text-gray-600 mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed font-light px-4"
+            variants={fadeInUp}
           >
             Know exactly what you own, when you wore it, and how much you've
             spent.
@@ -90,21 +90,22 @@ export default function LandingPage() {
 
           {/* Primary Actions */}
           <motion.div
-            variants={fadeInUp}
             className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 px-4"
+            variants={fadeInUp}
           >
             <a
-              href="/signup"
               className="bg-black text-white font-bold uppercase tracking-widest px-8 md:px-10 h-12 md:h-14 w-full sm:w-auto text-sm md:text-base inline-flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
+              href="/signup"
             >
               Start Curating
               <ArrowRight size={18} />
             </a>
 
             <a
-              href="https://chromewebstore.google.com/detail/hcakhbfdhndjcihacgbfiflkmlffknbp?utm_source=item-share-cb"
-              target="_blank"
               className="border-2 border-black bg-white text-black font-bold uppercase tracking-widest px-8 md:px-10 h-12 md:h-14 w-full sm:w-auto text-sm md:text-base inline-flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+              href="https://chromewebstore.google.com/detail/hcakhbfdhndjcihacgbfiflkmlffknbp?utm_source=item-share-cb"
+              rel="noreferrer"
+              target="_blank"
             >
               <Download size={18} />
               Get Extension
@@ -112,8 +113,8 @@ export default function LandingPage() {
           </motion.div>
 
           <motion.p
-            variants={fadeInUp}
             className="text-xs text-gray-500 uppercase tracking-widest mt-6"
+            variants={fadeInUp}
           >
             Free • No Credit Card • Works with 50+ Fashion Sites
           </motion.p>
@@ -124,20 +125,20 @@ export default function LandingPage() {
       <section className="py-12 md:py-16 px-4 md:px-6 bg-gray-50">
         <div className="max-w-6xl mx-auto text-center">
           <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
             className="text-2xl md:text-4xl font-black uppercase tracking-tighter italic mb-8 md:mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            viewport={{ once: true }}
+            whileInView={{ opacity: 1, y: 0 }}
           >
             Perfect For
           </motion.h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
               className="p-6 md:p-8 bg-white border border-gray-200"
+              initial={{ opacity: 0, y: 20 }}
+              viewport={{ once: true }}
+              whileInView={{ opacity: 1, y: 0 }}
             >
               <Sparkles className="mx-auto mb-4 text-gray-500" size={28} />
               <h3 className="font-bold uppercase tracking-widest mb-2 text-sm md:text-base">
@@ -150,11 +151,11 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
               className="p-6 md:p-8 bg-white border border-gray-200"
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ delay: 0.1 }}
+              viewport={{ once: true }}
+              whileInView={{ opacity: 1, y: 0 }}
             >
               <DollarSign className="mx-auto mb-4 text-gray-500" size={28} />
               <h3 className="font-bold uppercase tracking-widest mb-2 text-sm md:text-base">
@@ -167,11 +168,11 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
               className="p-6 md:p-8 bg-white border border-gray-200"
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ delay: 0.2 }}
+              viewport={{ once: true }}
+              whileInView={{ opacity: 1, y: 0 }}
             >
               <Eye className="mx-auto mb-4 text-gray-500" size={28} />
               <h3 className="font-bold uppercase tracking-widest mb-2 text-sm md:text-base">
@@ -190,10 +191,10 @@ export default function LandingPage() {
       <section className="py-16 md:py-24 px-4 md:px-6">
         <div className="max-w-7xl mx-auto">
           <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
             className="text-3xl md:text-5xl font-black uppercase tracking-tighter italic mb-8 md:mb-12 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            viewport={{ once: true }}
+            whileInView={{ opacity: 1, y: 0 }}
           >
             Core Features
           </motion.h2>
@@ -201,13 +202,13 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             {/* 1. WEAR TRACKING */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
               className="md:col-span-2 bg-gray-100/50 border border-gray-200 p-6 md:p-10 relative overflow-hidden group min-h-[280px] md:min-h-[340px]"
+              initial={{ opacity: 0, y: 20 }}
+              viewport={{ once: true }}
+              whileInView={{ opacity: 1, y: 0 }}
             >
               <div className="absolute top-4 md:top-6 right-4 md:right-6 p-2 md:p-3 bg-white border border-gray-200 text-gray-900">
-                <Calendar size={20} className="md:w-6 md:h-6" />
+                <Calendar className="md:w-6 md:h-6" size={20} />
               </div>
 
               <div className="relative z-10 h-full flex flex-col justify-between">
@@ -241,14 +242,14 @@ export default function LandingPage() {
 
             {/* 2. VALUATION */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
               className="bg-gray-900 text-white p-6 md:p-10 relative flex flex-col justify-between group overflow-hidden min-h-[280px] md:min-h-[340px]"
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ delay: 0.1 }}
+              viewport={{ once: true }}
+              whileInView={{ opacity: 1, y: 0 }}
             >
               <div className="absolute top-4 md:top-6 right-4 md:right-6 opacity-50">
-                <TrendingUp size={20} className="md:w-6 md:h-6" />
+                <TrendingUp className="md:w-6 md:h-6" size={20} />
               </div>
 
               <div>
@@ -287,11 +288,11 @@ export default function LandingPage() {
 
             {/* 3. COLOR DNA */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
               className="bg-white border border-gray-200 p-6 md:p-10 flex flex-col justify-between group hover:border-gray-900 transition-colors min-h-[280px] md:min-h-[340px]"
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ delay: 0.2 }}
+              viewport={{ once: true }}
+              whileInView={{ opacity: 1, y: 0 }}
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -302,7 +303,7 @@ export default function LandingPage() {
                     Your palette at a glance
                   </p>
                 </div>
-                <Palette size={18} className="text-gray-500 md:w-5 md:h-5" />
+                <Palette className="text-gray-500 md:w-5 md:h-5" size={18} />
               </div>
 
               <div className="space-y-2 md:space-y-3">
@@ -335,15 +336,15 @@ export default function LandingPage() {
 
             {/* 4. ORGANIZATION */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
               className="md:col-span-2 bg-gray-50 border border-gray-200 p-6 md:p-10 flex flex-col justify-center items-center text-center hover:bg-gray-100 transition-colors min-h-[280px] md:min-h-[340px]"
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ delay: 0.3 }}
+              viewport={{ once: true }}
+              whileInView={{ opacity: 1, y: 0 }}
             >
               <Tags
-                size={28}
                 className="mb-4 md:mb-6 text-gray-500 md:w-8 md:h-8"
+                size={28}
               />
               <h3 className="text-3xl md:text-5xl lg:text-6xl font-black italic text-gray-900/10 select-none uppercase leading-none mb-2">
                 Smart Organization
@@ -375,13 +376,13 @@ export default function LandingPage() {
       <section className="py-16 md:py-24 px-4 md:px-6 bg-gray-50">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
             className="space-y-6 md:space-y-8"
+            initial={{ opacity: 0, y: 20 }}
+            viewport={{ once: true }}
+            whileInView={{ opacity: 1, y: 0 }}
           >
             <div className="inline-block p-3 md:p-4 bg-white border border-gray-200">
-              <ChromeIcon size={32} className="md:w-10 md:h-10" />
+              <ChromeIcon className="md:w-10 md:h-10" size={32} />
             </div>
 
             <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter italic">
@@ -396,9 +397,10 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center pt-4">
               <a
-                href="https://chromewebstore.google.com/detail/hcakhbfdhndjcihacgbfiflkmlffknbp?utm_source=item-share-cb"
-                target="_blank"
                 className="bg-gray-900 text-white font-bold uppercase tracking-widest px-8 md:px-10 h-12 md:h-14 w-full sm:w-auto text-sm md:text-base inline-flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
+                href="https://chromewebstore.google.com/detail/hcakhbfdhndjcihacgbfiflkmlffknbp?utm_source=item-share-cb"
+                rel="noreferrer"
+                target="_blank"
               >
                 <Download size={18} />
                 Add to Chrome
@@ -415,14 +417,14 @@ export default function LandingPage() {
       {/* --- FOOTER CTA --- */}
       <section className="py-20 md:py-32 px-4 md:px-6 text-center border-t border-gray-100">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
           className="max-w-3xl mx-auto space-y-6 md:space-y-8"
+          initial={{ opacity: 0, scale: 0.95 }}
+          viewport={{ once: true }}
+          whileInView={{ opacity: 1, scale: 1 }}
         >
           <Sparkles
-            size={32}
             className="mx-auto text-gray-400 md:w-10 md:h-10"
+            size={32}
           />
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter italic">
             Start Building Your Digital Closet
@@ -433,8 +435,8 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col items-center gap-3 md:gap-4">
             <a
-              href="/signup"
               className="bg-gray-900 text-white font-bold uppercase tracking-widest px-12 md:px-16 h-14 md:h-16 text-base md:text-lg w-full sm:w-auto inline-flex items-center justify-center hover:bg-gray-800 transition-colors"
+              href="/signup"
             >
               Start Curating
             </a>

@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button, Spinner, Chip, Image as HeroImage } from "@heroui/react";
-
 import {
   ArrowLeftIcon,
   PencilSquareIcon,
@@ -44,6 +43,7 @@ export default function OutfitDetailPage() {
   const fetchOutfit = async () => {
     try {
       const response = await fetch(`/api/outfits/${params.id}`);
+
       if (response.ok) setOutfit(await response.json());
     } catch (error) {
       console.error(error);
@@ -58,6 +58,7 @@ export default function OutfitDetailPage() {
       const response = await fetch(`/api/outfits/${params.id}`, {
         method: "DELETE",
       });
+
       if (response.ok) {
         router.push("/outfits");
       } else {
@@ -79,9 +80,9 @@ export default function OutfitDetailPage() {
     <div className="w-full min-h-screen">
       <div className="max-w-7xl mx-auto px-6 pt-8 pb-4">
         <Button
-          variant="light"
-          startContent={<ArrowLeftIcon className="w-4 h-4" />}
           className="uppercase tracking-widest text-xs font-bold pl-0"
+          startContent={<ArrowLeftIcon className="w-4 h-4" />}
+          variant="light"
           onPress={() => router.back()}
         >
           Back
@@ -94,9 +95,9 @@ export default function OutfitDetailPage() {
           <div className="w-full max-w-lg shadow-2xl bg-white overflow-hidden aspect-[3/4]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={outfit.imageUrl || "/images/placeholder.png"}
               alt={outfit.name}
               className="w-full h-full object-cover block"
+              src={outfit.imageUrl || "/images/placeholder.png"}
             />
           </div>
         </div>
@@ -106,20 +107,20 @@ export default function OutfitDetailPage() {
           <div className="mb-2 flex gap-2">
             {outfit.season && (
               <Chip
+                className="uppercase text-[10px]"
+                radius="none"
                 size="sm"
                 variant="bordered"
-                radius="none"
-                className="uppercase text-[10px]"
               >
                 {outfit.season}
               </Chip>
             )}
             {outfit.occasion && (
               <Chip
+                className="uppercase text-[10px]"
+                radius="none"
                 size="sm"
                 variant="bordered"
-                radius="none"
-                className="uppercase text-[10px]"
               >
                 {outfit.occasion}
               </Chip>
@@ -167,10 +168,10 @@ export default function OutfitDetailPage() {
                   <div className="w-16 h-16 bg-default-50 border border-default-200">
                     <HeroImage
                       removeWrapper
-                      src={item.imageUrl || ""}
-                      radius="none"
-                      className="w-full h-full object-cover"
                       alt={item.name}
+                      className="w-full h-full object-cover"
+                      radius="none"
+                      src={item.imageUrl || ""}
                     />
                   </div>
                   <div>
@@ -187,22 +188,22 @@ export default function OutfitDetailPage() {
           </div>
           <div className="mt-12 flex gap-4">
             <Button
-              variant="solid"
-              color="primary"
-              radius="none"
               fullWidth
               className="uppercase font-bold tracking-widest h-12"
+              color="primary"
+              radius="none"
               startContent={<PencilSquareIcon className="w-4 h-4" />}
+              variant="solid"
               onPress={() => router.push(`/outfits/${outfit.id}/edit`)}
             >
               Edit Look
             </Button>
             <Button
-              variant="bordered"
+              className="uppercase font-bold tracking-widest h-12 min-w-[100px]"
               color="danger"
               radius="none"
-              className="uppercase font-bold tracking-widest h-12 min-w-[100px]"
               startContent={<TrashIcon className="w-4 h-4" />}
+              variant="bordered"
               onPress={handleDelete}
             >
               Delete

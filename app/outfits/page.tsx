@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Image, Spinner, Switch, Chip } from "@heroui/react";
+import { Image, Spinner, Switch } from "@heroui/react";
 import { HeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { motion, AnimatePresence } from "framer-motion";
@@ -54,8 +54,10 @@ export default function OutfitsPage() {
   const fetchOutfits = async () => {
     try {
       const response = await fetch("/api/outfits");
+
       if (response.ok) {
         const data = await response.json();
+
         setOutfits(Array.isArray(data) ? data : []);
       }
     } catch (error) {
@@ -99,6 +101,7 @@ export default function OutfitsPage() {
     // 1. Search
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
+
       result = result.filter(
         (o) =>
           o.name.toLowerCase().includes(lowerQuery) ||
@@ -141,6 +144,7 @@ export default function OutfitsPage() {
   const suggestions = useMemo(() => {
     const names = outfits.map((o) => o.name);
     const seasons = outfits.map((o) => o.season).filter(Boolean) as string[];
+
     return Array.from(new Set([...names, ...seasons])).slice(0, 5);
   }, [outfits]);
 
@@ -155,7 +159,15 @@ export default function OutfitsPage() {
     <div className="w-full max-w-7xl mx-auto px-6 py-12">
       {/* --- INTEGRATED WARDROBE HEADER --- */}
       <WardrobeHeader
-        title="LOOKBOOK"
+        actionLabel="Curate Look"
+        history={history}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        setShowFilters={setShowFilters}
+        setSortBy={setSortBy}
+        setViewMode={setViewMode}
+        showFilters={showFilters}
+        sortBy={sortBy}
         subtitle={
           <div className="flex gap-2 text-xs uppercase tracking-widest text-default-400 mt-1">
             <span>Collection</span>
@@ -163,33 +175,25 @@ export default function OutfitsPage() {
             <span className="text-foreground">All Looks</span>
           </div>
         }
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
+        suggestions={suggestions}
+        title="LOOKBOOK"
+        viewMode={viewMode}
+        onAddNew={() => router.push("/outfits/new")}
+        onClearHistory={clearHistory}
         onSearchSubmit={(term) => {
           setSearchQuery(term);
           addSearch(term);
         }}
-        suggestions={suggestions}
-        history={history}
-        onClearHistory={clearHistory}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        showFilters={showFilters}
-        setShowFilters={setShowFilters}
-        onAddNew={() => router.push("/outfits/new")}
-        actionLabel="Curate Look"
       />
 
       {/* --- COLLAPSIBLE FILTER PANEL --- */}
       <AnimatePresence>
         {showFilters && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden bg-default-50 border-b border-default-200"
+            exit={{ height: 0, opacity: 0 }}
+            initial={{ height: 0, opacity: 0 }}
           >
             <div className="p-6 flex flex-wrap gap-8 items-center">
               {/* Filter: Favorites */}
@@ -198,10 +202,10 @@ export default function OutfitsPage() {
                   Status
                 </span>
                 <Switch
-                  isSelected={filterFavorites}
-                  onValueChange={setFilterFavorites}
-                  size="sm"
                   classNames={{ label: "text-sm font-light" }}
+                  isSelected={filterFavorites}
+                  size="sm"
+                  onValueChange={setFilterFavorites}
                 >
                   Favorites Only
                 </Switch>
@@ -217,12 +221,12 @@ export default function OutfitsPage() {
                     (season) => (
                       <button
                         key={season}
-                        onClick={() => setFilterSeason(season.toLowerCase())}
                         className={`px-3 py-1 text-xs uppercase tracking-wide border transition-colors ${
                           filterSeason === season.toLowerCase()
                             ? "bg-black text-white border-black dark:bg-white dark:text-black"
                             : "border-default-200 text-default-500 hover:border-default-400"
                         }`}
+                        onClick={() => setFilterSeason(season.toLowerCase())}
                       >
                         {season}
                       </button>
@@ -249,8 +253,8 @@ export default function OutfitsPage() {
                 : "Your collection is empty."}
             </p>
             <button
-              onClick={() => router.push("/outfits/new")}
               className="text-xs uppercase tracking-widest border-b border-black pb-1 hover:text-primary transition-colors"
+              onClick={() => router.push("/outfits/new")}
             >
               Start Styling
             </button>
@@ -273,10 +277,10 @@ export default function OutfitsPage() {
                   {outfit.imageUrl ? (
                     <Image
                       alt={outfit.name}
-                      src={outfit.imageUrl}
-                      radius="none"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       classNames={{ wrapper: "w-full h-full" }}
+                      radius="none"
+                      src={outfit.imageUrl}
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center bg-default-50 text-default-300">
@@ -290,10 +294,10 @@ export default function OutfitsPage() {
                   )}
 
                   <button
+                    className="absolute top-3 right-3 z-20 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={(e) =>
                       toggleFavorite(e, outfit.id, outfit.isFavorite)
                     }
-                    className="absolute top-3 right-3 z-20 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     {outfit.isFavorite ? (
                       <HeartSolidIcon className="w-6 h-6 text-red-600 drop-shadow-md" />

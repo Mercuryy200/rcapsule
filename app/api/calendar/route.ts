@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
@@ -55,6 +56,7 @@ async function updateClothesStats(supabase: any, clothesIds: string[]) {
     const totalWears = uniqueDates.size;
     const lastWorn = distinctWears?.[0]?.wornAt || null;
     const firstWorn = distinctWears?.[distinctWears.length - 1]?.wornAt || null;
+
     await supabase
       .from("Clothes")
       .update({
@@ -82,6 +84,7 @@ async function updateClothesStats(supabase: any, clothesIds: string[]) {
 
 export async function GET(req: Request) {
   const session = await auth();
+
   if (!session?.user?.id)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -110,6 +113,7 @@ export async function GET(req: Request) {
   }
 
   const { data, error } = await query;
+
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
 
@@ -118,6 +122,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const session = await auth();
+
   if (!session?.user?.id)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -171,6 +176,7 @@ export async function POST(req: Request) {
     }));
 
     const { error } = await supabase.from("WearLog").insert(logs);
+
     if (error) throw error;
 
     // Update both outfit and individual clothes stats
@@ -187,6 +193,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   const session = await auth();
+
   if (!session?.user?.id)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -262,6 +269,7 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   const session = await auth();
+
   if (!session?.user?.id)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
