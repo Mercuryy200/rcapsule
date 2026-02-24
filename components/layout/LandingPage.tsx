@@ -78,7 +78,7 @@ function HeroSection() {
 
       {/* Floating product card — Jacket (top-left) */}
       <motion.div
-        className="absolute top-[15%] -left-8 md:left-[5%] w-32 h-44 md:w-40 md:h-56 hidden md:block overflow-hidden border border-default-200 shadow-sm"
+        className="absolute top-[7%] -left-8 md:left-[5%] w-32 h-44 md:w-40 md:h-56 overflow-hidden border border-default-200 shadow-sm"
         style={{ y: card1Y, rotate: -12 }}
       >
         <div className="relative w-full h-32 md:h-40">
@@ -100,7 +100,7 @@ function HeroSection() {
 
       {/* Floating product card — Sneakers (top-right) */}
       <motion.div
-        className="absolute top-[25%] -right-4 md:right-[8%] w-28 h-40 md:w-36 md:h-48 hidden md:block overflow-hidden border border-default-200 shadow-sm"
+        className="absolute bottom-[10%] md:bottom-auto md:top-[25%] -right-4 md:right-[8%] w-28 h-40 md:w-36 md:h-48 overflow-hidden border border-default-200 shadow-sm"
         style={{ y: card2Y, rotate: 8 }}
       >
         <div className="relative w-full h-28 md:h-36">
@@ -145,12 +145,12 @@ function HeroSection() {
       {/* Content */}
       <motion.div
         animate="visible"
-        className="max-w-5xl mx-auto z-10"
+        className="w-full max-w-5xl mx-auto z-10"
         initial="hidden"
         variants={staggerContainer}
       >
         <motion.h1
-          className="text-[clamp(3rem,8vw,7rem)] font-black uppercase tracking-tighter italic leading-[0.9] mb-6 md:mb-8"
+          className="text-[clamp(2rem,8vw,7rem)] font-black uppercase tracking-tighter italic leading-[0.9] mb-6 md:mb-8"
           variants={fadeInUp}
         >
           Your Wardrobe. <br />
@@ -158,7 +158,7 @@ function HeroSection() {
         </motion.h1>
 
         <motion.p
-          className="text-[clamp(0.875rem,1.2vw,1.125rem)] text-default-500 mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed font-light px-4"
+          className="text-sm sm:text-base md:text-lg text-default-500 mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed font-light px-4"
           variants={fadeInUp}
         >
           Catalog your closet, plan outfits,
@@ -172,6 +172,7 @@ function HeroSection() {
         >
           <DSButton
             as="a"
+            className="w-full sm:w-auto"
             href="/signup"
             icon={<ArrowRight size={18} />}
             size="lg"
@@ -180,13 +181,19 @@ function HeroSection() {
             Start Curating
           </DSButton>
 
-          <DSButton as="a" href="/catalog" size="lg" variant="outline">
+          <DSButton
+            as="a"
+            className="w-full sm:w-auto"
+            href="/catalog"
+            size="lg"
+            variant="outline"
+          >
             Browse Catalog
           </DSButton>
         </motion.div>
 
         <motion.p
-          className="text-[clamp(0.625rem,0.8vw,0.75rem)] text-default-400 uppercase tracking-widest mt-8"
+          className="text-[10px] md:text-xs text-default-400 uppercase tracking-widest mt-8"
           variants={fadeInUp}
         >
           Free &bull; No Credit Card Required
