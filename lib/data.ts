@@ -55,6 +55,7 @@ export const categories = [
   "jewelry",
   "beanie",
   "cap",
+  "socks",
 
   "underwear",
   "swimwear",

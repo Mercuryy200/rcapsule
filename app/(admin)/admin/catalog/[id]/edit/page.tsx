@@ -75,7 +75,8 @@ export default function AdminCatalogEditPage({
         sku: product.sku ?? "",
         imageurl: product.imageurl ?? "",
         retaillink: product.retaillink ?? "",
-        originalprice: product.originalprice != null ? String(product.originalprice) : "",
+        originalprice:
+          product.originalprice != null ? String(product.originalprice) : "",
         currency: product.currency ?? "CAD",
         inStock: product.inStock ?? true,
         materials: product.materials ?? "",
@@ -211,7 +212,7 @@ export default function AdminCatalogEditPage({
                 min="0"
                 placeholder="0.00"
                 startContent={<span className="text-sm opacity-50">$</span>}
-                type="number"
+                type="double"
                 value={form.originalprice}
                 onValueChange={(v) => update("originalprice", v)}
               />
@@ -219,7 +220,10 @@ export default function AdminCatalogEditPage({
                 label="Currency"
                 selectedKeys={[form.currency]}
                 onSelectionChange={(keys) =>
-                  update("currency", Array.from(keys as Set<string>)[0] ?? "CAD")
+                  update(
+                    "currency",
+                    Array.from(keys as Set<string>)[0] ?? "CAD",
+                  )
                 }
               >
                 {CURRENCIES.map((c) => (
@@ -228,7 +232,10 @@ export default function AdminCatalogEditPage({
               </Select>
             </div>
 
-            <Checkbox isSelected={form.inStock} onValueChange={(v) => update("inStock", v)}>
+            <Checkbox
+              isSelected={form.inStock}
+              onValueChange={(v) => update("inStock", v)}
+            >
               In Stock
             </Checkbox>
 
@@ -334,13 +341,20 @@ export default function AdminCatalogEditPage({
                 </div>
                 <Select
                   label="Scraping Status"
-                  selectedKeys={form.scrapingStatus ? [form.scrapingStatus] : []}
+                  selectedKeys={
+                    form.scrapingStatus ? [form.scrapingStatus] : []
+                  }
                   onSelectionChange={(keys) =>
-                    update("scrapingStatus", Array.from(keys as Set<string>)[0] ?? "")
+                    update(
+                      "scrapingStatus",
+                      Array.from(keys as Set<string>)[0] ?? "",
+                    )
                   }
                 >
                   {SCRAPING_STATUSES.map((s) => (
-                    <SelectItem key={s} className="capitalize">{s}</SelectItem>
+                    <SelectItem key={s} className="capitalize">
+                      {s}
+                    </SelectItem>
                   ))}
                 </Select>
               </div>

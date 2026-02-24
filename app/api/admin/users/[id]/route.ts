@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/admin";
 import { getSupabaseServer } from "@/lib/supabase-server";
+import { apiLimiter, rateLimitResponse } from "@/lib/ratelimit";
 
 export async function GET(
   _req: Request,
@@ -10,6 +11,11 @@ export async function GET(
   const result = await requireAdmin();
 
   if ("error" in result) return result.error;
+
+  const { session } = result;
+  const { success, reset } = await apiLimiter().limit(`user:${session.user.id}`);
+
+  if (!success) return rateLimitResponse(reset);
 
   const { id } = await params;
 
@@ -61,6 +67,11 @@ export async function PATCH(
 
   if ("error" in result) return result.error;
 
+  const { session } = result;
+  const { success, reset } = await apiLimiter().limit(`user:${session.user.id}`);
+
+  if (!success) return rateLimitResponse(reset);
+
   const { id } = await params;
 
   try {
@@ -105,6 +116,10 @@ export async function DELETE(
   if ("error" in result) return result.error;
 
   const { session } = result;
+  const { success, reset } = await apiLimiter().limit(`user:${session.user.id}`);
+
+  if (!success) return rateLimitResponse(reset);
+
   const { id } = await params;
 
   if (id === session.user.id) {

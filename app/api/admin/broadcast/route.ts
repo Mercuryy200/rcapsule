@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/admin";
 import { getSupabaseServer } from "@/lib/supabase-server";
+import { heavyLimiter, rateLimitResponse } from "@/lib/ratelimit";
 
 export async function POST(req: Request) {
   const result = await requireAdmin();
@@ -9,6 +10,9 @@ export async function POST(req: Request) {
   if ("error" in result) return result.error;
 
   const { session } = result;
+  const { success, reset } = await heavyLimiter().limit(`user:${session.user.id}`);
+
+  if (!success) return rateLimitResponse(reset);
 
   try {
     const body = await req.json();
