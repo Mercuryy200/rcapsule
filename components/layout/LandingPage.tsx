@@ -1,19 +1,18 @@
 "use client";
 
+import Image from "next/image";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 import {
   ArrowRight,
   Sparkles,
-  Download,
   Palette,
-  Tags,
   TrendingUp,
   Calendar,
-  Chrome,
-  Import,
   FolderOpen,
-  Shirt,
+  Heart,
+  Layers,
+  BookOpen,
 } from "lucide-react";
 
 import { Container } from "@/components/ui/container";
@@ -49,35 +48,6 @@ function useCountUp(end: number, duration = 2000) {
 }
 
 /* ========================================
-   CHROME ICON (inline SVG)
-   ======================================== */
-const ChromeIcon = ({
-  size = 24,
-  className = "",
-}: {
-  size?: number;
-  className?: string;
-}) => (
-  <svg
-    className={className}
-    fill="none"
-    height={size}
-    stroke="currentColor"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth="2"
-    viewBox="0 0 24 24"
-    width={size}
-  >
-    <circle cx="12" cy="12" r="10" />
-    <circle cx="12" cy="12" r="4" />
-    <line x1="21.17" x2="12" y1="8" y2="8" />
-    <line x1="3.95" x2="8.54" y1="6.06" y2="14" />
-    <line x1="10.88" x2="15.46" y1="21.94" y2="14" />
-  </svg>
-);
-
-/* ========================================
    SECTION 1: HERO
    ======================================== */
 function HeroSection() {
@@ -106,31 +76,69 @@ function HeroSection() {
         }}
       />
 
-      {/* Floating fashion card placeholders */}
+      {/* Floating product card — Jacket (top-left) */}
       <motion.div
-        className="absolute top-[15%] -left-8 md:left-[5%] w-32 h-44 md:w-40 md:h-56 border border-default-200 bg-default-50 opacity-20 hidden md:block"
+        className="absolute top-[15%] -left-8 md:left-[5%] w-32 h-44 md:w-40 md:h-56 hidden md:block overflow-hidden border border-default-200 shadow-sm"
         style={{ y: card1Y, rotate: -12 }}
       >
-        <div className="w-full h-full flex items-center justify-center">
-          <Shirt className="w-12 h-12 text-default-300" />
+        <div className="relative w-full h-32 md:h-40">
+          <Image
+            fill
+            unoptimized
+            alt="Leather jacket"
+            className="object-cover"
+            src="https://assets.aritzia.com/image/upload/c_crop,ar_1920:2623,g_south/q_auto,f_auto,dpr_auto,w_1800/f25_a05_128542_9166_off_a"
+          />
+        </div>
+        <div className="bg-background px-2 py-1.5 border-t border-default-200">
+          <p className="text-[9px] font-bold uppercase tracking-wider truncate">
+            Leather Jacket
+          </p>
+          <p className="text-[9px] text-default-400 font-mono">Worn 12×</p>
         </div>
       </motion.div>
 
+      {/* Floating product card — Sneakers (top-right) */}
       <motion.div
-        className="absolute top-[25%] -right-4 md:right-[8%] w-28 h-40 md:w-36 md:h-48 border border-default-200 bg-default-50 opacity-20 hidden md:block"
+        className="absolute top-[25%] -right-4 md:right-[8%] w-28 h-40 md:w-36 md:h-48 hidden md:block overflow-hidden border border-default-200 shadow-sm"
         style={{ y: card2Y, rotate: 8 }}
       >
-        <div className="w-full h-full flex items-center justify-center">
-          <Shirt className="w-10 h-10 text-default-300" />
+        <div className="relative w-full h-28 md:h-36">
+          <Image
+            fill
+            unoptimized
+            alt="Sneakers"
+            className="object-cover"
+            src="https://static2.goldengoose.com/public/Style/ECOMM/GMF00102.F000311-10270.jpg"
+          />
+        </div>
+        <div className="bg-background px-2 py-1.5 border-t border-default-200">
+          <p className="text-[9px] font-bold uppercase tracking-wider truncate">
+            Sneakers
+          </p>
+          <p className="text-[9px] text-default-400 font-mono">Worn 28×</p>
         </div>
       </motion.div>
 
+      {/* Floating product card — Dress (bottom-left) */}
       <motion.div
-        className="absolute bottom-[20%] left-[12%] w-24 h-32 md:w-32 md:h-44 border border-default-200 bg-default-50 opacity-15 hidden lg:block"
+        className="absolute bottom-[20%] left-[12%] w-24 h-32 md:w-32 md:h-44 hidden lg:block overflow-hidden border border-default-200 shadow-sm"
         style={{ y: card3Y, rotate: -5 }}
       >
-        <div className="w-full h-full flex items-center justify-center">
-          <Shirt className="w-8 h-8 text-default-300" />
+        <div className="relative w-full h-24 md:h-32">
+          <Image
+            fill
+            unoptimized
+            alt="Fashion dress"
+            className="object-cover"
+            src="https://assets.aritzia.com/image/upload/c_crop,ar_1920:2623,g_south/q_auto,f_auto,dpr_auto,w_1500/s26_a08_132084_1274_off_a"
+          />
+        </div>
+        <div className="bg-background px-2 py-1.5 border-t border-default-200">
+          <p className="text-[9px] font-bold uppercase tracking-wider truncate">
+            Satin Dress
+          </p>
+          <p className="text-[9px] text-default-400 font-mono">Worn 3×</p>
         </div>
       </motion.div>
 
@@ -145,18 +153,17 @@ function HeroSection() {
           className="text-[clamp(3rem,8vw,7rem)] font-black uppercase tracking-tighter italic leading-[0.9] mb-6 md:mb-8"
           variants={fadeInUp}
         >
-          The Operating System <br />
-          <span className="text-default-400">For Your Wardrobe</span>
+          Your Wardrobe. <br />
+          <span className="text-default-400">Your Story.</span>
         </motion.h1>
 
         <motion.p
           className="text-[clamp(0.875rem,1.2vw,1.125rem)] text-default-500 mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed font-light px-4"
           variants={fadeInUp}
         >
-          Know exactly what you own, when you wore it, and how much you&apos;ve
-          spent.
+          Catalog your closet, plan outfits,
           <br className="hidden sm:block" />
-          Finally, a digital closet that helps you make smarter style decisions.
+          and share your style with the world.
         </motion.p>
 
         <motion.div
@@ -173,17 +180,8 @@ function HeroSection() {
             Start Curating
           </DSButton>
 
-          <DSButton
-            as="a"
-            href="https://chromewebstore.google.com/detail/hcakhbfdhndjcihacgbfiflkmlffknbp?utm_source=item-share-cb"
-            icon={<Download size={18} />}
-            iconPosition="left"
-            rel="noreferrer"
-            size="lg"
-            target="_blank"
-            variant="outline"
-          >
-            Get Extension
+          <DSButton as="a" href="/catalog" size="lg" variant="outline">
+            Browse Catalog
           </DSButton>
         </motion.div>
 
@@ -191,7 +189,7 @@ function HeroSection() {
           className="text-[clamp(0.625rem,0.8vw,0.75rem)] text-default-400 uppercase tracking-widest mt-8"
           variants={fadeInUp}
         >
-          Free &bull; No Credit Card &bull; 50+ Fashion Sites
+          Free &bull; No Credit Card Required
         </motion.p>
       </motion.div>
     </section>
@@ -199,15 +197,55 @@ function HeroSection() {
 }
 
 /* ========================================
-   SECTION 2: SOCIAL PROOF / STATS BAR
+   SECTION 2: CATEGORY STRIP
+   ======================================== */
+const CATEGORIES = [
+  "Tops",
+  "Dresses",
+  "Outerwear",
+  "Denim",
+  "Footwear",
+  "Accessories",
+  "Knitwear",
+  "Bags",
+  "Swimwear",
+  "Suits",
+  "Activewear",
+  "Skirts",
+];
+
+function CategoryStrip() {
+  return (
+    <div className="overflow-hidden border-y border-default-200 bg-default-50 py-3">
+      <motion.div
+        animate={{ x: [0, "-50%"] }}
+        className="flex gap-8 whitespace-nowrap"
+        transition={{ duration: 22, ease: "linear", repeat: Infinity }}
+      >
+        {[...CATEGORIES, ...CATEGORIES].map((cat, i) => (
+          <span
+            key={i}
+            className="text-[10px] font-bold uppercase tracking-[0.3em] text-default-400 flex-shrink-0"
+          >
+            {cat}
+            <span className="ml-8 text-default-200">·</span>
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+/* ========================================
+   SECTION 3: SOCIAL PROOF / STATS BAR
    ======================================== */
 function StatsBar() {
   const stat1 = useCountUp(2000);
   const stat2 = useCountUp(500);
-  const stat3 = useCountUp(50);
+  const stat3 = useCountUp(1000);
 
   return (
-    <section className="py-8 md:py-12 border-y border-default-200 bg-default-50">
+    <section className="py-8 md:py-12 border-b border-default-200">
       <Container>
         <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
           <div className="text-center">
@@ -230,7 +268,7 @@ function StatsBar() {
               {stat2.count.toLocaleString()}+
             </span>
             <p className="text-[10px] uppercase tracking-widest text-default-400 mt-1">
-              Wardrobes Created
+              Closets Built
             </p>
           </div>
           <div className="hidden md:block h-8 w-px bg-default-200" />
@@ -239,10 +277,10 @@ function StatsBar() {
               ref={stat3.ref}
               className="text-2xl md:text-3xl font-black tracking-tighter"
             >
-              {stat3.count}+
+              {stat3.count.toLocaleString()}+
             </span>
             <p className="text-[10px] uppercase tracking-widest text-default-400 mt-1">
-              Supported Sites
+              Outfits Created
             </p>
           </div>
         </div>
@@ -252,7 +290,7 @@ function StatsBar() {
 }
 
 /* ========================================
-   SECTION 3: FEATURE BENTO GRID
+   SECTION 4: FEATURE BENTO GRID
    ======================================== */
 function FeatureBentoGrid() {
   return (
@@ -355,6 +393,10 @@ function FeatureBentoGrid() {
                   <span className="uppercase">Avg. Item Cost</span>
                   <span className="font-mono">$320</span>
                 </div>
+                <div className="flex justify-between items-center opacity-60">
+                  <span className="uppercase">Cost Per Wear</span>
+                  <span className="font-mono">$12</span>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -391,10 +433,10 @@ function FeatureBentoGrid() {
                   label: "Gray",
                 },
                 {
-                  color: "bg-orange-700",
+                  color: "bg-blue-200",
                   pct: "10%",
                   width: "w-[30%]",
-                  label: "Brown",
+                  label: "Blue",
                 },
               ].map((bar) => (
                 <motion.div
@@ -419,39 +461,74 @@ function FeatureBentoGrid() {
             </div>
           </motion.div>
 
-          {/* 4. ORGANIZATION */}
+          {/* 4. OUTFITS */}
           <motion.div
-            className="md:col-span-2 bg-default-50 border border-default-200 p-6 md:p-10 flex flex-col justify-center items-center text-center hover:bg-default-100 transition-colors duration-300 min-h-[300px] md:min-h-[380px]"
+            className="md:col-span-2 bg-default-50 border border-default-200 p-6 md:p-10 flex flex-col justify-between group hover:border-default-400 transition-colors duration-300 min-h-[300px] md:min-h-[380px]"
             variants={fadeInUp}
           >
-            <Tags
-              className="mb-4 md:mb-6 text-default-500 md:w-8 md:h-8"
-              size={28}
-            />
-            <h3 className="text-3xl md:text-5xl lg:text-6xl font-black italic text-foreground/10 select-none uppercase leading-none mb-2">
-              Smart Organization
-            </h3>
-            <p className="text-xs md:text-sm text-default-500 mb-4 md:mb-6 max-w-md">
-              Create custom wardrobes, tag by season, occasion, or brand. Find
-              what you need instantly.
-            </p>
-            <motion.div
-              className="flex flex-wrap gap-2 md:gap-4 justify-center"
-              initial="hidden"
-              variants={staggerContainer}
-              viewport={{ once: true }}
-              whileInView="visible"
-            >
-              {["Season", "Occasion", "Brand", "Custom"].map((tag) => (
-                <motion.span
-                  key={tag}
-                  className="px-2 md:px-3 py-1 border border-default-300 text-[10px] font-bold uppercase tracking-widest hover:bg-foreground hover:text-background transition-colors duration-200 cursor-default"
-                  variants={fadeInUp}
-                >
-                  {tag}
-                </motion.span>
+            <div className="flex justify-between items-start">
+              <div className="space-y-3 md:space-y-4 max-w-md">
+                <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tighter italic">
+                  Build &amp; Plan Outfits
+                </h3>
+                <p className="text-sm md:text-base text-default-500 font-medium">
+                  Combine pieces from your closet into saved outfits. Plan
+                  ahead, track what you wear, and never waste time deciding
+                  again.
+                </p>
+              </div>
+              <Layers
+                className="text-default-300 md:w-6 md:h-6 mt-1 flex-shrink-0"
+                size={20}
+              />
+            </div>
+
+            {/* Mini outfit builder mockup */}
+            <div className="mt-6 md:mt-8 flex flex-wrap gap-4 md:gap-6 items-end">
+              {[
+                {
+                  label: "Outfit 1",
+                  squares: [
+                    "bg-neutral-800",
+                    "bg-stone-200",
+                    "bg-indigo-200",
+                    "bg-neutral-800",
+                  ],
+                },
+                {
+                  label: "Outfit 2",
+                  squares: [
+                    "bg-white border border-default-200",
+                    "bg-amber-100",
+                    "bg-stone-300",
+                    "bg-amber-900",
+                  ],
+                },
+                {
+                  label: "Outfit 3",
+                  squares: [
+                    "bg-rose-100",
+                    "bg-neutral-200",
+                    "bg-rose-200",
+                    "bg-white border border-default-200",
+                  ],
+                },
+              ].map((outfit) => (
+                <div key={outfit.label} className="space-y-1.5">
+                  <p className="text-[9px] uppercase tracking-widest text-default-400">
+                    {outfit.label}
+                  </p>
+                  <div className="grid grid-cols-2 gap-1 w-20 md:w-24">
+                    {outfit.squares.map((cls, j) => (
+                      <div key={j} className={`h-9 md:h-10 ${cls}`} />
+                    ))}
+                  </div>
+                </div>
               ))}
-            </motion.div>
+              <p className="text-[10px] uppercase tracking-widest text-default-300 self-center">
+                +&nbsp;more
+              </p>
+            </div>
           </motion.div>
         </motion.div>
       </Container>
@@ -473,35 +550,226 @@ function ValuationCounter() {
 }
 
 /* ========================================
-   SECTION 4: HOW IT WORKS
+   SECTION 5: CATALOG MARQUEE
+   ======================================== */
+const CATALOG_ROW_1 = [
+  {
+    name: "Leather Jacket",
+    brand: "Acne Studios",
+    price: "$4,000",
+    img: "https://www.acnestudios.com/dw/image/v2/AAXV_PRD/on/demandware.static/-/Sites-acne-product-catalog/default/dw55929c47/images/A7/A70220-/2000x/A70220-900_Y.jpg?sw=1500&sh=2250",
+  },
+  {
+    name: "White Sneakers",
+    brand: "New Balance",
+    price: "$145",
+    img: "https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcSIiYpLZjMHHaBKM7TA_1-BOE1LpK6rg9kS6DBo4O6zGx9DyjOwSqAKhoXQWQ2ENQ2I2VVtV2GogtLror9itYteZECCJ9Du",
+  },
+  {
+    name: "Silk Skirt",
+    brand: "Max Mara",
+    price: "$1,475",
+    img: "https://b2c-media.maxmara.com/sys-master/m0/MM/2026/1/6101026306/004/s3details/6101026306004-w-msecalle_normal.webp#product",
+  },
+  {
+    name: "Wool Coat",
+    brand: "Aritzia",
+    price: "$425",
+    img: "https://assets.aritzia.com/image/upload/c_crop,ar_1920:2623,g_south/q_auto,f_auto,dpr_auto,w_1500/f25_a05_127534_19070_off_a",
+  },
+  {
+    name: "Vintage Denim",
+    brand: "Levi's",
+    price: "$120",
+    img: "https://lscoglobal.scene7.com/is/image/lscoglobal/MB_00501-3604_GLO_CL_FV?fmt=webp&qlt=70&resMode=sharp2&fit=crop,1&op_usm=0.6,0.6,8&wid=1320&hei=1320",
+  },
+  {
+    name: "Sunglasses",
+    brand: "Miu Miu",
+    price: "$613",
+    img: "https://assets2.sunglasshut.com/cdn-record-files-pi/a5a2f6ee-912c-4d70-9fac-b0c200337095/df18b7a0-8646-4962-95a2-b0c20033738f/0MU_11ZS__VAU2Z1__P21__shad__qt.png?impolicy=SGH_bgtransparent&width=2048",
+  },
+  {
+    name: "Heeled Sandals",
+    brand: "Manolo Blahnik",
+    price: "$1,245",
+    img: "https://img.ssensemedia.com/images/f_auto/252140F122003_4/manolo-blahnik-black-maysli-heeled-sandals.jpg",
+  },
+  {
+    name: "Small 25 Bag",
+    brand: "Chanel",
+    price: "$8,450",
+    img: "https://www.chanel.com/images///f_auto,q_auto:good,dpr_1.1/w_1600/-9572544610334.jpg",
+  },
+];
+
+const CATALOG_ROW_2 = [
+  {
+    name: "Blazer",
+    brand: "Toteme",
+    price: "$890",
+    img: "https://www.mytheresa.com/media/1094/1238/100/64/P00825738.jpg",
+  },
+  {
+    name: "Effortless Pants",
+    brand: "Aritzia",
+    price: "$85",
+    img: "https://assets.aritzia.com/image/upload/c_crop,ar_1920:2623,g_south/q_auto,f_auto,dpr_auto,w_1500/s26_a06_77775_30751_off_a",
+  },
+  {
+    name: "Cardogan",
+    brand: "Aritzia",
+    price: "$118",
+    img: "https://assets.aritzia.com/image/upload/c_crop,ar_1920:2623,g_south/q_auto,f_auto,dpr_auto,w_1500/s26_a03_114360_4425_off_a",
+  },
+  {
+    name: "Trench Coat",
+    brand: "Burberry",
+    price: "$2,100",
+    img: "https://assets.burberry.com/is/image/Burberryltd/9FAB380E-9232-4CAA-8BE7-B5974480F779?$BBY_V3_UNSHARP_SL_1$&wid=4000&hei=4000",
+  },
+  {
+    name: "Midi Dress",
+    brand: "Reformation",
+    price: "$278",
+    img: "https://assets.aritzia.com/image/upload/c_crop,ar_1920:2623,g_south/q_auto,f_auto,dpr_auto,w_800/s26_a08_132084_1274_off_a",
+  },
+  {
+    name: "Ballet Flats",
+    brand: "Chanel",
+    price: "$1,600",
+    img: "https://www.chanel.com/images///f_auto//-9543237763102.jpg",
+  },
+  {
+    name: "Cotton Shirt",
+    brand: "COS",
+    price: "$55",
+    img: "https://public.assets.hmgroup.com/assets/001/c0/16/c016e184c0fd876796eacd117171728fa30caf1e_xxl-1.jpg",
+  },
+  {
+    name: "Wide Trousers",
+    brand: "Mango",
+    price: "$70",
+    img: "https://shop.mango.com/assets/rcs/pics/static/T2/fotos/S/27085821_30_B.jpg?imwidth=2048&imdensity=1&ts=1767953150254",
+  },
+];
+
+function CatalogTile({ item }: { item: (typeof CATALOG_ROW_1)[number] }) {
+  return (
+    <div className="flex-shrink-0 w-40 md:w-48 border border-default-200 overflow-hidden bg-background">
+      <div className="relative h-28 md:h-36 bg-gray-200">
+        <Image
+          fill
+          unoptimized
+          alt={item.name}
+          className="object-contain"
+          src={item.img}
+        />
+      </div>
+      <div className="p-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider truncate">
+          {item.name}
+        </p>
+        <p className="text-[9px] text-default-400 uppercase tracking-widest mt-0.5 truncate">
+          {item.brand}
+        </p>
+        <p className="text-[10px] font-mono text-default-500 mt-1">
+          {item.price}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function CatalogMarquee() {
+  return (
+    <section className="py-[var(--spacing-section)] overflow-hidden bg-default-50 border-y border-default-200">
+      <Container size="xl">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10 px-4 md:px-0">
+          <motion.h2
+            className="text-[clamp(2rem,5vw,3.5rem)] font-black uppercase tracking-tighter italic"
+            initial={{ opacity: 0, y: 20 }}
+            viewport={{ once: true }}
+            whileInView={{ opacity: 1, y: 0 }}
+          >
+            Browse the Catalog
+          </motion.h2>
+          <motion.div
+            className="flex items-center gap-4"
+            initial={{ opacity: 0 }}
+            viewport={{ once: true }}
+            whileInView={{ opacity: 1 }}
+          >
+            <p className="text-sm text-default-500 max-w-xs">
+              Thousands of cataloged items from the world&apos;s top brands —
+              all in one place.
+            </p>
+            <DSButton as="a" href="/catalog" size="sm" variant="outline">
+              View All
+            </DSButton>
+          </motion.div>
+        </div>
+      </Container>
+
+      {/* Row 1 — scrolls left */}
+      <div className="flex gap-4 pl-4 md:pl-8">
+        <motion.div
+          animate={{ x: [0, "-50%"] }}
+          className="flex gap-4 flex-shrink-0"
+          transition={{ duration: 35, ease: "linear", repeat: Infinity }}
+        >
+          {[...CATALOG_ROW_1, ...CATALOG_ROW_1].map((item, i) => (
+            <CatalogTile key={i} item={item} />
+          ))}
+        </motion.div>
+      </div>
+
+      {/* Row 2 — scrolls right */}
+      <div className="flex gap-4 pl-4 md:pl-8 mt-4">
+        <motion.div
+          animate={{ x: ["-50%", 0] }}
+          className="flex gap-4 flex-shrink-0"
+          transition={{ duration: 30, ease: "linear", repeat: Infinity }}
+        >
+          {[...CATALOG_ROW_2, ...CATALOG_ROW_2].map((item, i) => (
+            <CatalogTile key={i} item={item} />
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ========================================
+   SECTION 6: HOW IT WORKS
    ======================================== */
 function HowItWorks() {
   const steps = [
     {
       number: "01",
-      title: "Import",
+      title: "Add",
       description:
-        "Add items from 50+ fashion sites with our Chrome extension, or manually add pieces from your closet.",
-      icon: <Import className="w-8 h-8" />,
+        "Add items manually, photograph your existing wardrobe, or discover from our global catalog of thousands of cataloged pieces across top brands.",
+      icon: <BookOpen className="w-8 h-8" />,
     },
     {
       number: "02",
       title: "Organize",
       description:
-        "Tag by category, season, occasion, and brand. Create custom wardrobes and collections.",
+        "Tag by category, season, occasion, and brand. Create custom wardrobes and curated collections for any chapter of your life.",
       icon: <FolderOpen className="w-8 h-8" />,
     },
     {
       number: "03",
       title: "Style",
       description:
-        "Plan outfits, track what you wear, and get insights on your fashion habits and spending.",
+        "Plan outfits, track what you wear, and unlock insights on your fashion habits, spending patterns, and cost-per-wear.",
       icon: <Sparkles className="w-8 h-8" />,
     },
   ];
 
   return (
-    <section className="py-[var(--spacing-section)] px-4 md:px-6 bg-default-50">
+    <section className="py-[var(--spacing-section)] px-4 md:px-6">
       <Container size="xl">
         <motion.h2
           className="text-[clamp(2rem,5vw,3.5rem)] font-black uppercase tracking-tighter italic mb-12 md:mb-16 text-center"
@@ -546,89 +814,169 @@ function HowItWorks() {
 }
 
 /* ========================================
-   SECTION 5: CHROME EXTENSION
+   SECTION 7: WISHLIST + COLLECTIONS
    ======================================== */
-function ChromeExtensionSection() {
+const WISHLIST_ITEMS = [
+  { name: "Linen Blazer", brand: "COS", price: "$195", bg: "bg-stone-200" },
+  {
+    name: "Platform Boots",
+    brand: "Steve Madden",
+    price: "$160",
+    bg: "bg-neutral-800",
+  },
+  {
+    name: "Wrap Dress",
+    brand: "Reformation",
+    price: "$320",
+    bg: "bg-emerald-100",
+  },
+  { name: "Bucket Hat", brand: "Jacquemus", price: "$240", bg: "bg-amber-200" },
+];
+
+const COLLECTIONS = [
+  {
+    name: "Summer Capsule",
+    count: 14,
+    squares: [
+      "bg-white border border-default-200",
+      "bg-stone-200",
+      "bg-sky-100",
+      "bg-amber-100",
+    ],
+  },
+  {
+    name: "Work Wardrobe",
+    count: 22,
+    squares: [
+      "bg-neutral-800",
+      "bg-neutral-600",
+      "bg-stone-300",
+      "bg-white border border-default-200",
+    ],
+  },
+  {
+    name: "Weekend Fits",
+    count: 18,
+    squares: [
+      "bg-indigo-200",
+      "bg-neutral-300",
+      "bg-white border border-default-200",
+      "bg-stone-800",
+    ],
+  },
+];
+
+function WishlistCollections() {
   return (
-    <section className="py-[var(--spacing-section)] px-4 md:px-6">
+    <section className="py-[var(--spacing-section)] px-4 md:px-6 bg-default-50 border-y border-default-200">
       <Container size="xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
-          {/* Text side */}
+        <motion.h2
+          className="text-[clamp(2rem,5vw,3.5rem)] font-black uppercase tracking-tighter italic mb-8 md:mb-12 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          viewport={{ once: true }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
+          Save &amp; Curate
+        </motion.h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Wishlist panel */}
           <motion.div
-            className="space-y-6 md:space-y-8"
-            initial={{ opacity: 0, x: -30 }}
+            initial={{ opacity: 0, x: -20 }}
             viewport={{ once: true }}
             whileInView={{ opacity: 1, x: 0 }}
           >
-            <div className="inline-block p-3 md:p-4 border border-default-200 bg-default-50">
-              <ChromeIcon className="md:w-10 md:h-10" size={32} />
-            </div>
+            <div className="border border-default-200 bg-background p-6 md:p-8 h-full">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 border border-default-200 bg-default-50">
+                  <Heart size={18} />
+                </div>
+                <h3 className="text-lg font-black uppercase tracking-tighter italic">
+                  Wishlist
+                </h3>
+              </div>
+              <p className="text-sm text-default-500 mb-6 ml-12">
+                Save items you love before buying. Never lose track of something
+                you wanted.
+              </p>
 
-            <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black uppercase tracking-tighter italic">
-              Add Items <span className="text-default-400">In One Click</span>
-            </h2>
+              <div className="space-y-2">
+                {WISHLIST_ITEMS.map((item) => (
+                  <div
+                    key={item.name}
+                    className="flex items-center gap-3 p-3 border border-default-200 hover:border-default-400 transition-colors"
+                  >
+                    <div className={`w-9 h-9 flex-shrink-0 ${item.bg}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold uppercase tracking-wider truncate">
+                        {item.name}
+                      </p>
+                      <p className="text-[10px] text-default-400 uppercase tracking-widest">
+                        {item.brand}
+                      </p>
+                    </div>
+                    <span className="text-xs font-mono text-default-500 flex-shrink-0">
+                      {item.price}
+                    </span>
+                    <Heart className="w-3.5 h-3.5 text-default-300 flex-shrink-0" />
+                  </div>
+                ))}
 
-            <p className="text-sm md:text-base text-default-500 leading-relaxed max-w-lg">
-              Our Chrome Extension lets you save items from your favorite
-              shopping sites directly to your digital closet. No manual entry,
-              no switching tabs — just seamless cataloging.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 items-start">
-              <DSButton
-                as="a"
-                href="https://chromewebstore.google.com/detail/hcakhbfdhndjcihacgbfiflkmlffknbp?utm_source=item-share-cb"
-                icon={<Download size={18} />}
-                iconPosition="left"
-                rel="noreferrer"
-                size="md"
-                target="_blank"
-                variant="primary"
-              >
-                Add to Chrome
-              </DSButton>
-            </div>
-
-            {/* Supported sites */}
-            <div className="flex flex-wrap gap-4 items-center pt-2">
-              {["SSENSE", "Grailed", "Zara", "H&M", "ASOS"].map((site) => (
-                <span
-                  key={site}
-                  className="text-[10px] uppercase tracking-widest text-default-400 font-medium"
-                >
-                  {site}
-                </span>
-              ))}
-              <span className="text-[10px] uppercase tracking-widest text-default-300">
-                + 45 more
-              </span>
+                <div className="flex items-center justify-center gap-2 p-3 border border-dashed border-default-200 text-default-400">
+                  <span className="text-[10px] uppercase tracking-widest">
+                    + Add more items
+                  </span>
+                </div>
+              </div>
             </div>
           </motion.div>
 
-          {/* Browser mockup placeholder */}
+          {/* Collections panel */}
           <motion.div
-            className="relative"
-            initial={{ opacity: 0, x: 30 }}
+            initial={{ opacity: 0, x: 20 }}
             viewport={{ once: true }}
             whileInView={{ opacity: 1, x: 0 }}
           >
-            <div className="border border-default-200 bg-default-50 aspect-[4/3] flex flex-col">
-              {/* Browser chrome */}
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-default-200">
-                <div className="flex gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-default-300" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-default-300" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-default-300" />
+            <div className="bg-foreground text-background p-6 md:p-8 h-full">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 border border-current/20 bg-current/10">
+                  <BookOpen className="opacity-80" size={18} />
                 </div>
-                <div className="flex-1 h-5 bg-default-100 mx-8" />
+                <h3 className="text-lg font-black uppercase tracking-tighter italic">
+                  Collections
+                </h3>
               </div>
-              {/* Content area */}
-              <div className="flex-1 flex items-center justify-center p-8">
-                <div className="text-center space-y-3">
-                  <Chrome className="w-12 h-12 mx-auto text-default-300" />
-                  <p className="text-xs uppercase tracking-widest text-default-400">
-                    One-click import
-                  </p>
+              <p className="text-sm opacity-50 mb-6 ml-12">
+                Curate themed capsule wardrobes for any season, trip, or chapter
+                of your style.
+              </p>
+
+              <div className="space-y-3">
+                {COLLECTIONS.map((col) => (
+                  <div
+                    key={col.name}
+                    className="border border-current/20 p-4 hover:border-current/40 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs font-bold uppercase tracking-wider">
+                        {col.name}
+                      </p>
+                      <span className="text-[10px] font-mono opacity-40">
+                        {col.count} items
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1">
+                      {col.squares.map((cls, j) => (
+                        <div key={j} className={`h-8 ${cls}`} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+                <div className="flex items-center justify-center gap-2 p-3 border border-dashed border-current/20 opacity-40">
+                  <span className="text-[10px] uppercase tracking-widest">
+                    + New collection
+                  </span>
                 </div>
               </div>
             </div>
@@ -640,39 +988,78 @@ function ChromeExtensionSection() {
 }
 
 /* ========================================
-   SECTION 6: TESTIMONIAL / QUOTE
+   SECTION 8: TESTIMONIALS
    ======================================== */
-function TestimonialSection() {
+const TESTIMONIALS = [
+  {
+    quote:
+      "It's like having a personal stylist that actually knows what's in my closet.",
+    name: "Maria K.",
+    role: "Fashion Enthusiast",
+  },
+  {
+    quote:
+      "I stopped buying duplicates and finally know my actual cost-per-wear on everything I own.",
+    name: "James T.",
+    role: "Minimalist",
+  },
+  {
+    quote:
+      "Planning outfits the night before used to take forever. Now it takes two minutes.",
+    name: "Priya S.",
+    role: "Early Adopter",
+  },
+];
+
+function TestimonialsSection() {
   return (
-    <section className="py-[var(--spacing-section)] px-4 md:px-6 border-y border-default-200">
-      <Container size="md">
-        <motion.div
-          className="text-center space-y-8"
-          initial={{ opacity: 0, scale: 0.98 }}
+    <section className="py-[var(--spacing-section)] px-4 md:px-6">
+      <Container size="xl">
+        <motion.h2
+          className="text-[clamp(2rem,5vw,3.5rem)] font-black uppercase tracking-tighter italic mb-10 md:mb-14 text-center"
+          initial={{ opacity: 0, y: 20 }}
           viewport={{ once: true }}
-          whileInView={{ opacity: 1, scale: 1 }}
+          whileInView={{ opacity: 1, y: 0 }}
         >
-          <blockquote className="font-display text-2xl md:text-4xl lg:text-5xl italic font-light leading-snug text-foreground/80">
-            &ldquo;It&apos;s like having a personal stylist that actually knows
-            what&apos;s in your closet.&rdquo;
-          </blockquote>
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-10 h-10 bg-default-200 rounded-full flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-default-400" />
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-medium">Early Adopter</p>
-              <p className="text-xs text-default-400">Fashion Enthusiast</p>
-            </div>
-          </div>
-        </motion.div>
+          What People Say
+        </motion.h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {TESTIMONIALS.map((t, i) => (
+            <motion.blockquote
+              key={i}
+              className="bg-default-50 border border-default-200 p-6 md:p-8 flex flex-col justify-between gap-6 hover:border-default-400 transition-colors"
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ delay: i * 0.1 }}
+              viewport={{ once: true }}
+              whileInView={{ opacity: 1, y: 0 }}
+            >
+              <p className="text-base md:text-lg italic font-light leading-snug text-foreground/80">
+                &ldquo;{t.quote}&rdquo;
+              </p>
+              <footer className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-default-200 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-3 h-3 text-default-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider">
+                    {t.name}
+                  </p>
+                  <p className="text-[10px] text-default-400 uppercase tracking-widest">
+                    {t.role}
+                  </p>
+                </div>
+              </footer>
+            </motion.blockquote>
+          ))}
+        </div>
       </Container>
     </section>
   );
 }
 
 /* ========================================
-   SECTION 7: FINAL CTA
+   SECTION 9: FINAL CTA
    ======================================== */
 function FinalCTA() {
   return (
@@ -718,11 +1105,13 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col bg-background text-foreground">
       <HeroSection />
+      <CategoryStrip />
       <StatsBar />
       <FeatureBentoGrid />
+      <CatalogMarquee />
       <HowItWorks />
-      <ChromeExtensionSection />
-      <TestimonialSection />
+      <WishlistCollections />
+      <TestimonialsSection />
       <FinalCTA />
     </div>
   );
