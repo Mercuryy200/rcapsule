@@ -9,7 +9,7 @@ import { Providers } from "./providers";
 
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
-import { fontSans } from "@/lib/config/fonts";
+import { fontSans, fontDisplay } from "@/lib/config/fonts";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 
 Sentry.init({
@@ -72,13 +72,14 @@ export default function RootLayout({
         className={clsx(
           "min-h-screen bg-background font-sans antialiased text-foreground",
           fontSans.variable,
+          fontDisplay.variable,
         )}
       >
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
           <ScrollToTop />
           <div className="flex flex-col min-h-screen">
             <Header />
-            <main className="flex-1 w-full max-w-7xl mx-auto px-6">
+            <main className="flex-1 w-full">
               {children}
               <Toaster richColors position="top-right" />
               <Analytics />

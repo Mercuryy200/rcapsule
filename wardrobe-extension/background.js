@@ -133,6 +133,34 @@ async function extractProductDetailInjected() {
     data.brand = siteName || "Aritzia";
   }
 
+  // Extract selected color name from product page
+  // Aritzia: look for the selected color swatch label
+  const colorName = (() => {
+    // Aritzia pattern: selected color displayed near swatches
+    const colorLabel =
+      document.querySelector('[data-testid="selected-color"]') ||
+      document.querySelector('[data-testid="color-name"]') ||
+      document.querySelector('.product-color-name') ||
+      document.querySelector('[class*="color-name"]') ||
+      document.querySelector('[class*="selectedColor"]');
+    if (colorLabel) return colorLabel.textContent.trim();
+
+    // Generic: look for "Color: <value>" pattern in product info
+    const allText = document.querySelectorAll('span, p, div');
+    for (const el of allText) {
+      const text = el.textContent.trim();
+      const match = text.match(/^Colou?r:\s*(.+)$/i);
+      if (match && match[1].length < 40) return match[1].trim();
+    }
+
+    return "";
+  })();
+
+  // Append color to name if found, so different variants are distinguishable
+  if (colorName && data.name && !data.name.toLowerCase().includes(colorName.toLowerCase())) {
+    data.name = `${data.name} — ${colorName}`;
+  }
+
   // Fix protocol-relative URLs
   if (data.imageUrl) {
     if (data.imageUrl.startsWith("//"))

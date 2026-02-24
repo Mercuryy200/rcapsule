@@ -87,14 +87,12 @@ export async function GET(req: Request) {
         .from("GlobalProduct")
         .select("id", { count: "exact", head: true });
 
-      let dataQuery = supabase
-        .from("GlobalProduct")
-        .select(
-          `
+      let dataQuery = supabase.from("GlobalProduct").select(
+        `
           *,
           clothes:Clothes(count)
         `,
-        );
+      );
 
       // Apply search
       if (query) {
@@ -123,8 +121,10 @@ export async function GET(req: Request) {
 
       dataQuery = dataQuery.limit(fetchLimit);
 
-      const [{ count: totalCount, error: countError }, { data: products, error: dataError }] =
-        await Promise.all([countQuery, dataQuery]);
+      const [
+        { count: totalCount, error: countError },
+        { data: products, error: dataError },
+      ] = await Promise.all([countQuery, dataQuery]);
 
       if (countError) throw countError;
       if (dataError) throw dataError;
@@ -163,15 +163,13 @@ export async function GET(req: Request) {
     }
 
     // Non-popularity sorts — use Supabase .order() + .range()
-    let dbQuery = supabase
-      .from("GlobalProduct")
-      .select(
-        `
+    let dbQuery = supabase.from("GlobalProduct").select(
+      `
         *,
         clothes:Clothes(count)
       `,
-        { count: "exact" },
-      );
+      { count: "exact" },
+    );
 
     // Apply sort
     switch (sort) {
@@ -282,12 +280,11 @@ function buildSearchFilter(query: string, filterType: string): string {
   }
 }
 
-async function fetchFilterMetadata(supabase: ReturnType<typeof getSupabaseServer>) {
+async function fetchFilterMetadata(
+  supabase: ReturnType<typeof getSupabaseServer>,
+) {
   const [{ data: brandsData }, { data: catsData }] = await Promise.all([
-    supabase
-      .from("GlobalProduct")
-      .select("brand")
-      .not("brand", "is", null),
+    supabase.from("GlobalProduct").select("brand").not("brand", "is", null),
     supabase
       .from("GlobalProduct")
       .select("category")

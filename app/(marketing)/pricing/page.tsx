@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Button, Chip, Accordion, AccordionItem } from "@heroui/react";
+import { Accordion, AccordionItem } from "@heroui/react";
 import {
   CheckIcon,
   XMarkIcon,
@@ -12,6 +12,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 
 import { useUser } from "@/lib/contexts/UserContext";
+import { Container } from "@/components/ui/container";
+import { DSButton } from "@/components/ui/button";
+import { DSBadge } from "@/components/ui/badge";
+import { DSCard } from "@/components/ui/card";
 
 export default function PricingPage() {
   const router = useRouter();
@@ -39,13 +43,8 @@ export default function PricingPage() {
     try {
       const response = await fetch("/api/checkout", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          billingCycle,
-          userId: user?.id,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ billingCycle, userId: user?.id }),
       });
 
       const data = await response.json();
@@ -63,9 +62,9 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="wardrobe-page-container min-h-screen">
+    <Container className="min-h-screen py-16">
       <header className="text-center mb-16 pt-8">
-        <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic mb-2">
+        <h1 className="text-[clamp(2rem,5vw,3.5rem)] font-black uppercase tracking-tighter italic mb-2">
           The Membership
         </h1>
         <div className="text-xs uppercase tracking-widest text-default-500">
@@ -73,9 +72,10 @@ export default function PricingPage() {
         </div>
       </header>
 
+      {/* Billing toggle */}
       <div className="flex justify-center items-center gap-6 mb-16">
         <span
-          className={`text-xs uppercase tracking-widest cursor-pointer transition-colors ${
+          className={`text-xs uppercase tracking-widest cursor-pointer transition-colors duration-200 ${
             billingCycle === "monthly"
               ? "text-foreground font-bold"
               : "text-default-400"
@@ -101,7 +101,7 @@ export default function PricingPage() {
 
         <div className="flex items-center gap-2">
           <span
-            className={`text-xs uppercase tracking-widest cursor-pointer transition-colors ${
+            className={`text-xs uppercase tracking-widest cursor-pointer transition-colors duration-200 ${
               billingCycle === "yearly"
                 ? "text-foreground font-bold"
                 : "text-default-400"
@@ -110,25 +110,24 @@ export default function PricingPage() {
           >
             Annually
           </span>
-          <Chip
-            classNames={{
-              base: "bg-default-100 text-foreground h-5 rounded-none uppercase font-bold text-[9px] tracking-widest",
-            }}
-            size="sm"
-            variant="flat"
-          >
-            Save {savingsPercent}%
-          </Chip>
+          <DSBadge>Save {savingsPercent}%</DSBadge>
         </div>
       </div>
 
+      {/* Pricing cards */}
       <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto relative items-start">
-        <div className="border border-default-200 p-10 relative hover:border-default-400 transition-colors bg-background">
+        {/* Free plan */}
+        <DSCard
+          className="p-10 hover:border-default-400 transition-colors duration-200"
+          variant="bordered"
+        >
           <div className="mb-10 text-center md:text-left">
             <span className="font-bold uppercase tracking-widest text-xs mb-2 block text-default-500">
               The Digital Closet
             </span>
-            <h2 className="font-serif italic text-3xl font-light">Organized</h2>
+            <h2 className="font-display italic text-3xl font-light">
+              Organized
+            </h2>
           </div>
 
           <div className="mb-10 h-16 flex items-baseline justify-center md:justify-start">
@@ -138,14 +137,14 @@ export default function PricingPage() {
             </span>
           </div>
 
-          <Button
-            className="w-full mb-10 font-bold uppercase tracking-widest text-xs h-14 border-default-200 hover:bg-default-100"
-            radius="none"
-            variant="bordered"
+          <DSButton
+            fullWidth
+            className="mb-10"
+            variant="outline"
             onPress={() => handleSubscribe("free")}
           >
             Start Curating
-          </Button>
+          </DSButton>
 
           <div className="space-y-5">
             <span className="text-xs font-bold uppercase tracking-widest text-default-400 mb-4 block">
@@ -162,9 +161,10 @@ export default function PricingPage() {
               <FeatureItem included={false} text="Weather-Smart Suggestions" />
             </div>
           </div>
-        </div>
+        </DSCard>
 
-        <div className="border border-foreground p-10 relative bg-foreground text-background md:-translate-y-4 shadow-xl">
+        {/* Premium plan */}
+        <DSCard className="p-10 md:-translate-y-4 shadow-xl" variant="stat">
           <div className="absolute top-0 right-0 p-6">
             <SparklesIcon className="w-5 h-5 animate-pulse" />
           </div>
@@ -173,7 +173,7 @@ export default function PricingPage() {
             <span className="font-bold uppercase tracking-widest text-xs mb-2 block opacity-60">
               The Pocket Stylist
             </span>
-            <h2 className="font-serif italic text-3xl font-light">
+            <h2 className="font-display italic text-3xl font-light">
               Effortless
             </h2>
           </div>
@@ -203,16 +203,15 @@ export default function PricingPage() {
             )}
           </div>
 
-          <Button
-            className="w-full mb-10 font-bold uppercase tracking-widest text-xs h-14 bg-background text-foreground hover:opacity-90"
-            isDisabled={isLoading}
+          <DSButton
+            fullWidth
+            className="mb-10 bg-background text-foreground hover:opacity-90"
             isLoading={isLoading}
-            radius="none"
-            variant="solid"
+            variant="primary"
             onPress={() => handleSubscribe("premium")}
           >
             {isLoading ? "Redirecting to Checkout..." : "Upgrade Membership"}
-          </Button>
+          </DSButton>
 
           <div className="space-y-5">
             <span className="text-xs font-bold uppercase tracking-widest opacity-40 mb-4 block">
@@ -271,12 +270,13 @@ export default function PricingPage() {
               </li>
             </div>
           </div>
-        </div>
+        </DSCard>
       </div>
 
+      {/* FAQ */}
       <div className="max-w-2xl mx-auto mt-24 text-center pb-20">
-        <p className="font-serif italic text-2xl mb-6">
-          "It's like having a stylist in your pocket."
+        <p className="font-display italic text-2xl mb-6">
+          &ldquo;It&apos;s like having a stylist in your pocket.&rdquo;
         </p>
         <div className="h-px w-20 bg-default-300 mx-auto mb-12" />
 
@@ -302,9 +302,9 @@ export default function PricingPage() {
             aria-label="cancel"
             title="Can I cancel anytime?"
           >
-            Yes! You can cancel your subscription at any time. You'll continue
-            to have access to premium features until the end of your billing
-            period.
+            Yes! You can cancel your subscription at any time. You&apos;ll
+            continue to have access to premium features until the end of your
+            billing period.
           </AccordionItem>
           <AccordionItem
             key="3"
@@ -319,12 +319,12 @@ export default function PricingPage() {
             aria-label="refund"
             title="What's your refund policy?"
           >
-            We offer a 7-day money-back guarantee. If you're not satisfied with
-            premium features, contact us within 7 days for a full refund.
+            We offer a 7-day money-back guarantee. If you&apos;re not satisfied
+            with premium features, contact us within 7 days for a full refund.
           </AccordionItem>
         </Accordion>
       </div>
-    </div>
+    </Container>
   );
 }
 

@@ -1,9 +1,11 @@
 "use client";
-import { Link, Input, Button, Divider } from "@heroui/react";
+import { Link, Divider } from "@heroui/react";
 import { ArrowRight } from "lucide-react";
 import { FaGithub, FaInstagram, FaTwitter } from "react-icons/fa";
 
 import { Logo } from "@/components/ui/logo";
+import { DSInput } from "@/components/ui/input";
+import { Container } from "@/components/ui/container";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -36,7 +38,7 @@ export default function Footer() {
 
   return (
     <footer className="w-full border-t border-divider bg-background pt-16 pb-8">
-      <div className="max-w-7xl mx-auto px-6">
+      <Container>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16">
           <div className="lg:col-span-5 flex flex-col gap-6">
             <Link className="text-foreground w-fit" href="/">
@@ -47,19 +49,15 @@ export default function Footer() {
               lifestyle. Join the future of fashion management.
             </p>
 
-            <div className="flex gap-2 max-w-sm mt-2">
-              <Input
-                classNames={{
-                  inputWrapper:
-                    "border-b border-default-400 bg-transparent px-0 shadow-none",
-                }}
+            <div className="flex gap-2 max-w-sm mt-2 items-end">
+              <DSInput
                 placeholder="Enter your email"
-                radius="none"
                 size="sm"
+                variant="underline"
               />
-              <Button isIconOnly radius="full" size="sm" variant="light">
+              <button className="p-2 hover:bg-default-100 transition-colors duration-200">
                 <ArrowRight size={18} />
-              </Button>
+              </button>
             </div>
           </div>
 
@@ -73,7 +71,7 @@ export default function Footer() {
                   {section.links.map((link) => (
                     <li key={link.name}>
                       <Link
-                        className="text-sm hover:text-default-500 transition-colors"
+                        className="text-sm transition-colors duration-200 hover:underline underline-offset-4"
                         color="foreground"
                         href={link.href}
                       >
@@ -92,11 +90,11 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
             <p className="text-xs text-default-400">
-              © {currentYear} rcapsule. All rights reserved.
+              &copy; {currentYear} rcapsule. All rights reserved.
             </p>
-            <span className="hidden sm:inline text-default-300">·</span>
+            <span className="hidden sm:inline text-default-300">&middot;</span>
             <Link
-              className="text-xs text-default-400 hover:text-foreground transition-colors"
+              className="text-xs text-default-400 hover:text-foreground transition-colors duration-200"
               href="mailto:nafouguirima@gmail.com"
             >
               nafouguirima@gmail.com
@@ -110,13 +108,13 @@ export default function Footer() {
               href="https://github.com/Mercuryy200"
             >
               <FaGithub
-                className="hover:text-default-500 transition-colors"
+                className="hover:text-default-500 transition-colors duration-200"
                 size={20}
               />
             </Link>
             <Link isExternal color="foreground" href="https://twitter.com">
               <FaTwitter
-                className="hover:text-default-500 transition-colors"
+                className="hover:text-default-500 transition-colors duration-200"
                 size={20}
               />
             </Link>
@@ -126,13 +124,13 @@ export default function Footer() {
               href="https://instagram.com/Mercuryy.200"
             >
               <FaInstagram
-                className="hover:text-default-500 transition-colors"
+                className="hover:text-default-500 transition-colors duration-200"
                 size={20}
               />
             </Link>
           </div>
         </div>
-      </div>
+      </Container>
     </footer>
   );
 }

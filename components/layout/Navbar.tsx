@@ -8,28 +8,31 @@ import {
   NavbarBrand,
   NavbarItem,
   NavbarMenuItem,
-  Button,
 } from "@heroui/react";
 import { link as linkStyles } from "@heroui/theme";
 import NextLink from "next/link";
+import { usePathname } from "next/navigation";
 import clsx from "clsx";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { siteConfig } from "@/lib/config/site";
 import { ThemeSwitch } from "@/components/ui/theme-switch";
 import { ProfileDropdown } from "@/components/auth/dropdown";
 import { Logo } from "@/components/ui/logo";
+import { DSButton } from "@/components/ui/button";
 
 export const AppNavbar = ({ user }: { user: any }) => {
   const [isMenuOpen, setIsMenuOpen] = React.useReducer(
-    (current) => !current,
+    (current: boolean) => !current,
     false,
   );
+  const pathname = usePathname();
 
   const navLinks = user ? siteConfig.navItems : siteConfig.marketingNavItems;
 
   return (
     <HeroUINavbar
-      className="border-b border-divider"
+      className="border-b border-divider backdrop-blur-lg bg-background/80 supports-[backdrop-filter]:bg-background/60"
       isMenuOpen={isMenuOpen}
       maxWidth="xl"
       position="sticky"
@@ -49,19 +52,27 @@ export const AppNavbar = ({ user }: { user: any }) => {
         </NavbarBrand>
 
         <ul className="hidden lg:flex gap-4 ml-4">
-          {navLinks.map((item) => (
-            <NavbarItem key={item.href}>
-              <NextLink
-                className={clsx(
-                  linkStyles({ color: "foreground" }),
-                  "text-sm uppercase tracking-widest font-medium",
-                )}
-                href={item.href}
-              >
-                {item.label}
-              </NextLink>
-            </NavbarItem>
-          ))}
+          {navLinks.map((item) => {
+            const isActive = pathname === item.href;
+
+            return (
+              <NavbarItem key={item.href}>
+                <NextLink
+                  className={clsx(
+                    linkStyles({ color: "foreground" }),
+                    "text-sm uppercase tracking-widest font-medium relative transition-opacity duration-200",
+                    isActive ? "opacity-100" : "opacity-60 hover:opacity-100",
+                  )}
+                  href={item.href}
+                >
+                  {item.label}
+                  {isActive && (
+                    <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-foreground" />
+                  )}
+                </NextLink>
+              </NavbarItem>
+            );
+          })}
         </ul>
       </NavbarContent>
 
@@ -76,67 +87,80 @@ export const AppNavbar = ({ user }: { user: any }) => {
           </NavbarItem>
         ) : (
           <div className="flex gap-2">
-            <Button as={NextLink} href="/login" size="sm" variant="light">
+            <DSButton as={NextLink} href="/login" size="sm" variant="ghost">
               Log In
-            </Button>
-            <Button
-              as={NextLink}
-              className="hidden sm:flex"
-              color="primary"
-              href="/signup"
-              size="sm"
-              variant="flat"
-            >
-              Sign Up
-            </Button>
+            </DSButton>
+            <div className="hidden sm:flex">
+              <DSButton
+                as={NextLink}
+                href="/signup"
+                size="sm"
+                variant="primary"
+              >
+                Sign Up
+              </DSButton>
+            </div>
           </div>
         )}
       </NavbarContent>
 
-      <NavbarMenu className="pt-6">
-        <div className="flex flex-col gap-4">
-          {navLinks.map((item, index) => (
-            <NavbarMenuItem key={`${item.label}-${index}`}>
-              <NextLink
-                className="w-full text-2xl font-light uppercase tracking-tighter py-2"
-                href={item.href}
-                onClick={() => setIsMenuOpen()}
-              >
-                {item.label}
-              </NextLink>
-            </NavbarMenuItem>
-          ))}
+      <NavbarMenu className="pt-6 bg-background/95 backdrop-blur-xl">
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col gap-4"
+              exit={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {navLinks.map((item, index) => (
+                <NavbarMenuItem key={`${item.label}-${index}`}>
+                  <NextLink
+                    className={clsx(
+                      "w-full text-2xl font-light uppercase tracking-tighter py-2 transition-opacity duration-200",
+                      pathname === item.href ? "opacity-100" : "opacity-60",
+                    )}
+                    href={item.href}
+                    onClick={() => setIsMenuOpen()}
+                  >
+                    {item.label}
+                  </NextLink>
+                </NavbarMenuItem>
+              ))}
 
-          {!user && (
-            <>
-              <NavbarMenuItem>
-                <NextLink
-                  className="text-2xl font-light uppercase tracking-tighter py-2"
-                  href="/login"
-                  onClick={() => setIsMenuOpen()}
-                >
-                  Log In
-                </NextLink>
-              </NavbarMenuItem>
-              <NavbarMenuItem>
-                <NextLink
-                  className="text-2xl font-light uppercase tracking-tighter py-2"
-                  href="/signup"
-                  onClick={() => setIsMenuOpen()}
-                >
-                  Sign Up
-                </NextLink>
-              </NavbarMenuItem>
-            </>
+              {!user && (
+                <>
+                  <NavbarMenuItem>
+                    <NextLink
+                      className="text-2xl font-light uppercase tracking-tighter py-2"
+                      href="/login"
+                      onClick={() => setIsMenuOpen()}
+                    >
+                      Log In
+                    </NextLink>
+                  </NavbarMenuItem>
+                  <NavbarMenuItem>
+                    <NextLink
+                      className="text-2xl font-light uppercase tracking-tighter py-2"
+                      href="/signup"
+                      onClick={() => setIsMenuOpen()}
+                    >
+                      Sign Up
+                    </NextLink>
+                  </NavbarMenuItem>
+                </>
+              )}
+
+              <div className="pt-4 border-t border-divider flex items-center justify-between">
+                <span className="text-sm font-medium uppercase opacity-50">
+                  Appearance
+                </span>
+                <ThemeSwitch />
+              </div>
+            </motion.div>
           )}
-
-          <div className="pt-4 border-t border-divider flex items-center justify-between">
-            <span className="text-sm font-medium uppercase opacity-50">
-              Appearance
-            </span>
-            <ThemeSwitch />
-          </div>
-        </div>
+        </AnimatePresence>
       </NavbarMenu>
     </HeroUINavbar>
   );

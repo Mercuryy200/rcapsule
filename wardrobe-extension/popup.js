@@ -349,6 +349,20 @@ function checkOnlineStatus() {
   return navigator.onLine;
 }
 
+async function checkAuth() {
+  try {
+    const response = await fetch(CONFIG.BULK_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ products: [] }),
+    });
+    return response.status !== 401;
+  } catch {
+    return true; // Network error — don't block, let the import attempt reveal the issue
+  }
+}
+
 function showOfflineIndicator(show) {
   const statusEl = document.getElementById("status");
   if (show && statusEl) {
@@ -848,6 +862,17 @@ async function extractProductData() {
           .trim();
       }
     }
+    // Extract selected color name so variant is distinguishable
+    const colorEl =
+      document.querySelector('[data-testid="selected-color"]') ||
+      document.querySelector('[data-testid="color-name"]') ||
+      document.querySelector('.product-color-name') ||
+      document.querySelector('[class*="color-name"]') ||
+      document.querySelector('[class*="selectedColor"]');
+    const aritziaColor = colorEl?.textContent.trim();
+    if (aritziaColor && data.name && !data.name.toLowerCase().includes(aritziaColor.toLowerCase())) {
+      data.name = `${data.name} — ${aritziaColor}`;
+    }
   }
   //lululemon
   if (hostname.includes("lululemon")) {
@@ -940,6 +965,26 @@ async function extractProductData() {
       .replace(/chevron|down/gi, "")
       .replace(/\n/g, " ")
       .trim();
+  }
+
+  // ========== COLOR EXTRACTION (generic fallback) ==========
+  // If no site-specific extractor already appended a color, try generic patterns
+  if (data.name && !data.name.includes(" — ")) {
+    const colorLabel = (() => {
+      // Look for "Color: <value>" text near the product info
+      const allEls = document.querySelectorAll("span, p, div, label");
+      for (const el of allEls) {
+        const text = el.textContent.trim();
+        const match = text.match(/^Colou?r:\s*(.+)$/i);
+        if (match && match[1].length < 40 && !match[1].includes("\n")) {
+          return match[1].trim();
+        }
+      }
+      return "";
+    })();
+    if (colorLabel) {
+      data.name = `${data.name} — ${colorLabel}`;
+    }
   }
 
   // ========== IMAGE EXTRACTION ==========
@@ -1039,13 +1084,38 @@ async function extractProductData() {
 // Track bulk import state locally in popup
 let bulkProducts = [];
 
+// Query params that distinguish product variants (color, size, etc.)
+const VARIANT_PARAMS = new Set([
+  "color",
+  "colorid",
+  "colour",
+  "variant",
+  "sku",
+  "dwvar",
+  "sz",
+]);
+
 function deduplicateByUrl(products) {
   const seen = new Set();
   return products.filter((p) => {
-    const normalized = p.url.split("?")[0].replace(/\/$/, "");
-    if (seen.has(normalized)) return false;
-    seen.add(normalized);
-    return true;
+    try {
+      const url = new URL(p.url);
+      const kept = new URLSearchParams();
+      for (const [key, val] of url.searchParams) {
+        if (VARIANT_PARAMS.has(key.toLowerCase())) kept.set(key, val);
+      }
+      const base = url.origin + url.pathname.replace(/\/$/, "");
+      const qs = kept.toString();
+      const normalized = qs ? `${base}?${qs}` : base;
+      if (seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    } catch {
+      const normalized = p.url.split("?")[0].replace(/\/$/, "");
+      if (seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    }
   });
 }
 
@@ -1199,6 +1269,24 @@ async function startBulkScan() {
 async function startPass2() {
   if (!bulkProducts.length) return;
 
+  // Check auth before starting the expensive scan
+  updateBulkUI({
+    phase: "scanning",
+    message: "Checking login status...",
+  });
+
+  const isLoggedIn = await checkAuth();
+  if (!isLoggedIn) {
+    const summaryEl = document.getElementById("bulkSummary");
+    if (summaryEl) {
+      summaryEl.classList.remove("hidden");
+      summaryEl.className = "bulk-summary has-errors";
+      summaryEl.textContent = "Not logged in. Please log in at rcapsule.com first, then try again.";
+    }
+    updateBulkUI({ phase: "complete", message: "Login required." });
+    return;
+  }
+
   updateBulkUI({
     phase: "scanning",
     message: "Opening each product page to get full details...",
@@ -1289,6 +1377,15 @@ async function submitBulkImport() {
         imported += data.imported || 0;
         duplicates += data.duplicates || 0;
         importErrors += data.errors || 0;
+      } else if (response.status === 401) {
+        if (summaryEl) {
+          summaryEl.classList.remove("hidden");
+          summaryEl.className = "bulk-summary has-errors";
+          summaryEl.textContent = "Not logged in. Your scanned items are saved — log in at rcapsule.com and click Retry Import.";
+        }
+        updateBulkUI({ phase: "complete", message: "Login required." });
+        document.getElementById("bulkRetryBtn")?.classList.remove("hidden");
+        return;
       } else {
         const errorBody = await response.text().catch(() => "");
         console.error(
@@ -1338,6 +1435,14 @@ async function cancelBulkScan() {
     phase: "complete",
     message: "Cancelling...",
   });
+}
+
+async function retryImport() {
+  document.getElementById("bulkRetryBtn")?.classList.add("hidden");
+  const summaryEl = document.getElementById("bulkSummary");
+  if (summaryEl) summaryEl.classList.add("hidden");
+  updateBulkUI({ phase: "importing", message: "Retrying import..." });
+  await submitBulkImport();
 }
 
 // Listen for bulk scan progress from background
@@ -1409,6 +1514,17 @@ async function checkBulkImportState() {
         current: state.currentIndex,
         total: state.totalCount,
       });
+    } else if (state && state.status === "complete" && state.scannedProducts?.length > 0) {
+      // Scan completed but import may have failed (e.g. logged out)
+      switchView("bulkView");
+      const summaryEl = document.getElementById("bulkSummary");
+      if (summaryEl) {
+        summaryEl.classList.remove("hidden");
+        summaryEl.className = "bulk-summary";
+        summaryEl.textContent = `${state.scannedProducts.length} items from a previous scan are ready to import.`;
+      }
+      updateBulkUI({ phase: "complete", message: "Previous scan found." });
+      document.getElementById("bulkRetryBtn")?.classList.remove("hidden");
     }
   } catch (e) {
     // No ongoing import
@@ -1431,11 +1547,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Bulk import buttons
   const bulkScanBtn = document.getElementById("bulkScanBtn");
   const bulkStartBtn = document.getElementById("bulkStartBtn");
+  const bulkRetryBtn = document.getElementById("bulkRetryBtn");
   const bulkCancelBtn = document.getElementById("bulkCancelBtn");
   const bulkBackBtn = document.getElementById("bulkBackBtn");
 
   if (bulkScanBtn) bulkScanBtn.addEventListener("click", startBulkScan);
   if (bulkStartBtn) bulkStartBtn.addEventListener("click", startPass2);
+  if (bulkRetryBtn) bulkRetryBtn.addEventListener("click", retryImport);
   if (bulkCancelBtn) bulkCancelBtn.addEventListener("click", cancelBulkScan);
   if (bulkBackBtn)
     bulkBackBtn.addEventListener("click", () => switchView("scanView"));

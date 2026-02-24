@@ -1,21 +1,29 @@
 import { tv } from "tailwind-variants";
 
-export const title = tv({
-  base: "tracking-tight inline font-semibold",
+export const display = tv({
+  base: "font-black uppercase tracking-tighter italic leading-[0.9]",
   variants: {
-    color: {
-      violet: "from-[#FF1CF7] to-[#b249f8]",
-      yellow: "from-[#FF705B] to-[#FFB457]",
-      beige: "from-[#f4ede4] to-[#ffffff]",
-      cyan: "from-[#00b7fa] to-[#01cfea]",
-      green: "from-[#6FEE8D] to-[#17c964]",
-      pink: "from-[#FF72E1] to-[#F54C7A]",
-      foreground: "dark:from-[#FFFFFF] dark:to-[#4B4B4B]",
-    },
     size: {
-      sm: "text-3xl lg:text-4xl",
-      md: "text-[2.3rem] lg:text-5xl",
-      lg: "text-4xl lg:text-6xl",
+      sm: "text-[clamp(2rem,5vw,3.5rem)]",
+      md: "text-[clamp(2.5rem,6vw,5rem)]",
+      lg: "text-[clamp(3rem,8vw,7rem)]",
+    },
+    fullWidth: {
+      true: "w-full block",
+    },
+  },
+  defaultVariants: {
+    size: "lg",
+  },
+});
+
+export const title = tv({
+  base: "font-black uppercase tracking-tighter italic leading-tight",
+  variants: {
+    size: {
+      sm: "text-[clamp(1.125rem,2vw,1.5rem)]",
+      md: "text-[clamp(1.5rem,3vw,2.5rem)]",
+      lg: "text-[clamp(2rem,5vw,3.5rem)]",
     },
     fullWidth: {
       true: "w-full block",
@@ -24,22 +32,44 @@ export const title = tv({
   defaultVariants: {
     size: "md",
   },
-  compoundVariants: [
-    {
-      color: ["violet", "yellow", "cyan", "green", "pink", "foreground"],
-      class: "bg-clip-text text-transparent bg-gradient-to-b",
-    },
-  ],
 });
 
-export const subtitle = tv({
-  base: "w-full md:w-1/2 my-2 text-lg lg:text-xl text-default-600 block max-w-full",
+export const heading = tv({
+  base: "font-bold uppercase tracking-widest",
   variants: {
-    fullWidth: {
-      true: "!w-full",
+    size: {
+      sm: "text-xs",
+      md: "text-sm",
+      lg: "text-base",
     },
   },
   defaultVariants: {
+    size: "md",
+  },
+});
+
+export const subtitle = tv({
+  base: "text-default-500 leading-relaxed",
+  variants: {
+    size: {
+      sm: "text-xs",
+      md: "text-sm",
+      lg: "text-base lg:text-lg",
+    },
+    fullWidth: {
+      true: "w-full",
+    },
+  },
+  defaultVariants: {
+    size: "md",
     fullWidth: true,
   },
+});
+
+export const label = tv({
+  base: "text-[clamp(0.625rem,0.8vw,0.75rem)] font-bold uppercase tracking-widest text-default-500",
+});
+
+export const caption = tv({
+  base: "text-[clamp(0.625rem,0.8vw,0.75rem)] uppercase tracking-widest text-default-400",
 });

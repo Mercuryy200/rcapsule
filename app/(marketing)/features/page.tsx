@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardBody, Button } from "@heroui/react";
+import { motion } from "framer-motion";
 import {
   SparklesIcon,
   TagIcon,
@@ -10,6 +10,11 @@ import {
   DevicePhoneMobileIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
+
+import { Container } from "@/components/ui/container";
+import { FeatureCard } from "@/components/ui/card";
+import { DSButton } from "@/components/ui/button";
+import { fadeInUp, staggerContainer } from "@/components/ui/motion";
 
 const features = [
   {
@@ -46,9 +51,9 @@ const features = [
 
 export default function FeaturesPage() {
   return (
-    <div className="w-full max-w-7xl mx-auto px-6 py-16">
+    <Container className="py-16">
       <div className="text-center max-w-2xl mx-auto mb-16">
-        <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic mb-2">
+        <h1 className="text-[clamp(2rem,5vw,3.5rem)] font-black uppercase tracking-tighter italic mb-2">
           The Operating System <br /> For Your Closet
         </h1>
         <p className="text-default-500 uppercase tracking-widest text-sm">
@@ -56,39 +61,30 @@ export default function FeaturesPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16"
+        initial="hidden"
+        variants={staggerContainer}
+        viewport={{ once: true }}
+        whileInView="visible"
+      >
         {features.map((f, i) => (
-          <Card
-            key={i}
-            className="bg-content1 shadow-sm border border-default-100"
-            radius="sm"
-          >
-            <CardBody className="p-8 gap-4">
-              <f.icon className="w-8 h-8 text-foreground stroke-1" />
-              <div>
-                <h3 className="font-bold uppercase tracking-wider text-sm mb-2">
-                  {f.title}
-                </h3>
-                <p className="text-sm text-default-500 leading-relaxed">
-                  {f.desc}
-                </p>
-              </div>
-            </CardBody>
-          </Card>
+          <motion.div key={i} variants={fadeInUp}>
+            <FeatureCard
+              className="h-full"
+              description={f.desc}
+              icon={<f.icon className="w-8 h-8 text-foreground stroke-1" />}
+              title={f.title}
+            />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       <div className="flex justify-center">
-        <Button
-          as={Link}
-          className="bg-foreground text-background font-bold uppercase tracking-widest px-12"
-          href="/closet"
-          radius="full"
-          size="lg"
-        >
+        <DSButton as={Link} href="/closet" size="lg" variant="primary">
           Start Digitizing
-        </Button>
+        </DSButton>
       </div>
-    </div>
+    </Container>
   );
 }

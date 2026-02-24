@@ -28,6 +28,7 @@ function corsHeaders(origin: string) {
 
 export async function OPTIONS(req: Request) {
   const origin = req.headers.get("origin") || "";
+
   return new NextResponse(null, { status: 200, headers: corsHeaders(origin) });
 }
 
@@ -90,7 +91,11 @@ export async function POST(req: Request) {
       } = item;
 
       if (!name) {
-        results.push({ url: link || "", success: false, error: "Missing name" });
+        results.push({
+          url: link || "",
+          success: false,
+          error: "Missing name",
+        });
         errors++;
         continue;
       }
@@ -154,25 +159,23 @@ export async function POST(req: Request) {
         }
 
         // Insert into Clothes
-        const { error: clothesError } = await supabase
-          .from("Clothes")
-          .insert({
-            userId: session.user.id,
-            name,
-            brand: brand || null,
-            price: price ? parseFloat(price) : null,
-            imageUrl: imageUrl || null,
-            link: link || null,
-            category: finalCategory,
-            size: size || null,
-            status: finalStatus,
-            purchaseDate: finalDate,
-            colors: [],
-            placesToWear: [],
-            materials: materials || null,
-            description: description || null,
-            globalproductid: globalProductId,
-          });
+        const { error: clothesError } = await supabase.from("Clothes").insert({
+          userId: session.user.id,
+          name,
+          brand: brand || null,
+          price: price ? parseFloat(price) : null,
+          imageUrl: imageUrl || null,
+          link: link || null,
+          category: finalCategory,
+          size: size || null,
+          status: finalStatus,
+          purchaseDate: finalDate,
+          colors: [],
+          placesToWear: [],
+          materials: materials || null,
+          description: description || null,
+          globalproductid: globalProductId,
+        });
 
         if (clothesError) {
           results.push({

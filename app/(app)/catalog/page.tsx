@@ -118,7 +118,14 @@ export default function CatalogPage() {
     if (inStockOnly) params.set("inStock", "true");
 
     return `/api/catalog?${params.toString()}`;
-  }, [debouncedQuery, sort, offset, selectedCategories, selectedBrands, inStockOnly]);
+  }, [
+    debouncedQuery,
+    sort,
+    offset,
+    selectedCategories,
+    selectedBrands,
+    inStockOnly,
+  ]);
 
   // Fetch data
   const { data, isLoading } = useSWR<CatalogResponse>(apiUrl, fetcher, {
@@ -139,7 +146,8 @@ export default function CatalogPage() {
 
     // Store metadata from first page
     if (data.availableBrands) setAvailableBrands(data.availableBrands);
-    if (data.availableCategories) setAvailableCategories(data.availableCategories);
+    if (data.availableCategories)
+      setAvailableCategories(data.availableCategories);
   }, [data]);
 
   // Handlers
@@ -176,9 +184,7 @@ export default function CatalogPage() {
   };
 
   const hasActiveFilters =
-    selectedCategories.length > 0 ||
-    selectedBrands.length > 0 ||
-    inStockOnly;
+    selectedCategories.length > 0 || selectedBrands.length > 0 || inStockOnly;
 
   const allLoaded = products.length >= total;
   const isLoadingMore = isLoading && offset > 0;
@@ -194,9 +200,7 @@ export default function CatalogPage() {
   const filterContent = (
     <div className="w-full h-full flex flex-col">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-sm font-bold uppercase tracking-widest">
-          Filters
-        </h3>
+        <h3 className="text-sm font-bold uppercase tracking-widest">Filters</h3>
         {hasActiveFilters && (
           <Button
             className="text-xs uppercase tracking-wider text-default-400 data-[hover=true]:text-foreground"
@@ -218,11 +222,7 @@ export default function CatalogPage() {
           selectionMode="multiple"
           showDivider={false}
         >
-          <AccordionItem
-            key="category"
-            aria-label="Category"
-            title="Category"
-          >
+          <AccordionItem key="category" aria-label="Category" title="Category">
             <CheckboxGroup
               classNames={{ wrapper: "gap-3" }}
               value={selectedCategories}

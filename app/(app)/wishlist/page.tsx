@@ -10,7 +10,9 @@ import ClothingCard from "@/components/closet/ClothingCard";
 import ClothesFilter, {
   FilterOptions,
 } from "@/components/closet/ClothesFilter";
-import WardrobeHeader, { useSearchHistory } from "@/components/closet/WardrobeHeader";
+import WardrobeHeader, {
+  useSearchHistory,
+} from "@/components/closet/WardrobeHeader";
 import { ClothingCardSkeleton } from "@/components/closet/ClothingCardSkeleton";
 
 interface ClothingItem {

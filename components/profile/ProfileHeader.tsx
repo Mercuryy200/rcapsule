@@ -8,7 +8,6 @@ import {
 } from "@heroicons/react/24/outline";
 
 import { SocialIcon } from "@/components/ui/icons";
-
 import { useUser } from "@/lib/contexts/UserContext";
 
 interface ProfileHeaderProps {

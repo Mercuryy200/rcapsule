@@ -106,12 +106,44 @@ function findButtonByText(text) {
   return null;
 }
 
+// Query params that distinguish product variants (color, size, etc.)
+const VARIANT_PARAMS = new Set([
+  "color",
+  "colorid",
+  "colour",
+  "variant",
+  "sku",
+  "dwvar",
+  "sz",
+]);
+
+// Normalizes a product URL: keeps variant params, strips tracking params
+function normalizeProductUrl(href) {
+  try {
+    const url = new URL(href);
+    const kept = new URLSearchParams();
+    for (const [key, val] of url.searchParams) {
+      if (VARIANT_PARAMS.has(key.toLowerCase())) kept.set(key, val);
+    }
+    const base = url.origin + url.pathname.replace(/\/$/, "");
+    const qs = kept.toString();
+    return qs ? `${base}?${qs}` : base;
+  } catch {
+    return href.split("?")[0].replace(/\/$/, "");
+  }
+}
+
+// Strips ALL query params — used only for card boundary detection where
+// different color swatches within the same card should be treated as one product
+function baseProductUrl(href) {
+  return href.split("?")[0].replace(/\/$/, "");
+}
+
 function countUniqueProducts() {
   const links = document.querySelectorAll('a[href*="/product/"]');
   const urls = new Set();
   links.forEach((a) => {
-    const base = a.href.split("?")[0].replace(/\/$/, "");
-    urls.add(base);
+    urls.add(normalizeProductUrl(a.href));
   });
   return urls.size;
 }
@@ -124,15 +156,14 @@ function countUniqueProducts() {
 // The card is the deepest ancestor that contains links to ONLY this product.
 // Once the parent contains links to OTHER products, we've gone too far.
 function findCardBoundary(link) {
-  const thisProduct = link.href.split("?")[0].replace(/\/$/, "");
+  const thisProduct = baseProductUrl(link.href);
   let el = link;
 
   while (el.parentElement) {
     const parent = el.parentElement;
     const parentLinks = parent.querySelectorAll('a[href*="/product/"]');
     const hasOtherProducts = Array.from(parentLinks).some((l) => {
-      const otherUrl = l.href.split("?")[0].replace(/\/$/, "");
-      return otherUrl !== thisProduct;
+      return baseProductUrl(l.href) !== thisProduct;
     });
 
     if (hasOtherProducts) {
@@ -281,21 +312,21 @@ async function extractListingProducts() {
 
   console.log(`Found ${allLinks.length} total product links`);
 
-  // Group links by base product URL (strip query params like ?color=)
+  // Group links by normalized product URL (preserves color/variant params)
   const productGroups = new Map();
   for (const link of allLinks) {
-    const baseUrl = link.href.split("?")[0].replace(/\/$/, "");
-    if (!productGroups.has(baseUrl)) {
-      productGroups.set(baseUrl, []);
+    const normalizedUrl = normalizeProductUrl(link.href);
+    if (!productGroups.has(normalizedUrl)) {
+      productGroups.set(normalizedUrl, []);
     }
-    productGroups.get(baseUrl).push(link);
+    productGroups.get(normalizedUrl).push(link);
   }
 
-  console.log(`Grouped into ${productGroups.size} unique products`);
+  console.log(`Grouped into ${productGroups.size} unique products (including color variants)`);
 
-  for (const [baseUrl, links] of productGroups) {
-    if (seenUrls.has(baseUrl)) continue;
-    seenUrls.add(baseUrl);
+  for (const [normalizedUrl, links] of productGroups) {
+    if (seenUrls.has(normalizedUrl)) continue;
+    seenUrls.add(normalizedUrl);
 
     try {
       // Find the card boundary by walking up from the first image-bearing link
@@ -303,11 +334,12 @@ async function extractListingProducts() {
       const primaryLink = imageLink || links[0];
       const card = findCardBoundary(primaryLink);
 
-      // Get all links to this product within the card
+      // Get all links to this base product within the card (any color variant)
+      const base = baseProductUrl(links[0].href);
       const cardProductLinks = Array.from(
         card.querySelectorAll('a[href*="/product/"]'),
       ).filter(
-        (l) => l.href.split("?")[0].replace(/\/$/, "") === baseUrl,
+        (l) => baseProductUrl(l.href) === base,
       );
 
       const name = extractNameFromCard(card, cardProductLinks);
@@ -315,7 +347,7 @@ async function extractListingProducts() {
       const imageUrl = extractImageFromCard(card, cardProductLinks);
       const brand = extractBrandFromCard(card);
 
-      // Use the full URL (with color param) from the first link
+      // Use the full URL (with color param) from the first link in this variant group
       const url = links[0].href;
 
       products.push({ url, name, price, imageUrl, brand });

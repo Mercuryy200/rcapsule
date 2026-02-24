@@ -11,7 +11,7 @@ const config = {
     extend: {
       fontFamily: {
         sans: ["var(--font-sans)"],
-        mono: ["var(--font-mono)"],
+        display: ["var(--font-display)"],
       },
       animation: {
         "fade-in": "fadeIn 0.8s ease-in-out",
@@ -53,6 +53,18 @@ const config = {
               DEFAULT: "#E5E5E5",
               foreground: "#171717",
             },
+            default: {
+              50: "#FAFAFA",
+              100: "#F5F5F5",
+              200: "#E5E5E5",
+              300: "#D4D4D4",
+              400: "#A3A3A3",
+              500: "#737373",
+              600: "#525252",
+              700: "#404040",
+              800: "#262626",
+              900: "#171717",
+            },
             focus: "#171717",
             danger: {
               DEFAULT: "#DC2626",
@@ -81,6 +93,18 @@ const config = {
             secondary: {
               DEFAULT: "#262626",
               foreground: "#FFFFFF",
+            },
+            default: {
+              50: "#0A0A0A",
+              100: "#171717",
+              200: "#262626",
+              300: "#404040",
+              400: "#525252",
+              500: "#737373",
+              600: "#A3A3A3",
+              700: "#D4D4D4",
+              800: "#E5E5E5",
+              900: "#FAFAFA",
             },
             focus: "#FFFFFF",
             danger: {
