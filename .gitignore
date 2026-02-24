@@ -53,3 +53,4 @@ bun.lockb
 .env.sentry-build-plugin
 
 .vscode
+.env.local
