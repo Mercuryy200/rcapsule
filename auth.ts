@@ -233,13 +233,14 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         try {
           const { data: userData } = await supabase
             .from("User")
-            .select("name, image")
+            .select("name, image, role")
             .eq("id", token.id as string)
             .single();
 
           if (userData) {
             token.name = userData.name;
             token.picture = userData.image;
+            token.role = userData.role;
           }
         } catch (error) {
           console.error("Error fetching user data in JWT callback:", error);
@@ -253,6 +254,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
         session.user.name = token.name as string;
         session.user.image = token.picture as string;
+        session.user.role = (token.role as string) ?? "user";
       }
 
       return session;

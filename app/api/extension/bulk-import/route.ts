@@ -47,6 +47,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // Admin-only: only admins can bulk-import to GlobalProduct
+    if (session.user.role !== "admin") {
+      return NextResponse.json(
+        { error: "Forbidden: only admins can bulk-import to the catalog" },
+        { status: 403, headers: corsHeaders(origin) },
+      );
+    }
+
     const body = await req.json();
     const { products } = body;
 
@@ -83,9 +91,7 @@ export async function POST(req: Request) {
         price,
         imageUrl,
         link,
-        size,
         category,
-        status,
         materials,
         description,
       } = item;
@@ -102,30 +108,9 @@ export async function POST(req: Request) {
 
       try {
         const finalCategory = category || "Uncategorized";
-        const finalStatus = status || "owned";
-        const finalDate =
-          finalStatus === "wishlist"
-            ? null
-            : new Date().toISOString().split("T")[0];
 
-        // Check if user already has this item (deduplication by link)
-        let globalProductId: string | null = null;
-
+        // Deduplication: check if GlobalProduct with this retaillink already exists
         if (link) {
-          const { data: existingClothes } = await supabase
-            .from("Clothes")
-            .select("id")
-            .eq("userId", session.user.id)
-            .eq("link", link)
-            .single();
-
-          if (existingClothes) {
-            results.push({ url: link, success: true, duplicate: true });
-            duplicates++;
-            continue;
-          }
-
-          // Upsert GlobalProduct
           const { data: existingProduct } = await supabase
             .from("GlobalProduct")
             .select("id")
@@ -133,55 +118,33 @@ export async function POST(req: Request) {
             .single();
 
           if (existingProduct) {
-            globalProductId = existingProduct.id;
-          } else {
-            const { data: newProduct, error: gpError } = await supabase
-              .from("GlobalProduct")
-              .insert({
-                name,
-                brand: brand || "Unknown",
-                category: finalCategory,
-                description: description || null,
-                retaillink: link,
-                imageurl: imageUrl || null,
-                colors: [],
-                materials: materials || null,
-                originalprice: price ? parseFloat(price) : null,
-                source: new URL(link).hostname.replace("www.", ""),
-              })
-              .select("id")
-              .single();
-
-            if (!gpError && newProduct) {
-              globalProductId = newProduct.id;
-            }
+            results.push({ url: link, success: true, duplicate: true });
+            duplicates++;
+            continue;
           }
         }
 
-        // Insert into Clothes
-        const { error: clothesError } = await supabase.from("Clothes").insert({
-          userId: session.user.id,
+        // Insert into GlobalProduct only
+        const { error: gpError } = await supabase.from("GlobalProduct").insert({
           name,
-          brand: brand || null,
-          price: price ? parseFloat(price) : null,
-          imageUrl: imageUrl || null,
-          link: link || null,
+          brand: brand || "Unknown",
           category: finalCategory,
-          size: size || null,
-          status: finalStatus,
-          purchaseDate: finalDate,
-          colors: [],
-          placesToWear: [],
-          materials: materials || null,
           description: description || null,
-          globalproductid: globalProductId,
+          retaillink: link || null,
+          imageurl: imageUrl || null,
+          colors: [],
+          materials: materials || null,
+          originalprice: price ? parseFloat(price) : null,
+          source: link ? new URL(link).hostname.replace("www.", "") : null,
+          createdat: new Date().toISOString(),
+          updatedat: new Date().toISOString(),
         });
 
-        if (clothesError) {
+        if (gpError) {
           results.push({
             url: link || "",
             success: false,
-            error: clothesError.message,
+            error: gpError.message,
           });
           errors++;
         } else {

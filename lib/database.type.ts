@@ -123,6 +123,9 @@ export interface User {
   stripe_customer_id?: string;
   stripe_subscription_id?: string;
   subscription_period_end?: string;
+  role?: "user" | "admin";
+  isVerified?: boolean;
+  isFeatured?: boolean;
 }
 
 export interface ClothesWithWardrobes extends Clothes {

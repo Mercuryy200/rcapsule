@@ -38,6 +38,18 @@ export function useSearchHistory() {
 }
 
 // --- Props Interface ---
+interface SortOption {
+  key: string;
+  label: string;
+}
+
+const DEFAULT_SORT_OPTIONS: SortOption[] = [
+  { key: "recent", label: "Most Recent" },
+  { key: "name", label: "Name (A-Z)" },
+  { key: "price", label: "Price (High-Low)" },
+  { key: "worn", label: "Most Worn" },
+];
+
 interface WardrobeHeaderProps {
   title: string;
   subtitle: React.ReactNode;
@@ -55,6 +67,9 @@ interface WardrobeHeaderProps {
   setShowFilters: (show: boolean) => void;
   onAddNew: () => void;
   actionLabel?: string;
+  sortOptions?: SortOption[];
+  showAddButton?: boolean;
+  showViewMode?: boolean;
 }
 
 export default function WardrobeHeader({
@@ -74,6 +89,9 @@ export default function WardrobeHeader({
   setShowFilters,
   onAddNew,
   actionLabel = "Add Item",
+  sortOptions = DEFAULT_SORT_OPTIONS,
+  showAddButton = true,
+  showViewMode = true,
 }: WardrobeHeaderProps) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -223,64 +241,44 @@ export default function WardrobeHeader({
           variant="underlined"
           onChange={(e) => setSortBy(e.target.value)}
         >
-          <SelectItem
-            key="recent"
-            classNames={{
-              title: "font-light uppercase tracking-wider text-xs",
-            }}
-          >
-            Most Recent
-          </SelectItem>
-          <SelectItem
-            key="name"
-            classNames={{
-              title: "font-light uppercase tracking-wider text-xs",
-            }}
-          >
-            Name (A-Z)
-          </SelectItem>
-          <SelectItem
-            key="price"
-            classNames={{
-              title: "font-light uppercase tracking-wider text-xs",
-            }}
-          >
-            Price (High-Low)
-          </SelectItem>
-          <SelectItem
-            key="worn"
-            classNames={{
-              title: "font-light uppercase tracking-wider text-xs",
-            }}
-          >
-            Most Worn
-          </SelectItem>
+          {sortOptions.map((opt) => (
+            <SelectItem
+              key={opt.key}
+              classNames={{
+                title: "font-light uppercase tracking-wider text-xs",
+              }}
+            >
+              {opt.label}
+            </SelectItem>
+          ))}
         </Select>
 
         {/* Buttons */}
         <div className="flex gap-3 items-center mt-2 sm:mt-0 ml-auto sm:ml-0">
-          <ButtonGroup
-            className="bg-transparent border border-default-200"
-            radius="none"
-            variant="flat"
-          >
-            <Button
-              isIconOnly
-              className={`w-10 h-10 bg-transparent ${viewMode === "grid" ? "text-primary" : "text-default-300"}`}
+          {showViewMode && (
+            <ButtonGroup
+              className="bg-transparent border border-default-200"
               radius="none"
-              onPress={() => setViewMode("grid")}
+              variant="flat"
             >
-              <Squares2X2Icon className="w-4 h-4" />
-            </Button>
-            <Button
-              isIconOnly
-              className={`w-10 h-10 bg-transparent ${viewMode === "gallery" ? "text-primary" : "text-default-300"}`}
-              radius="none"
-              onPress={() => setViewMode("gallery")}
-            >
-              <ViewColumnsIcon className="w-4 h-4" />
-            </Button>
-          </ButtonGroup>
+              <Button
+                isIconOnly
+                className={`w-10 h-10 bg-transparent ${viewMode === "grid" ? "text-primary" : "text-default-300"}`}
+                radius="none"
+                onPress={() => setViewMode("grid")}
+              >
+                <Squares2X2Icon className="w-4 h-4" />
+              </Button>
+              <Button
+                isIconOnly
+                className={`w-10 h-10 bg-transparent ${viewMode === "gallery" ? "text-primary" : "text-default-300"}`}
+                radius="none"
+                onPress={() => setViewMode("gallery")}
+              >
+                <ViewColumnsIcon className="w-4 h-4" />
+              </Button>
+            </ButtonGroup>
+          )}
 
           <Button
             className="border-default-200 font-medium uppercase text-xs tracking-wider"
@@ -292,15 +290,17 @@ export default function WardrobeHeader({
             {showFilters ? "Hide" : "Filter"}
           </Button>
 
-          <Button
-            className="font-medium uppercase text-[10px] tracking-[0.15em] h-10 px-6 shadow-none rounded-none"
-            color="primary"
-            radius="none"
-            startContent={<PlusIcon className="w-3 h-3" />}
-            onPress={onAddNew}
-          >
-            {actionLabel}
-          </Button>
+          {showAddButton && (
+            <Button
+              className="font-medium uppercase text-[10px] tracking-[0.15em] h-10 px-6 shadow-none rounded-none"
+              color="primary"
+              radius="none"
+              startContent={<PlusIcon className="w-3 h-3" />}
+              onPress={onAddNew}
+            >
+              {actionLabel}
+            </Button>
+          )}
         </div>
       </div>
     </header>

@@ -10,6 +10,7 @@ interface UserContextType {
   refreshUser: () => void;
   loading: boolean;
   isPremium: boolean;
+  isAdmin: boolean;
 }
 
 const UserContext = createContext<UserContextType>({
@@ -17,6 +18,7 @@ const UserContext = createContext<UserContextType>({
   refreshUser: () => {},
   loading: true,
   isPremium: false,
+  isAdmin: false,
 });
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
@@ -78,10 +80,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [status, session?.user?.id]);
 
   const isPremium = user?.subscription_status === "premium";
+  const isAdmin = user?.role === "admin";
 
   return (
     <UserContext.Provider
-      value={{ user, refreshUser: fetchUser, loading, isPremium }}
+      value={{ user, refreshUser: fetchUser, loading, isPremium, isAdmin }}
     >
       {children}
     </UserContext.Provider>

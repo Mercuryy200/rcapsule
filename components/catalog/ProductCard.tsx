@@ -6,6 +6,7 @@ import {
   PlusIcon,
   ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/24/outline";
+import NextLink from "next/link";
 
 interface ProductCardProps {
   product: GlobalProduct;
@@ -81,7 +82,11 @@ export default function ProductCard({
         )}
       </CardBody>
 
-      <CardFooter className="flex flex-col items-start p-4 gap-1">
+      <CardFooter
+        as={NextLink}
+        className="flex flex-col items-start p-4 gap-1 hover:bg-content2 transition-colors"
+        href={`/catalog/${product.id}`}
+      >
         <div className="flex justify-between w-full items-baseline">
           <p className="text-[10px] font-bold uppercase tracking-widest text-default-500">
             {product.brand || "Unknown Brand"}

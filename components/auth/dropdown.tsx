@@ -9,8 +9,11 @@ import {
 import NextLink from "next/link";
 
 import { logout } from "@/lib/actions/auth";
+import { useUser } from "@/lib/contexts/UserContext";
 
 export function ProfileDropdown({ user }: { user: any }) {
+  const { isAdmin } = useUser();
+
   if (!user) return null;
 
   return (
@@ -51,6 +54,18 @@ export function ProfileDropdown({ user }: { user: any }) {
         <DropdownItem key="settings" as={NextLink} href="/settings">
           Settings
         </DropdownItem>
+
+        {isAdmin ? (
+          <DropdownItem
+            key="admin"
+            as={NextLink}
+            className="text-warning"
+            color="warning"
+            href="/admin"
+          >
+            Admin Panel
+          </DropdownItem>
+        ) : null}
 
         <DropdownItem
           key="logout"
