@@ -57,9 +57,9 @@ function HeroSection() {
     offset: ["start start", "end start"],
   });
 
-  const card1Y = useTransform(scrollYProgress, [0, 1], [0, -80]);
-  const card2Y = useTransform(scrollYProgress, [0, 1], [0, -40]);
-  const card3Y = useTransform(scrollYProgress, [0, 1], [0, -120]);
+  const card1Y = useTransform(scrollYProgress, [0, 1], [0, -220]);
+  const card2Y = useTransform(scrollYProgress, [0, 1], [0, -140]);
+  const card3Y = useTransform(scrollYProgress, [0, 1], [0, -300]);
 
   return (
     <section
