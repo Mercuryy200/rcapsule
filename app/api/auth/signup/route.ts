@@ -1,52 +1,23 @@
 import { NextResponse } from "next/server";
 
 import { getSupabaseServer } from "@/lib/supabase-server";
+import { signupSchema } from "@/lib/validations/schemas";
 
 export async function POST(req: Request) {
   try {
     const supabase = getSupabaseServer();
-    const { email, password, name, username } = await req.json();
+    const body = await req.json();
 
-    if (!email || !password || !username) {
+    const result = signupSchema.safeParse(body);
+
+    if (!result.success) {
       return NextResponse.json(
-        { error: "Email and password are required" },
+        { error: result.error.flatten() },
         { status: 400 },
       );
     }
 
-    if (!username) {
-      return NextResponse.json(
-        { error: "Username is required" },
-        { status: 400 },
-      );
-    }
-
-    // Validate username format
-    if (username.length < 3 || username.length > 30) {
-      return NextResponse.json(
-        { error: "Username must be 3-30 characters" },
-        { status: 400 },
-      );
-    }
-
-    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-      return NextResponse.json(
-        {
-          error:
-            "Username can only contain letters, numbers, dashes, and underscores",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (/^[-_]|[-_]$/.test(username)) {
-      return NextResponse.json(
-        {
-          error: "Username cannot start or end with a dash or underscore",
-        },
-        { status: 400 },
-      );
-    }
+    const { email, password, name, username } = result.data;
 
     // Check if username is already taken
     const { data: existingUser } = await supabase

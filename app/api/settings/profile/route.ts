@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
+import { profilePutSchema } from "@/lib/validations/schemas";
 
 export async function GET(req: Request) {
   try {
@@ -74,7 +75,18 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await req.json();
+    const body = await req.json();
+
+    const result = profilePutSchema.safeParse(body);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error.flatten() },
+        { status: 400 },
+      );
+    }
+
+    const data = result.data;
     const supabase = getSupabaseServer();
 
     const updateData: any = {

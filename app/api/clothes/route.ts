@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
+import { clothesPostSchema } from "@/lib/validations/schemas";
 
 export async function GET(req: Request) {
   return await Sentry.startSpan(
@@ -122,18 +123,21 @@ export async function POST(req: Request) {
     }
 
     const userId = session.user.id;
-    const data = await req.json();
+    const body = await req.json();
 
-    if (!data.name || !data.category) {
+    const result = clothesPostSchema.safeParse(body);
+
+    if (!result.success) {
       return NextResponse.json(
-        { error: "Name and category are required" },
+        { error: result.error.flatten() },
         { status: 400 },
       );
     }
 
+    const data = result.data;
     const supabase = getSupabaseServer();
 
-    if (data.wardrobeIds?.length > 0) {
+    if (data.wardrobeIds && data.wardrobeIds.length > 0) {
       const { data: wardrobes, error } = await supabase
         .from("Wardrobe")
         .select("id, userId")
@@ -163,7 +167,7 @@ export async function POST(req: Request) {
       name: data.name,
       brand: data.brand || null,
       category: data.category,
-      price: data.price ? parseFloat(data.price) : null,
+      price: data.price != null ? parseFloat(String(data.price)) : null,
       status: data.status || "owned", // Default to owned
       purchaseDate:
         data.status === "wishlist" ? null : data.purchaseDate || null,
@@ -189,7 +193,7 @@ export async function POST(req: Request) {
     if (createError) throw createError;
 
     // Link to Wardrobes if IDs provided
-    if (data.wardrobeIds?.length > 0) {
+    if (data.wardrobeIds && data.wardrobeIds.length > 0) {
       const wardrobeEntries = data.wardrobeIds.map((wardrobeId: string) => ({
         wardrobeId,
         clothesId: clothing.id,

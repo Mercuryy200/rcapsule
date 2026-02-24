@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
+import { clothesPutSchema } from "@/lib/validations/schemas";
 
 export async function GET(
   req: Request,
@@ -70,7 +71,18 @@ export async function PUT(
     }
 
     const { id } = await params;
-    const data = await req.json();
+    const body = await req.json();
+
+    const result = clothesPutSchema.safeParse(body);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error.flatten() },
+        { status: 400 },
+      );
+    }
+
+    const data = result.data;
     const supabase = getSupabaseServer();
     const updatePayload: any = {
       updatedAt: new Date().toISOString(),
@@ -81,7 +93,7 @@ export async function PUT(
     if (data.category !== undefined) updatePayload.category = data.category;
     if (data.brand !== undefined) updatePayload.brand = data.brand || null;
     if (data.price !== undefined)
-      updatePayload.price = data.price ? parseFloat(data.price) : null;
+      updatePayload.price = data.price != null ? parseFloat(String(data.price)) : null;
     if (data.purchaseDate !== undefined)
       updatePayload.purchaseDate = data.purchaseDate || null;
     if (data.colors !== undefined) updatePayload.colors = data.colors || [];
@@ -115,8 +127,8 @@ export async function PUT(
     if (data.purchaseLocation !== undefined)
       updatePayload.purchaseLocation = data.purchaseLocation || null;
     if (data.originalPrice !== undefined)
-      updatePayload.originalPrice = data.originalPrice
-        ? parseFloat(data.originalPrice)
+      updatePayload.originalPrice = data.originalPrice != null
+        ? parseFloat(String(data.originalPrice))
         : null;
     if (data.purchaseType !== undefined)
       updatePayload.purchaseType = data.purchaseType || null;

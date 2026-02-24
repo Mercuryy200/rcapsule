@@ -58,8 +58,8 @@ describe("POST /api/auth/signup", () => {
     it("returns 400 when username is too short (< 3 chars)", async () => {
       const res = await POST(makeRequest({ email: "test@test.com", password: "Passw0rd!", username: "ab" }));
       expect(res.status).toBe(400);
-      const body = await res.json() as { error: string };
-      expect(body.error).toMatch(/3-30/);
+      const body = await res.json() as { error: { fieldErrors: { username?: string[] } } };
+      expect(body.error.fieldErrors.username?.[0]).toMatch(/3-30/);
     });
 
     it("returns 400 when username is too long (> 30 chars)", async () => {
@@ -70,8 +70,8 @@ describe("POST /api/auth/signup", () => {
     it("returns 400 when username contains invalid characters", async () => {
       const res = await POST(makeRequest({ email: "test@test.com", password: "Passw0rd!", username: "bad user!" }));
       expect(res.status).toBe(400);
-      const body = await res.json() as { error: string };
-      expect(body.error).toMatch(/letters, numbers/);
+      const body = await res.json() as { error: { fieldErrors: { username?: string[] } } };
+      expect(body.error.fieldErrors.username?.[0]).toMatch(/letters, numbers/);
     });
 
     it("returns 400 when username starts with a dash", async () => {

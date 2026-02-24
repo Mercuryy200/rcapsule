@@ -2,7 +2,6 @@ import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import clsx from "clsx";
 import { Analytics } from "@vercel/analytics/next";
-import * as Sentry from "@sentry/nextjs";
 import { Toaster } from "sonner";
 
 import { Providers } from "./providers";
@@ -11,21 +10,6 @@ import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
 import { fontSans, fontDisplay } from "@/lib/config/fonts";
 import ScrollToTop from "@/components/ui/ScrollToTop";
-
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  environment: process.env.NODE_ENV,
-  tracesSampleRate: 1.0,
-  profilesSampleRate: 1.0,
-
-  beforeSend(event, hint) {
-    if (process.env.NODE_ENV === "development") {
-      return null;
-    }
-
-    return event;
-  },
-});
 
 // app/layout.tsx
 export const metadata: Metadata = {
@@ -45,6 +29,16 @@ export const metadata: Metadata = {
     url: "https://rcapsule.com",
     siteName: "Rcapsule",
     type: "website",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Rcapsule — Your Digital Closet",
+    description: "Organize your wardrobe and plan outfits with ease.",
+    images: ["/og-image.png"],
+  },
+  alternates: {
+    canonical: "https://rcapsule.com",
   },
 };
 
@@ -54,6 +48,26 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: dark)", color: "black" },
   ],
 };
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://rcapsule.com/#website",
+      url: "https://rcapsule.com",
+      name: "Rcapsule",
+      description: "Organize your wardrobe and plan outfits with ease.",
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://rcapsule.com/#organization",
+      name: "Rcapsule",
+      url: "https://rcapsule.com",
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -66,6 +80,10 @@ export default function RootLayout({
           async
           defer
           src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+        />
+        <script
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          type="application/ld+json"
         />
       </head>
       <body
