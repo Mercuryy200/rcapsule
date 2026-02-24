@@ -20,6 +20,7 @@ const mockQueryChain = {
   order: vi.fn().mockReturnThis(),
   range: vi.fn().mockReturnThis(),
   limit: vi.fn().mockResolvedValue({ data: mockProducts, error: null }),
+  not: vi.fn().mockResolvedValue({ data: [], error: null }),
 };
 
 const mockFrom = vi.fn().mockReturnValue(mockQueryChain);
@@ -44,6 +45,7 @@ beforeEach(() => {
   mockQueryChain.order.mockReturnThis();
   mockQueryChain.range.mockResolvedValue({ data: mockProducts, error: null, count: 2 });
   mockQueryChain.limit.mockResolvedValue({ data: mockProducts, error: null });
+  mockQueryChain.not.mockResolvedValue({ data: [], error: null });
   mockFrom.mockReturnValue(mockQueryChain);
 });
 
@@ -87,7 +89,8 @@ describe("GET /api/catalog", () => {
   });
 
   it("returns 500 when database throws", async () => {
-    mockQueryChain.range.mockResolvedValueOnce({ data: null, error: new Error("DB error"), count: null });
+    // Default sort is "popularity" which uses .limit(), not .range()
+    mockQueryChain.limit.mockResolvedValueOnce({ data: null, error: new Error("DB error") });
 
     const res = await GET(makeRequest());
     expect(res.status).toBe(500);
