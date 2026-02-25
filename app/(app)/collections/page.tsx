@@ -21,6 +21,7 @@ import {
   Switch,
   Spinner,
 } from "@heroui/react";
+import { toast } from "sonner";
 import {
   PlusIcon,
   GlobeAltIcon,
@@ -74,6 +75,7 @@ export default function CollectionsPage() {
       }
     } catch (error) {
       console.error("Failed to fetch wardrobes:", error);
+      toast.error("Failed to load collections. Please refresh.");
     } finally {
       setLoading(false);
     }

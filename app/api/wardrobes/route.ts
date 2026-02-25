@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await auth();
 
@@ -12,6 +12,9 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "100"), 100);
+    const offset = parseInt(searchParams.get("offset") || "0");
     const supabase = getSupabaseServer();
 
     const { data: wardrobes, error } = await supabase
@@ -23,7 +26,8 @@ export async function GET() {
       `,
       )
       .eq("userId", session.user.id)
-      .order("createdAt", { ascending: false });
+      .order("createdAt", { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       throw error;

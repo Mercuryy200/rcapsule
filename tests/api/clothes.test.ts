@@ -14,6 +14,7 @@ const mockDbChain = {
   eq: vi.fn().mockReturnThis(),
   or: vi.fn().mockReturnThis(),
   order: vi.fn().mockReturnThis(),
+  range: vi.fn().mockReturnThis(),
   insert: vi.fn().mockReturnThis(),
   update: vi.fn().mockReturnThis(),
   delete: vi.fn().mockReturnThis(),
@@ -37,6 +38,7 @@ beforeEach(async () => {
   mockDbChain.eq.mockReturnThis();
   mockDbChain.or.mockReturnThis();
   mockDbChain.order.mockReturnThis();
+  mockDbChain.range.mockReturnThis();
   mockDbChain.insert.mockReturnThis();
   mockDbChain.update.mockReturnThis();
   mockDbChain.delete.mockReturnThis();
@@ -63,7 +65,8 @@ describe("GET /api/clothes", () => {
       { id: "c1", name: "T-Shirt", category: "Tops", userId: "user-abc" },
       { id: "c2", name: "Jeans", category: "Bottoms", userId: "user-abc" },
     ];
-    mockDbChain.order = vi.fn().mockResolvedValue({ data: mockClothes, error: null });
+    mockDbChain.order.mockReturnThis();
+    mockDbChain.range = vi.fn().mockResolvedValue({ data: mockClothes, error: null });
 
     const res = await GET(makeRequest("https://example.com/api/clothes"));
     expect(res.status).toBe(200);
@@ -72,7 +75,8 @@ describe("GET /api/clothes", () => {
   });
 
   it("returns 500 when database throws", async () => {
-    mockDbChain.order = vi.fn().mockResolvedValue({ data: null, error: new Error("DB error") });
+    mockDbChain.order.mockReturnThis();
+    mockDbChain.range = vi.fn().mockResolvedValue({ data: null, error: new Error("DB error") });
 
     const res = await GET(makeRequest("https://example.com/api/clothes"));
     expect(res.status).toBe(500);

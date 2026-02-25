@@ -29,6 +29,8 @@ function makeRequest(body: Record<string, unknown> = {}) {
 beforeEach(async () => {
   stripeMocks.createSession.mockReset();
   vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_fake");
+  vi.stubEnv("STRIPE_PRICE_MONTHLY", "price_monthly_fake");
+  vi.stubEnv("STRIPE_PRICE_YEARLY", "price_yearly_fake");
 
   const { auth } = await import("@/auth");
   vi.mocked(auth).mockResolvedValue({

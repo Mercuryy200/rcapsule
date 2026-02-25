@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Image, Spinner, Switch } from "@heroui/react";
+import { toast } from "sonner";
 import { HeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { motion, AnimatePresence } from "framer-motion";
@@ -64,6 +65,7 @@ export default function OutfitsPage() {
       }
     } catch (error) {
       console.error(error);
+      toast.error("Failed to load outfits. Please refresh.");
     } finally {
       setLoading(false);
     }
@@ -90,9 +92,12 @@ export default function OutfitsPage() {
               : outfit,
           ),
         );
+      } else {
+        toast.error("Failed to update favourite.");
       }
     } catch (error) {
       console.error(error);
+      toast.error("Failed to update favourite.");
     }
   };
 

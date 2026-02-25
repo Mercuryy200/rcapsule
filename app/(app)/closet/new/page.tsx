@@ -15,6 +15,7 @@ import {
   Chip,
 } from "@heroui/react";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { toast } from "sonner";
 
 import {
   colors,
@@ -156,11 +157,11 @@ export default function NewItemPage() {
       if (response.ok) {
         router.push(formData.status === "wishlist" ? "/wishlist" : "/closet");
       } else {
-        alert("Error saving item");
+        toast.error("Failed to save item. Please try again.");
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("Error saving item");
+      toast.error("Failed to save item. Please try again.");
     } finally {
       setSaving(false);
     }

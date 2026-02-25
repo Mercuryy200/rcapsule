@@ -26,6 +26,7 @@ import {
   CalendarDaysIcon,
   TagIcon,
 } from "@heroicons/react/24/outline";
+import { toast } from "sonner";
 
 import {
   colors,
@@ -152,6 +153,7 @@ export default function ItemPage() {
       }
     } catch (error) {
       console.error("Error fetching item:", error);
+      toast.error("Failed to load item. Please refresh.");
     } finally {
       setLoading(false);
     }
@@ -227,11 +229,13 @@ export default function ItemPage() {
 
         setItem(updatedData);
         setIsEditing(false);
+        toast.success("Changes saved.");
       } else {
-        alert("Error saving changes");
+        toast.error("Failed to save changes.");
       }
     } catch (error) {
       console.error("Error saving item:", error);
+      toast.error("Failed to save changes.");
     } finally {
       setSaving(false);
     }
@@ -245,10 +249,14 @@ export default function ItemPage() {
         method: "DELETE",
       });
 
-      if (response.ok)
+      if (response.ok) {
         router.push(item?.status === "wishlist" ? "/wishlist" : "/closet");
+      } else {
+        toast.error("Failed to delete item.");
+      }
     } catch (error) {
       console.error("Error deleting item:", error);
+      toast.error("Failed to delete item.");
     }
   };
 

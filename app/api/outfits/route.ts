@@ -12,6 +12,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "100"), 100);
+    const offset = parseInt(searchParams.get("offset") || "0");
     const supabase = getSupabaseServer();
 
     const { data: outfits, error } = await supabase
@@ -27,7 +30,8 @@ export async function GET(req: Request) {
       `,
       )
       .eq("userId", session.user.id)
-      .order("createdAt", { ascending: false });
+      .order("createdAt", { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       throw error;

@@ -68,6 +68,7 @@ export function DSInput({
       endContent={
         isSearch && value ? (
           <button
+            aria-label="Clear search"
             className="p-1 hover:bg-default-200 transition-colors"
             onClick={onClear}
           >

@@ -7,11 +7,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-12-15.clover",
 });
 
-const PRICE_IDS = {
-  monthly: "price_1St9WdAgtdFrYrBlFbckMvjE",
-  yearly: "price_1StDtDAgtdFrYrBlfyihP3Fd",
-};
-
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -22,7 +17,14 @@ export async function POST(request: NextRequest) {
 
     const { billingCycle } = await request.json();
 
-    const priceId = PRICE_IDS[billingCycle as keyof typeof PRICE_IDS];
+    // Evaluated at request time so env stubs work in tests and runtime changes
+    // (e.g. staging vs prod) are picked up without a redeploy.
+    const PRICE_IDS: Record<string, string | undefined> = {
+      monthly: process.env.STRIPE_PRICE_MONTHLY,
+      yearly: process.env.STRIPE_PRICE_YEARLY,
+    };
+
+    const priceId = PRICE_IDS[billingCycle as string];
 
     if (!priceId) {
       return NextResponse.json(

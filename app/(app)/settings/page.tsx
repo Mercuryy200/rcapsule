@@ -26,6 +26,7 @@ import {
   AtSymbolIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
+import { toast } from "sonner";
 
 import { useUser } from "@/lib/contexts/UserContext";
 import { ImageUpload } from "@/components/closet/ImageUpload";
@@ -105,6 +106,7 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error("Failed to load settings", error);
+      toast.error("Failed to load settings. Please refresh.");
     }
   };
 

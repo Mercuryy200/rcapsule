@@ -21,6 +21,9 @@ import {
   XMarkIcon,
   LockClosedIcon,
 } from "@heroicons/react/24/outline";
+import { toast } from "sonner";
+
+import NextImage from "next/image";
 
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import { useUser } from "@/lib/contexts/UserContext";
@@ -89,6 +92,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error(error);
+      toast.error("Failed to load profile data. Please refresh.");
     } finally {
       setLoading(false);
     }
@@ -283,9 +287,10 @@ export default function ProfilePage() {
                       className="aspect-[3/4] bg-content2 relative group overflow-hidden rounded-md"
                     >
                       {item.imageUrl ? (
-                        <img
+                        <NextImage
+                          fill
                           alt={item.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
                           src={item.imageUrl}
                         />
                       ) : (

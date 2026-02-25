@@ -15,6 +15,7 @@ function LoginFormContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const signupSuccess = searchParams?.get("signup") === "success";
+  const callbackUrl = searchParams?.get("callbackUrl") || "/closet";
 
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +60,7 @@ function LoginFormContent() {
           setError("Something went wrong. Please try again.");
         }
       } else {
-        router.push("/closet");
+        router.push(callbackUrl);
         router.refresh();
       }
     } catch (err) {
@@ -111,6 +112,7 @@ function LoginFormContent() {
           classNames={{ inputWrapper: "h-12" }}
           endContent={
             <button
+              aria-label={isVisible ? "Hide password" : "Show password"}
               className="focus:outline-none"
               type="button"
               onClick={toggleVisibility}
@@ -165,7 +167,7 @@ function LoginFormContent() {
           Don&apos;t have an account?{" "}
           <Link
             className="text-primary font-bold hover:underline"
-            href="/signp"
+            href="/signup"
           >
             Sign up
           </Link>
