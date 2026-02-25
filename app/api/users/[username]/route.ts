@@ -54,70 +54,61 @@ export async function GET(
       );
     }
 
-    const { data: wardrobes, error: wardrobesError } = await supabase
-      .from("Wardrobe")
-      .select(
-        `
-        id,
-        title,
-        description,
-        "coverImage",
-        slug,
-        "likeCount",
-        "viewCount",
-        "createdAt"
-      `,
-      )
-      .eq("userId", user.id)
-      .eq("isPublic", true)
-      .order("createdAt", { ascending: false });
+    // Fetch wardrobes with item counts in a single query via embedded relationship
+    const [{ data: wardrobes }, { data: outfits }] = await Promise.all([
+      supabase
+        .from("Wardrobe")
+        .select(
+          `
+          id,
+          title,
+          description,
+          "coverImage",
+          slug,
+          "likeCount",
+          "viewCount",
+          "createdAt",
+          clothes:WardrobeClothes(count)
+        `,
+        )
+        .eq("userId", user.id)
+        .eq("isPublic", true)
+        .order("createdAt", { ascending: false }),
+      supabase
+        .from("Outfit")
+        .select(
+          `
+          id,
+          name,
+          "imageUrl",
+          slug,
+          season,
+          occasion,
+          "likeCount",
+          "viewCount",
+          "createdAt"
+        `,
+        )
+        .eq("userId", user.id)
+        .eq("isPublic", true)
+        .order("createdAt", { ascending: false }),
+    ]);
 
-    // Get item count for each wardrobe
-    const wardrobesWithCount = await Promise.all(
-      (wardrobes || []).map(async (wardrobe) => {
-        const { count } = await supabase
-          .from("WardrobeClothes")
-          .select("*", { count: "exact", head: true })
-          .eq("wardrobeId", wardrobe.id);
+    const wardrobesWithCount = (wardrobes || []).map((wardrobe: any) => ({
+      id: wardrobe.id,
+      title: wardrobe.title,
+      description: wardrobe.description,
+      coverImage: wardrobe.coverImage,
+      slug: wardrobe.slug,
+      likeCount: wardrobe.likeCount,
+      viewCount: wardrobe.viewCount,
+      createdAt: wardrobe.createdAt,
+      itemCount: wardrobe.clothes?.[0]?.count || 0,
+    }));
 
-        return {
-          ...wardrobe,
-          itemCount: count || 0,
-        };
-      }),
-    );
-
-    const { data: outfits, error: outfitsError } = await supabase
-      .from("Outfit")
-      .select(
-        `
-        id,
-        name,
-        "imageUrl",
-        slug,
-        season,
-        occasion,
-        "likeCount",
-        "viewCount",
-        "createdAt"
-      `,
-      )
-      .eq("userId", user.id)
-      .eq("isPublic", true)
-      .order("createdAt", { ascending: false });
-
-    // Count public items
-    const { count: publicOutfitCount } = await supabase
-      .from("Outfit")
-      .select("*", { count: "exact", head: true })
-      .eq("userId", user.id)
-      .eq("isPublic", true);
-
-    const { count: publicWardrobeCount } = await supabase
-      .from("Wardrobe")
-      .select("*", { count: "exact", head: true })
-      .eq("userId", user.id)
-      .eq("isPublic", true);
+    // Counts come from the already-fetched arrays — no extra queries needed
+    const publicWardrobeCount = wardrobesWithCount.length;
+    const publicOutfitCount = (outfits || []).length;
 
     let isFollowing = false;
     let isBlocked = false;

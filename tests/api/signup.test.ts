@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { POST } from "@/app/api/auth/signup/route";
 
+// ── Mock rate limiter (always pass) ────────────────────────────────────────
+vi.mock("@/lib/ratelimit", () => ({
+  authLimiter: () => ({ limit: vi.fn().mockResolvedValue({ success: true, reset: 0 }) }),
+  getIdentifier: vi.fn().mockReturnValue("ip:127.0.0.1"),
+  rateLimitResponse: vi.fn(),
+}));
+
 // ── Supabase mock ─────────────────────────────────────────────────────────
 const mockSignUp = vi.fn();
 const mockFrom = vi.fn();

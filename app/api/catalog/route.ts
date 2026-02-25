@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { cacheGet, cacheSet } from "@/lib/redis";
+import { publicLimiter, getIdentifier, rateLimitResponse } from "@/lib/ratelimit";
 
 type SortOption = "popularity" | "newest" | "price-asc" | "price-desc" | "name";
 
 export async function GET(req: Request) {
+  const { success, reset } = await publicLimiter().limit(getIdentifier(req));
+
+  if (!success) return rateLimitResponse(reset);
+
   try {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("q") || "";

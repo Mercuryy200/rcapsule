@@ -57,17 +57,18 @@ async function updateClothesStats(supabase: any, clothesIds: string[]) {
     const lastWorn = distinctWears?.[0]?.wornAt || null;
     const firstWorn = distinctWears?.[distinctWears.length - 1]?.wornAt || null;
 
-    await supabase
+    const { error: clothesUpdateError } = await supabase
       .from("Clothes")
       .update({
         timesWorn: totalWears,
         lastWornAt: lastWorn,
       })
-      .eq("id", clothesId)
-      .then(() => {})
-      .catch(() => {});
+      .eq("id", clothesId);
 
-    await supabase
+    if (clothesUpdateError)
+      console.error("Error updating Clothes stats:", clothesUpdateError);
+
+    const { error: analyticsError } = await supabase
       .from("ClothesAnalytics")
       .upsert({
         clothesId,
@@ -76,9 +77,10 @@ async function updateClothesStats(supabase: any, clothesIds: string[]) {
         lastWornAt: lastWorn,
         firstWornAt: firstWorn,
         lastCalculatedAt: new Date().toISOString(),
-      })
-      .then(() => {})
-      .catch(() => {});
+      });
+
+    if (analyticsError)
+      console.error("Error upserting ClothesAnalytics:", analyticsError);
   }
 }
 

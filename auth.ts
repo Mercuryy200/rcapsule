@@ -214,7 +214,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
       return true;
     },
-    async jwt({ token, user, trigger, session, account }) {
+    async jwt({ token, user, trigger, session }) {
+      // Initial sign-in: populate token from the user object
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -222,6 +223,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         token.picture = user.image;
       }
 
+      // Explicit session update (e.g. after profile edit)
       if (trigger === "update" && session) {
         token.name = session.user.name;
         token.picture = session.user.image;
@@ -229,7 +231,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         return token;
       }
 
-      if (token.id) {
+      // Fetch role (and sync name/image) only once per session — when role
+      // is not yet stored in the token. Avoids a DB round-trip on every request.
+      if (token.id && token.role === undefined) {
         try {
           const { data: userData } = await supabase
             .from("User")
@@ -240,10 +244,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           if (userData) {
             token.name = userData.name;
             token.picture = userData.image;
-            token.role = userData.role;
+            token.role = userData.role ?? "user";
           }
         } catch (error) {
           console.error("Error fetching user data in JWT callback:", error);
+          token.role = "user";
         }
       }
 

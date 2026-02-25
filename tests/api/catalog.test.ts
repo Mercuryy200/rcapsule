@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GET } from "@/app/api/catalog/route";
 
+// ── Mock rate limiter (always pass) ────────────────────────────────────────
+vi.mock("@/lib/ratelimit", () => ({
+  publicLimiter: () => ({ limit: vi.fn().mockResolvedValue({ success: true, reset: 0 }) }),
+  getIdentifier: vi.fn().mockReturnValue("ip:127.0.0.1"),
+  rateLimitResponse: vi.fn(),
+}));
+
 // ── Mock Redis ─────────────────────────────────────────────────────────────
 vi.mock("@/lib/redis", () => ({
   cacheGet: vi.fn().mockResolvedValue(null),  // cache miss by default

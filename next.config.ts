@@ -19,11 +19,13 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.sentry.io",
+      // 'unsafe-eval' is only needed in development (webpack HMR).
+      // Production Next.js builds do not require it.
+      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : ""} https://js.stripe.com https://*.sentry.io https://maps.googleapis.com`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self'",
-      "connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.sentry.io",
+      "connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.sentry.io https://maps.googleapis.com",
       "frame-src https://js.stripe.com",
       "object-src 'none'",
       "base-uri 'self'",

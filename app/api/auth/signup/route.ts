@@ -2,8 +2,13 @@ import { NextResponse } from "next/server";
 
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { signupSchema } from "@/lib/validations/schemas";
+import { authLimiter, getIdentifier, rateLimitResponse } from "@/lib/ratelimit";
 
 export async function POST(req: Request) {
+  const { success, reset } = await authLimiter().limit(getIdentifier(req));
+
+  if (!success) return rateLimitResponse(reset);
+
   try {
     const supabase = getSupabaseServer();
     const body = await req.json();

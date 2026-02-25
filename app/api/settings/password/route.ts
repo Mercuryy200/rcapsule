@@ -2,8 +2,13 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 import { auth } from "@/auth";
+import { authLimiter, getIdentifier, rateLimitResponse } from "@/lib/ratelimit";
 
 export async function PUT(req: Request) {
+  const { success, reset } = await authLimiter().limit(getIdentifier(req));
+
+  if (!success) return rateLimitResponse(reset);
+
   try {
     const session = await auth();
 
