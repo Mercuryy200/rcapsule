@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import * as Sentry from "@sentry/nextjs";
 import { Button } from "@heroui/react";
 
@@ -11,6 +12,8 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const router = useRouter();
+
   useEffect(() => {
     Sentry.captureException(error);
   }, [error]);
@@ -53,7 +56,7 @@ export default function Error({
             className="font-medium uppercase tracking-wider"
             radius="none"
             variant="bordered"
-            onPress={() => (window.location.href = "/")}
+            onPress={() => router.push("/")}
           >
             Go Home
           </Button>

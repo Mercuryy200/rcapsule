@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
+import { getErrorMessage } from "@/lib/utils/error";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
     // You would need to pass the recommendationId from the frontend to do this.
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

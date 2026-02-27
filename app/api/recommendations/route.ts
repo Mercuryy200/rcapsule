@@ -8,6 +8,7 @@ import {
   getOutfitRecommendation,
   getOutfitOptions,
 } from "@/lib/services/ai-recommendations";
+import { getErrorMessage } from "@/lib/utils/error";
 
 const DAILY_LIMIT = 2; // Increased to 2 based on common usage patterns
 
@@ -201,13 +202,13 @@ export async function GET(req: Request) {
       generatedAt: new Date().toISOString(),
       remaining: Math.max(0, remaining),
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Recommendation error:", error);
 
     return NextResponse.json(
       {
         error: "Failed to generate recommendation",
-        message: error.message,
+        message: getErrorMessage(error),
       },
       { status: 500 },
     );
@@ -363,13 +364,13 @@ export async function POST(req: Request) {
       generatedAt: new Date().toISOString(),
       remaining: Math.max(0, remaining),
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Recommendation error:", error);
 
     return NextResponse.json(
       {
         error: "Failed to generate recommendation",
-        message: error.message,
+        message: getErrorMessage(error),
       },
       { status: 500 },
     );

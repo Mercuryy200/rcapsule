@@ -49,6 +49,34 @@ import {
   FireIcon,
 } from "@heroicons/react/24/outline";
 
+import { useCalendarLogs } from "@/lib/hooks/useCalendarLogs";
+import ConfirmModal from "@/components/ui/ConfirmModal";
+
+interface CalendarOutfit {
+  id: string;
+  name: string;
+  imageUrl?: string;
+  description?: string;
+  timesWorn?: number;
+}
+
+interface WearLogEntry {
+  id?: string;
+  wornAt: string;
+  occasion?: string;
+  weather?: string;
+  temperature?: number | string;
+  location?: string;
+  notes?: string;
+  outfit?: CalendarOutfit;
+}
+
+interface CalendarEntry {
+  type: "outfit";
+  data: CalendarOutfit;
+  metadata: WearLogEntry;
+}
+
 const occasions = ["Casual", "Work", "Date Night", "Gym", "Event", "Lounging"];
 const weathers = ["Sunny", "Cloudy", "Rainy", "Snowy", "Windy"];
 
@@ -57,16 +85,15 @@ type ViewMode = "month" | "week" | "day";
 export default function CalendarTracker({
   outfits,
 }: {
-  clothes: any[];
-  outfits: any[];
+  outfits: CalendarOutfit[];
 }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewMode>("month");
-  const [logs, setLogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { logs, loading, error, setError, fetchLogs, submitLog, deleteLog } = useCalendarLogs();
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+  const [deleteTarget, setDeleteTarget] = useState<{ outfitId: string; date: Date } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedOutfitId, setSelectedOutfitId] = useState("");
@@ -131,26 +158,10 @@ export default function CalendarTracker({
   };
 
   useEffect(() => {
-    fetchLogs();
-  }, [currentDate, view]);
-
-  const fetchLogs = async () => {
-    setLoading(true);
-    setError(null);
     const { apiStart, apiEnd } = getViewRange();
 
-    try {
-      const res = await fetch(`/api/calendar?start=${apiStart}&end=${apiEnd}`);
-
-      if (!res.ok) throw new Error("Failed to fetch logs");
-      setLogs(await res.json());
-    } catch (err) {
-      setError("Failed to load calendar data");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchLogs(apiStart, apiEnd);
+  }, [currentDate, view, fetchLogs]);
 
   const openAddModal = (date: Date) => {
     setIsEditing(false);
@@ -166,7 +177,7 @@ export default function CalendarTracker({
     onOpen();
   };
 
-  const openEditModal = (entry: any) => {
+  const openEditModal = (entry: CalendarEntry) => {
     setIsEditing(true);
     const entryDate = new Date(entry.metadata.wornAt);
 
@@ -187,7 +198,6 @@ export default function CalendarTracker({
   const handleSubmit = async () => {
     if (!selectedOutfitId || !selectedDate) return;
     setSubmitting(true);
-    setError(null);
 
     const payload = {
       date: format(selectedDate, "yyyy-MM-dd"),
@@ -196,76 +206,43 @@ export default function CalendarTracker({
     };
 
     try {
-      let res;
+      const success = await submitLog(payload, isEditing);
 
-      if (isEditing) {
-        // For editing, we need the original date from the current view
-        res = await fetch("/api/calendar", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            originalDate: format(selectedDate, "yyyy-MM-dd"),
-            newDate: format(selectedDate, "yyyy-MM-dd"),
-            outfitId: selectedOutfitId,
-            ...metadata,
-          }),
-        });
-      } else {
-        res = await fetch("/api/calendar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+      if (success) {
+        const { apiStart, apiEnd } = getViewRange();
+
+        await fetchLogs(apiStart, apiEnd);
+        onOpenChange();
       }
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Failed to save");
-
-        return;
-      }
-
-      fetchLogs();
-      onOpenChange();
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
+    } catch {
+      setError("Failed to save log");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDelete = async (outfitId: string, date: Date) => {
-    if (
-      !confirm(
-        "Remove this wear log? Your outfit stats will be updated automatically.",
-      )
-    )
-      return;
-
-    const dateStr = format(date, "yyyy-MM-dd");
-
-    try {
-      const res = await fetch(
-        `/api/calendar?outfitId=${outfitId}&date=${dateStr}`,
-        { method: "DELETE" },
-      );
-
-      if (res.ok) {
-        fetchLogs();
-      } else {
-        const data = await res.json();
-
-        alert(data.error || "Failed to delete");
-      }
-    } catch (err) {
-      alert("Failed to delete log");
-    }
+  const handleDeleteClick = (outfitId: string, date: Date) => {
+    setDeleteTarget({ outfitId, date });
+    onDeleteOpen();
   };
 
-  const getDayContent = (day: Date) => {
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    const success = await deleteLog(deleteTarget.outfitId, deleteTarget.date);
+
+    if (success) {
+      const { apiStart, apiEnd } = getViewRange();
+
+      await fetchLogs(apiStart, apiEnd);
+    }
+    onDeleteClose();
+    setDeleteTarget(null);
+  };
+
+  const getDayContent = (day: Date): CalendarEntry[] => {
     const dayLogs = logs.filter((log) => isSameDay(new Date(log.wornAt), day));
-    const uniqueEntries = new Map();
+    const uniqueEntries = new Map<string, CalendarEntry>();
 
     dayLogs.forEach((log) => {
       if (log.outfit && !uniqueEntries.has(log.outfit.id)) {
@@ -345,7 +322,7 @@ export default function CalendarTracker({
 
               {entries.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-1">
-                  {entries.map((entry: any) => (
+                  {entries.map((entry: CalendarEntry) => (
                     <div key={entry.data.id} className="relative group/avatar">
                       <Avatar
                         className="border border-default-200 shadow-sm"
@@ -405,7 +382,7 @@ export default function CalendarTracker({
 
         {entries.length > 0 && (
           <div className="space-y-6">
-            {entries.map((entry: any) => (
+            {entries.map((entry: CalendarEntry) => (
               <div
                 key={entry.data.id}
                 className="flex flex-col md:flex-row gap-6 p-6 border border-default-200 rounded-2xl bg-default-50/30 hover:border-default-300 transition-colors"
@@ -458,7 +435,7 @@ export default function CalendarTracker({
                         color="danger"
                         size="sm"
                         variant="light"
-                        onPress={() => handleDelete(entry.data.id, currentDate)}
+                        onPress={() => handleDeleteClick(entry.data.id, currentDate)}
                       >
                         <TrashIcon className="w-4 h-4" />
                       </Button>
@@ -785,6 +762,15 @@ export default function CalendarTracker({
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        message="Remove this wear log? Your outfit stats will be updated automatically."
+        title="Remove Wear Log"
+        confirmLabel="Remove"
+        onClose={onDeleteClose}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

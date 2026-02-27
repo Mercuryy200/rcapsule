@@ -1,8 +1,10 @@
 "use client";
 
+import type { Analytics } from "@/lib/types/analytics";
+
 import { StatsCard } from "@/components/analytics/StatsCard";
 
-export function OverviewDashboard({ analytics }: { analytics: any }) {
+export function OverviewDashboard({ analytics }: { analytics: Analytics }) {
   const { overview } = analytics;
 
   return (

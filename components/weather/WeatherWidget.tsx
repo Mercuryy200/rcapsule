@@ -3,6 +3,7 @@
 import type { WeatherContext } from "@/lib/services/weather";
 
 import { useState, useEffect } from "react";
+import { getErrorMessage } from "@/lib/utils/error";
 import { Button, Spinner } from "@heroui/react";
 import {
   SunIcon,
@@ -123,8 +124,8 @@ export default function WeatherWidget({
       }
 
       setData(result);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

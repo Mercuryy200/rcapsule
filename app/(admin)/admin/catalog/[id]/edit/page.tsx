@@ -1,5 +1,6 @@
 "use client";
 import { use, useEffect, useState } from "react";
+import { getErrorMessage } from "@/lib/utils/error";
 import useSWR from "swr";
 import {
   Button,
@@ -130,8 +131,8 @@ export default function AdminCatalogEditPage({
       }
 
       router.push("/admin/catalog");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setSaving(false);
     }

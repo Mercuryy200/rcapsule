@@ -34,6 +34,8 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 
+import { toast } from "sonner";
+
 import { ImageUpload } from "@/components/closet/ImageUpload";
 import CollageBuilder from "@/components/outfit/CollageBuilder";
 
@@ -246,7 +248,7 @@ export default function EditOutfitPage() {
           );
         }
       } else {
-        alert("Outfit not found");
+        toast.error("Outfit not found");
         router.push("/outfits");
       }
     } catch (error) {
@@ -332,7 +334,7 @@ export default function EditOutfitPage() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || selectedClothes.length === 0) {
-      alert("Name and items required.");
+      toast.error("Name and items required.");
 
       return;
     }
@@ -353,7 +355,7 @@ export default function EditOutfitPage() {
       } else {
         const err = await response.json();
 
-        alert(`Failed: ${err.error}`);
+        toast.error(`Failed: ${err.error}`);
       }
     } catch (error) {
       console.error(error);
@@ -370,7 +372,7 @@ export default function EditOutfitPage() {
       });
 
       if (response.ok) router.push("/outfits");
-      else alert("Failed to delete");
+      else toast.error("Failed to delete");
     } catch (error) {
       console.error(error);
     } finally {

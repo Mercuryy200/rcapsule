@@ -109,7 +109,7 @@ export default function NewItemPage() {
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.category) {
-      alert("Please fill in Name and Category.");
+      toast.error("Please fill in Name and Category.");
 
       return;
     }

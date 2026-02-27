@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Button, Tooltip, Input } from "@heroui/react";
 import {
   SparklesIcon,
@@ -32,6 +33,7 @@ export function ImageUpload({
   showRemoveBackground = true,
   className = "h-64",
 }: ImageUploadProps) {
+  const router = useRouter();
   const { isPremium } = useUser();
   const [uploading, setUploading] = useState(false);
   const [removingBg, setRemovingBg] = useState(false);
@@ -302,7 +304,7 @@ export function ImageUpload({
                   size="sm"
                   startContent={<SparklesIcon className="w-3 h-3" />}
                   variant="flat"
-                  onPress={() => (window.location.href = "/pricing")}
+                  onPress={() => router.push("/pricing")}
                 >
                   Magic Edit
                 </Button>

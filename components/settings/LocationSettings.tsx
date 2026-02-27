@@ -15,6 +15,8 @@ import {
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 
+import { getErrorMessage } from "@/lib/utils/error";
+
 interface LocationData {
   city: string | null;
   country: string | null;
@@ -92,8 +94,8 @@ export default function LocationSettings() {
 
           setSuccess("Location detected and saved");
           fetchLocation();
-        } catch (err: any) {
-          setError(err.message);
+        } catch (err) {
+          setError(getErrorMessage(err));
         } finally {
           setDetectingLocation(false);
         }
@@ -147,8 +149,8 @@ export default function LocationSettings() {
 
       setSuccess(`Location set to ${data.location.city}`);
       fetchLocation();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setSaving(false);
     }

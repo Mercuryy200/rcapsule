@@ -17,6 +17,7 @@ import {
   Spinner,
   Textarea,
   Chip,
+  useDisclosure,
 } from "@heroui/react";
 import {
   ArrowLeftIcon,
@@ -45,6 +46,7 @@ import {
   currencies,
 } from "@/lib/data";
 import { ImageUpload } from "@/components/closet/ImageUpload";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 export default function ItemPage() {
   const { status } = useSession();
@@ -55,6 +57,7 @@ export default function ItemPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
   const [editTab, setEditTab] = useState("basic");
 
   // Removed redundant imageMethod state
@@ -178,7 +181,7 @@ export default function ItemPage() {
 
   const handleSave = async () => {
     if (!formData.name || !formData.category) {
-      alert("Name and Category are required.");
+      toast.error("Name and Category are required.");
 
       return;
     }
@@ -242,8 +245,6 @@ export default function ItemPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Remove this piece from your collection?")) return;
-
     try {
       const response = await fetch(`/api/clothes/${itemId}`, {
         method: "DELETE",
@@ -257,6 +258,8 @@ export default function ItemPage() {
     } catch (error) {
       console.error("Error deleting item:", error);
       toast.error("Failed to delete item.");
+    } finally {
+      onDeleteClose();
     }
   };
 
@@ -304,7 +307,7 @@ export default function ItemPage() {
           {!isEditing ? (
             <ViewMode
               item={item}
-              onDelete={handleDelete}
+              onDelete={onDeleteOpen}
               onEdit={() => setIsEditing(true)}
             />
           ) : (
@@ -324,11 +327,18 @@ export default function ItemPage() {
           )}
         </div>
       </div>
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        message="Remove this piece from your collection? This cannot be undone."
+        title="Remove Item"
+        confirmLabel="Remove"
+        onClose={onDeleteClose}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }
 
-// ... ViewMode and DetailItem components remain exactly the same ...
 function ViewMode({
   item,
   onEdit,

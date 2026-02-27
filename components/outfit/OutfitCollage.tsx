@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { toast } from "sonner";
 import Image from "next/image";
 import { Button, Card, CardBody, Spinner } from "@heroui/react";
 
@@ -57,7 +58,7 @@ export function OutfitCollage({
       }
     } catch (error) {
       console.error("Error fetching outfit:", error);
-      alert(error instanceof Error ? error.message : "Failed to load outfit");
+      toast.error(error instanceof Error ? error.message : "Failed to load outfit");
     } finally {
       setLoading(false);
     }
@@ -80,7 +81,7 @@ export function OutfitCollage({
     const clothingItems = itemsToUse || items;
 
     if (!canvasRef.current || clothingItems.length === 0) {
-      alert("No images to generate collage");
+      toast.error("No images to generate collage");
 
       return;
     }
@@ -212,7 +213,7 @@ export function OutfitCollage({
 
             if (onSave) onSave(uploadData.url);
 
-            alert("✨ Collage generated and saved!");
+            toast.success("Collage generated and saved!");
           } catch (error) {
             console.error("Error uploading collage:", error);
             throw error;
@@ -223,7 +224,7 @@ export function OutfitCollage({
       );
     } catch (error) {
       console.error("Error generating collage:", error);
-      alert(
+      toast.error(
         error instanceof Error ? error.message : "Failed to generate collage",
       );
     } finally {

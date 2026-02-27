@@ -11,9 +11,12 @@ import {
   Select,
   SelectItem,
   Skeleton,
+  useDisclosure,
 } from "@heroui/react";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
+
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 const fetcher = (url: string) =>
   fetch(url).then((r) => {
@@ -37,6 +40,7 @@ export default function AdminUserDetailPage({
   const user = data?.user;
   const recentItems: any[] = data?.recentItems ?? [];
   const itemCount: number = data?.itemCount ?? 0;
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
 
   async function updateRole(newRole: string) {
     await fetch(`/api/admin/users/${id}`, {
@@ -57,10 +61,10 @@ export default function AdminUserDetailPage({
   }
 
   async function deleteUser() {
-    if (!confirm(`Delete user "${user?.name ?? user?.email}"? This cannot be undone.`)) return;
     const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
 
     if (res.ok) router.push("/admin/users");
+    else onDeleteClose();
   }
 
   if (isLoading) {
@@ -210,7 +214,7 @@ export default function AdminUserDetailPage({
             color="danger"
             size="sm"
             variant="flat"
-            onPress={deleteUser}
+            onPress={onDeleteOpen}
           >
             Delete Account
           </Button>
@@ -253,6 +257,14 @@ export default function AdminUserDetailPage({
           </CardBody>
         </Card>
       )}
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        message={`Delete user "${user?.name ?? user?.email}"? This cannot be undone.`}
+        title="Delete Account"
+        confirmLabel="Delete"
+        onClose={onDeleteClose}
+        onConfirm={deleteUser}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 import { getWeather, getWeatherSummary } from "@/lib/services/weather";
+import { getErrorMessage } from "@/lib/utils/error";
 
 export async function GET() {
   const session = await auth();
@@ -52,13 +53,13 @@ export async function GET() {
         country: prefs.location_country,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Weather API error:", error);
 
     return NextResponse.json(
       {
         error: "Failed to fetch weather",
-        message: error.message,
+        message: getErrorMessage(error),
       },
       { status: 500 },
     );

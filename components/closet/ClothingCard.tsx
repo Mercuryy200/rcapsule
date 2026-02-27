@@ -2,6 +2,7 @@
 import { Card, CardBody, CardFooter, Image, Chip, Button } from "@heroui/react";
 import { CheckIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface ClothingItem {
   id: string;
@@ -42,11 +43,11 @@ export default function ClothingCard({ item, onClick }: ClothingCardProps) {
         // Refresh the page or trigger a refetch
         window.location.reload();
       } else {
-        alert("Failed to update item status");
+        toast.error("Failed to update item status");
       }
     } catch (error) {
       console.error("Error updating item:", error);
-      alert("Error updating item status");
+      toast.error("Error updating item status");
     } finally {
       setIsUpdating(false);
     }

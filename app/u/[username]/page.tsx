@@ -30,6 +30,7 @@ import {
   UserPlusIcon,
   UserMinusIcon,
 } from "@heroicons/react/24/outline";
+import { toast } from "sonner";
 
 // --- INLINE SOCIAL ICONS COMPONENT ---
 const SocialIcon = ({
@@ -193,7 +194,7 @@ export default function PublicProfilePage() {
 
   const handleReport = () => {
     if (!session) return router.push("/login");
-    alert("Report submitted.");
+    toast.success("Report submitted.");
   };
 
   const handleBlock = async () => {

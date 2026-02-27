@@ -32,6 +32,8 @@ import {
   CurrencyDollarIcon,
 } from "@heroicons/react/24/outline";
 
+import ConfirmModal from "@/components/ui/ConfirmModal";
+
 interface ClothingItem {
   id: string;
   name: string;
@@ -73,6 +75,7 @@ export default function WardrobePage() {
 
   const wardrobeModal = useDisclosure();
   const addExistingModal = useDisclosure();
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
 
   const [selectedExistingItems, setSelectedExistingItems] = useState<
     Set<string>
@@ -168,7 +171,6 @@ export default function WardrobePage() {
   };
 
   const handleDeleteWardrobe = async () => {
-    if (!confirm("Are you sure? This collection will be deleted.")) return;
     try {
       const response = await fetch(`/api/wardrobes/${wardrobeId}`, {
         method: "DELETE",
@@ -177,6 +179,8 @@ export default function WardrobePage() {
       if (response.ok) router.push("/profile");
     } catch (error) {
       console.error(error);
+    } finally {
+      onDeleteClose();
     }
   };
 
@@ -325,7 +329,7 @@ export default function WardrobePage() {
                     className="text-danger"
                     color="danger"
                     startContent={<TrashIcon className="w-4 h-4" />}
-                    onPress={handleDeleteWardrobe}
+                    onPress={onDeleteOpen}
                   >
                     Delete Collection
                   </DropdownItem>
@@ -575,6 +579,15 @@ export default function WardrobePage() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        message="This collection will be permanently deleted."
+        title="Delete Collection"
+        confirmLabel="Delete"
+        onClose={onDeleteClose}
+        onConfirm={handleDeleteWardrobe}
+      />
     </div>
   );
 }

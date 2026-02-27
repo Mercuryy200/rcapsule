@@ -1,44 +1,51 @@
 // components/analytics/InsightsCard.tsx
 "use client";
 
+import type { ComponentType } from "react";
+import type { Insight } from "@/lib/types/analytics";
+
 import {
   LightBulbIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
-export function InsightsCard({ insights }: { insights: any[] }) {
-  const getStyles = (type: string) => {
-    switch (type) {
-      case "positive":
-        return {
-          border: "border-[#2d4530]",
-          bg: "bg-[#2d4530]/5",
-          icon: "text-[#2d4530]",
-          IconComponent: CheckCircleIcon,
-        };
-      case "warning":
-        return {
-          border: "border-[#5e4b3b]",
-          bg: "bg-[#5e4b3b]/5",
-          icon: "text-[#5e4b3b]",
-          IconComponent: ExclamationTriangleIcon,
-        };
-      default:
-        return {
-          border: "border-[#6b7884]",
-          bg: "bg-[#6b7884]/5",
-          icon: "text-[#6b7884]",
-          IconComponent: LightBulbIcon,
-        };
-    }
-  };
+interface InsightStyle {
+  border: string;
+  bg: string;
+  icon: string;
+  IconComponent: ComponentType<{ className?: string }>;
+}
 
+const INSIGHT_STYLES: Record<string, InsightStyle> = {
+  positive: {
+    border: "border-success-400",
+    bg: "bg-success/5",
+    icon: "text-success-600",
+    IconComponent: CheckCircleIcon,
+  },
+  warning: {
+    border: "border-warning-400",
+    bg: "bg-warning/5",
+    icon: "text-warning-600",
+    IconComponent: ExclamationTriangleIcon,
+  },
+  tip: {
+    border: "border-default-300",
+    bg: "bg-default-50",
+    icon: "text-default-500",
+    IconComponent: LightBulbIcon,
+  },
+};
+
+const DEFAULT_STYLE = INSIGHT_STYLES.tip;
+
+export function InsightsCard({ insights }: { insights: Insight[] }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="border-b border-[#E5E5E5] dark:border-[#262626] pb-4">
-        <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#3c3c3c] dark:text-[#EDEDED]">
+      <div className="border-b border-default-200 dark:border-default-700 pb-4">
+        <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground-600">
           Wardrobe Intelligence
         </h3>
       </div>
@@ -46,7 +53,7 @@ export function InsightsCard({ insights }: { insights: any[] }) {
       {/* Insights Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {insights.map((insight, index) => {
-          const styles = getStyles(insight.type);
+          const styles = INSIGHT_STYLES[insight.type] ?? DEFAULT_STYLE;
           const Icon = styles.IconComponent;
 
           return (
@@ -59,10 +66,10 @@ export function InsightsCard({ insights }: { insights: any[] }) {
                   className={`w-5 h-5 ${styles.icon} flex-shrink-0 mt-0.5`}
                 />
                 <div className="flex-1">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#6b7884] mb-2">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-default-500 mb-2">
                     {insight.category}
                   </p>
-                  <p className="text-sm leading-relaxed text-[#171717] dark:text-[#EDEDED] font-light">
+                  <p className="text-sm leading-relaxed text-foreground font-light">
                     {insight.message}
                   </p>
                 </div>

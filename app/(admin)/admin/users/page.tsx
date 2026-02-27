@@ -12,8 +12,11 @@ import {
   SelectItem,
   Skeleton,
   Tooltip,
+  useDisclosure,
 } from "@heroui/react";
 import NextLink from "next/link";
+
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 const fetcher = (url: string) =>
   fetch(url).then((r) => {
@@ -44,6 +47,8 @@ export default function AdminUsersPage() {
 
   const users: any[] = data?.users ?? [];
   const total: number = data?.total ?? 0;
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   async function toggleField(userId: string, field: string, current: boolean) {
     await fetch(`/api/admin/users/${userId}`, {
@@ -54,9 +59,16 @@ export default function AdminUsersPage() {
     mutate();
   }
 
-  async function deleteUser(userId: string, name: string) {
-    if (!confirm(`Delete user "${name}"? This cannot be undone.`)) return;
-    await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
+  function deleteUser(userId: string, name: string) {
+    setDeleteTarget({ id: userId, name });
+    onDeleteOpen();
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    await fetch(`/api/admin/users/${deleteTarget.id}`, { method: "DELETE" });
+    onDeleteClose();
+    setDeleteTarget(null);
     mutate();
   }
 
@@ -273,6 +285,14 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        message={deleteTarget ? `Delete user "${deleteTarget.name}"? This cannot be undone.` : ""}
+        title="Delete User"
+        confirmLabel="Delete"
+        onClose={onDeleteClose}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

@@ -34,6 +34,8 @@ import {
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 
+import { toast } from "sonner";
+
 import { ImageUpload } from "@/components/closet/ImageUpload";
 import CollageBuilder from "@/components/outfit/CollageBuilder";
 
@@ -285,7 +287,7 @@ export default function CreateOutfitPage() {
         setFormData((prev) => ({ ...prev, imageUrl: data.url }));
         setShowCollageBuilder(false);
       } else {
-        alert("Upload failed");
+        toast.error("Upload failed");
       }
     } catch (error) {
       console.error("Collage upload error", error);
@@ -344,13 +346,13 @@ export default function CreateOutfitPage() {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      alert("Please enter a name for your outfit");
+      toast.error("Please enter a name for your outfit");
 
       return;
     }
 
     if (selectedClothes.length === 0) {
-      alert("Please select at least one clothing item");
+      toast.error("Please select at least one clothing item");
 
       return;
     }
@@ -376,11 +378,11 @@ export default function CreateOutfitPage() {
       } else {
         const error = await response.json();
 
-        alert(error.error || "Failed to create outfit");
+        toast.error(error.error || "Failed to create outfit");
       }
     } catch (error) {
       console.error(error);
-      alert("An error occurred");
+      toast.error("An error occurred");
     } finally {
       setSubmitting(false);
     }

@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import { auth } from "@/auth";
 import { authLimiter, getIdentifier, rateLimitResponse } from "@/lib/ratelimit";
+import { getErrorMessage } from "@/lib/utils/error";
 
 export async function PUT(req: Request) {
   const { success, reset } = await authLimiter().limit(getIdentifier(req));
@@ -76,11 +77,11 @@ export async function PUT(req: Request) {
       .eq("id", session.user.id);
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error changing password:", error);
 
     return NextResponse.json(
-      { error: error.message || "Failed to change password" },
+      { error: getErrorMessage(error) || "Failed to change password" },
       { status: 500 },
     );
   }

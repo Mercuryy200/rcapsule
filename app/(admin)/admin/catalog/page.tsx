@@ -14,10 +14,13 @@ import {
   ScrollShadow,
   Skeleton,
   Switch,
+  useDisclosure,
 } from "@heroui/react";
 import NextLink from "next/link";
 import { motion } from "framer-motion";
 import { AdjustmentsHorizontalIcon, XMarkIcon } from "@heroicons/react/24/outline";
+
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 const fetcher = (url: string) =>
   fetch(url).then((r) => {
@@ -64,6 +67,8 @@ export default function AdminCatalogPage() {
   const products: any[] = data?.products ?? [];
   const total: number = data?.total ?? 0;
   const hasActiveFilters = selectedCategories.length > 0 || selectedBrands.length > 0 || inStockOnly;
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   // Derive available filters from all products (fetch with no filters to get all)
   const { data: allData } = useSWR("/api/admin/catalog?limit=2000&offset=0", fetcher);
@@ -71,9 +76,16 @@ export default function AdminCatalogPage() {
   const availableCategories = [...new Set(allProducts.map((p: any) => p.category).filter(Boolean))].sort();
   const availableBrands = [...new Set(allProducts.map((p: any) => p.brand).filter(Boolean))].sort();
 
-  async function deleteProduct(id: string, name: string) {
-    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
-    await fetch(`/api/admin/catalog/${id}`, { method: "DELETE" });
+  function deleteProduct(id: string, name: string) {
+    setDeleteTarget({ id, name });
+    onDeleteOpen();
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    await fetch(`/api/admin/catalog/${deleteTarget.id}`, { method: "DELETE" });
+    onDeleteClose();
+    setDeleteTarget(null);
     mutate();
   }
 
@@ -308,6 +320,14 @@ export default function AdminCatalogPage() {
           )}
         </div>
       </div>
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        message={deleteTarget ? `Delete "${deleteTarget.name}"? This cannot be undone.` : ""}
+        title="Delete Product"
+        confirmLabel="Delete"
+        onClose={onDeleteClose}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

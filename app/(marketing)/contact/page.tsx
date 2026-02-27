@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button, Input, Textarea } from "@heroui/react";
 import { EnvelopeIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 
+import { toast } from "sonner";
+
 import { supabase } from "@/lib/supabase";
 
 export default function ContactPage() {
@@ -30,7 +32,7 @@ export default function ContactPage() {
       setSucceeded(true);
     } catch (error) {
       console.error("Error sending message:", error);
-      alert("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }

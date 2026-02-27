@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
+import { getErrorMessage } from "@/lib/utils/error";
 
 // FIXED: Count distinct wornAt timestamps, not total rows
 async function updateOutfitStats(
@@ -117,7 +118,7 @@ export async function GET(req: Request) {
   const { data, error } = await query;
 
   if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
 
   return NextResponse.json(data);
 }
@@ -188,8 +189,8 @@ export async function POST(req: Request) {
     ]);
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -264,8 +265,8 @@ export async function PUT(req: Request) {
     ]);
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -310,7 +311,7 @@ export async function DELETE(req: Request) {
     ]);
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

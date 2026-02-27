@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { getErrorMessage } from "@/lib/utils/error";
 import {
   Button,
   Card,
@@ -86,8 +87,8 @@ export default function AdminCatalogNewPage() {
       }
 
       router.push("/admin/catalog");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

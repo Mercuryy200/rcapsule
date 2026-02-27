@@ -2,7 +2,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Button, Spinner, Chip, Image as HeroImage } from "@heroui/react";
+import { Button, Spinner, Chip, Image as HeroImage, useDisclosure } from "@heroui/react";
+import { toast } from "sonner";
+
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import {
   ArrowLeftIcon,
   PencilSquareIcon,
@@ -34,6 +37,7 @@ export default function OutfitDetailPage() {
   const { status } = useSession();
   const [outfit, setOutfit] = useState<Outfit | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -53,7 +57,6 @@ export default function OutfitDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this look?")) return;
     try {
       const response = await fetch(`/api/outfits/${params.id}`, {
         method: "DELETE",
@@ -62,10 +65,12 @@ export default function OutfitDetailPage() {
       if (response.ok) {
         router.push("/outfits");
       } else {
-        alert("Failed to delete outfit");
+        toast.error("Failed to delete outfit");
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      onDeleteClose();
     }
   };
 
@@ -204,13 +209,21 @@ export default function OutfitDetailPage() {
               radius="none"
               startContent={<TrashIcon className="w-4 h-4" />}
               variant="bordered"
-              onPress={handleDelete}
+              onPress={onDeleteOpen}
             >
               Delete
             </Button>
           </div>
         </div>
       </div>
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        message="Are you sure you want to delete this look? This cannot be undone."
+        title="Delete Look"
+        confirmLabel="Delete"
+        onClose={onDeleteClose}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

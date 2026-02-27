@@ -467,7 +467,7 @@ export default function ProfilePage() {
           {/* CALENDAR TAB */}
           <Tab key="calendar" title="Calendar">
             <div className="py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <CalendarTracker clothes={clothes} outfits={outfits} />
+              <CalendarTracker outfits={outfits} />
             </div>
           </Tab>
         </Tabs>

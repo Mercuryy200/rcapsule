@@ -26,6 +26,8 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 
+import { getErrorMessage } from "@/lib/utils/error";
+
 interface RecommendedItem {
   id: string;
   name: string;
@@ -104,8 +106,8 @@ export default function OutfitRecommendation({
       setData(result);
       setRemaining(result.remaining);
       setCurrentIndex(0);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
