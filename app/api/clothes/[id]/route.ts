@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 import { clothesPutSchema } from "@/lib/validations/schemas";
+import { cacheDel, analyticsKey, ownedClothesKey } from "@/lib/redis";
 
 export async function GET(
   req: Request,
@@ -180,6 +181,12 @@ export async function PUT(
       .eq("id", id)
       .single();
 
+    // Invalidate caches — price/category/wear data affects analytics
+    await cacheDel(
+      analyticsKey(session.user.id),
+      ownedClothesKey(session.user.id),
+    );
+
     return NextResponse.json(clothingWithWardrobes || updatedClothing[0]);
   } catch (error) {
     console.error("Error updating clothing:", error);
@@ -221,6 +228,11 @@ export async function DELETE(
         { status: 404 },
       );
     }
+
+    await cacheDel(
+      analyticsKey(session.user.id),
+      ownedClothesKey(session.user.id),
+    );
 
     return NextResponse.json({ message: "Deleted successfully" });
   } catch (error) {

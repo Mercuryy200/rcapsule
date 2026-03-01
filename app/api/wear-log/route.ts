@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 import { getErrorMessage } from "@/lib/utils/error";
+import { cacheDel, analyticsKey } from "@/lib/redis";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -33,8 +34,9 @@ export async function POST(req: Request) {
 
     if (error) throw error;
 
-    // Optional: If you want to update the OutfitRecommendation status to "worn"
-    // You would need to pass the recommendationId from the frontend to do this.
+    // Invalidate analytics cache — wear events affect cost-per-wear and
+    // utilization metrics that are computed inside calculateAnalytics.
+    await cacheDel(analyticsKey(session.user.id));
 
     return NextResponse.json({ success: true });
   } catch (error) {

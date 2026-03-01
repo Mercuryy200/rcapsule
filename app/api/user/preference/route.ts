@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
+import { cacheDel, prefsKey } from "@/lib/redis";
 
 export async function GET() {
   const session = await auth();
@@ -97,6 +98,10 @@ export async function PATCH(req: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Invalidate the preferences cache so the next recommendation request
+  // picks up the updated location / style goals immediately.
+  await cacheDel(prefsKey(session.user.id));
 
   return NextResponse.json(data);
 }

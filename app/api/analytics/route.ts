@@ -1,9 +1,10 @@
-// app/api/analytics/route.ts - Fixed version
+// app/api/analytics/route.ts
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
+import { cacheGet, cacheSet, analyticsKey, ANALYTICS_TTL } from "@/lib/redis";
 
 interface ClothesItem {
   id: string;
@@ -48,17 +49,39 @@ export async function GET(req: Request) {
         }
 
         const userId = session.user.id;
+
+        // ── Cache check ──────────────────────────────────────────────────
+        const cached = await cacheGet<ReturnType<typeof calculateAnalytics>>(
+          analyticsKey(userId),
+        );
+
+        if (cached) {
+          span?.setAttribute("cache", "hit");
+          return NextResponse.json(cached);
+        }
+
+        span?.setAttribute("cache", "miss");
+
         const supabase = getSupabaseServer();
 
-        // Fetch all user data
+        // Fetch only the columns required by calculateAnalytics to reduce
+        // data transfer and serialization overhead.
         const [clothesRes, outfitsRes, wearLogsRes] = await Promise.all([
           supabase
             .from("Clothes")
-            .select("*")
+            .select(
+              "id,name,brand,category,price,colors,season,style,condition,purchaseType,purchaseDate,timesworn,sustainability",
+            )
             .eq("userId", userId)
             .or("status.eq.owned,status.is.null"),
-          supabase.from("Outfit").select("*").eq("userId", userId),
-          supabase.from("WearLog").select("*").eq("userId", userId),
+          supabase
+            .from("Outfit")
+            .select("id,timesWorn")
+            .eq("userId", userId),
+          supabase
+            .from("WearLog")
+            .select("id")
+            .eq("userId", userId),
         ]);
 
         const clothes = (clothesRes.data || []) as ClothesItem[];
@@ -67,6 +90,9 @@ export async function GET(req: Request) {
 
         // Calculate comprehensive analytics
         const analytics = calculateAnalytics(clothes, outfits, wearLogs);
+
+        // Persist to cache – non-fatal on failure
+        await cacheSet(analyticsKey(userId), analytics, ANALYTICS_TTL);
 
         span?.setAttribute("total_items", clothes.length);
         span?.setAttribute("total_outfits", outfits.length);

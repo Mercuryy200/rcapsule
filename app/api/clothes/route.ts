@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/nextjs";
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { auth } from "@/auth";
 import { clothesPostSchema } from "@/lib/validations/schemas";
+import { cacheDel, analyticsKey, ownedClothesKey } from "@/lib/redis";
 
 export async function GET(req: Request) {
   return await Sentry.startSpan(
@@ -224,6 +225,10 @@ export async function POST(req: Request) {
       )
       .eq("id", clothing.id)
       .single();
+
+    // Invalidate analytics and owned-clothes caches so the next read
+    // reflects the new item immediately.
+    await cacheDel(analyticsKey(userId), ownedClothesKey(userId));
 
     return NextResponse.json(clothingWithWardrobes || clothing, {
       status: 201,

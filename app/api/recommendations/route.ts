@@ -7,8 +7,17 @@ import { getWeather } from "@/lib/services/weather";
 import {
   getOutfitRecommendation,
   getOutfitOptions,
+  type ClothingItem,
 } from "@/lib/services/ai-recommendations";
 import { getErrorMessage } from "@/lib/utils/error";
+import {
+  cacheGet,
+  cacheSet,
+  prefsKey,
+  PREFS_TTL,
+  ownedClothesKey,
+  OWNED_CLOTHES_TTL,
+} from "@/lib/redis";
 
 const DAILY_LIMIT = 2; // Increased to 2 based on common usage patterns
 
@@ -67,15 +76,32 @@ export async function GET(req: Request) {
       );
     }
 
-    // 2. Get user's location preferences
-    const { data: prefs, error: prefsError } = await supabase
-      .from("UserPreferences")
-      .select("location_lat, location_lon, temperature_unit, styleGoals")
-      .eq("userId", session.user.id)
-      .single();
+    // 2. Get user's location preferences (cached)
+    type PrefsRow = {
+      location_lat: number;
+      location_lon: number;
+      temperature_unit: string;
+      styleGoals: string[];
+    };
 
-    if (prefsError && prefsError.code !== "PGRST116") {
-      throw new Error(prefsError.message);
+    let prefs = await cacheGet<PrefsRow>(prefsKey(session.user.id));
+
+    if (!prefs) {
+      const { data, error: prefsError } = await supabase
+        .from("UserPreferences")
+        .select("location_lat, location_lon, temperature_unit, styleGoals")
+        .eq("userId", session.user.id)
+        .single();
+
+      if (prefsError && prefsError.code !== "PGRST116") {
+        throw new Error(prefsError.message);
+      }
+
+      prefs = data as PrefsRow | null;
+
+      if (prefs) {
+        await cacheSet(prefsKey(session.user.id), prefs, PREFS_TTL);
+      }
     }
 
     if (!prefs?.location_lat || !prefs?.location_lon) {
@@ -94,20 +120,30 @@ export async function GET(req: Request) {
     const weather = await getWeather(
       prefs.location_lat,
       prefs.location_lon,
-      prefs.temperature_unit || "celsius",
+      prefs.temperature_unit as "celsius" | "fahrenheit" || "celsius",
     );
 
-    // 4. Get user's clothes
-    const { data: clothes, error: clothesError } = await supabase
-      .from("Clothes")
-      .select(
-        "id, name, category, colors, season, placesToWear, style, materials, imageUrl, status",
-      )
-      .eq("userId", session.user.id)
-      .eq("status", "owned");
+    // 4. Get user's clothes (cached)
+    let clothes = await cacheGet<ClothingItem[]>(ownedClothesKey(session.user.id));
 
-    if (clothesError) {
-      throw new Error(clothesError.message);
+    if (!clothes) {
+      const { data, error: clothesError } = await supabase
+        .from("Clothes")
+        .select(
+          "id, name, category, colors, season, placesToWear, style, materials, imageUrl, status",
+        )
+        .eq("userId", session.user.id)
+        .eq("status", "owned");
+
+      if (clothesError) {
+        throw new Error(clothesError.message);
+      }
+
+      clothes = (data as ClothingItem[]) ?? [];
+
+      if (clothes.length > 0) {
+        await cacheSet(ownedClothesKey(session.user.id), clothes, OWNED_CLOTHES_TTL);
+      }
     }
 
     if (!clothes || clothes.length < 2) {
@@ -253,12 +289,29 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Get user preferences
-    const { data: prefs } = await supabase
-      .from("UserPreferences")
-      .select("location_lat, location_lon, temperature_unit, styleGoals")
-      .eq("userId", session.user.id)
-      .single();
+    // 2. Get user preferences (cached)
+    type PrefsRowPost = {
+      location_lat: number;
+      location_lon: number;
+      temperature_unit: string;
+      styleGoals: string[];
+    };
+
+    let prefs = await cacheGet<PrefsRowPost>(prefsKey(session.user.id));
+
+    if (!prefs) {
+      const { data } = await supabase
+        .from("UserPreferences")
+        .select("location_lat, location_lon, temperature_unit, styleGoals")
+        .eq("userId", session.user.id)
+        .single();
+
+      prefs = data as PrefsRowPost | null;
+
+      if (prefs) {
+        await cacheSet(prefsKey(session.user.id), prefs, PREFS_TTL);
+      }
+    }
 
     // 3. Get weather
     let weather;
@@ -269,7 +322,7 @@ export async function POST(req: Request) {
       weather = await getWeather(
         prefs.location_lat,
         prefs.location_lon,
-        prefs.temperature_unit || "celsius",
+        prefs.temperature_unit as "celsius" | "fahrenheit" || "celsius",
       );
     } else {
       return NextResponse.json(
@@ -278,14 +331,24 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4. Get clothes
-    const { data: clothes } = await supabase
-      .from("Clothes")
-      .select(
-        "id, name, category, colors, season, placesToWear, style, materials, imageUrl, status",
-      )
-      .eq("userId", session.user.id)
-      .eq("status", "owned");
+    // 4. Get clothes (cached)
+    let clothes = await cacheGet<ClothingItem[]>(ownedClothesKey(session.user.id));
+
+    if (!clothes) {
+      const { data } = await supabase
+        .from("Clothes")
+        .select(
+          "id, name, category, colors, season, placesToWear, style, materials, imageUrl, status",
+        )
+        .eq("userId", session.user.id)
+        .eq("status", "owned");
+
+      clothes = (data as ClothingItem[]) ?? [];
+
+      if (clothes.length > 0) {
+        await cacheSet(ownedClothesKey(session.user.id), clothes, OWNED_CLOTHES_TTL);
+      }
+    }
 
     if (!clothes || clothes.length < 2) {
       return NextResponse.json(

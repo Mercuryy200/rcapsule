@@ -70,3 +70,27 @@ export async function cacheDel(...keys: string[]): Promise<void> {
     // Non-fatal
   }
 }
+
+// ─── Domain cache-key helpers ─────────────────────────────────────────────
+//
+// Centralised key constructors keep TTL constants and key shapes in one
+// place.  Bump the version suffix (v1 → v2) to invalidate all entries
+// after a schema or shape change without touching every call-site.
+
+/** Analytics snapshot for a user. TTL: 10 minutes. */
+export const ANALYTICS_TTL = 600;
+export function analyticsKey(userId: string) {
+  return `analytics:v1:${userId}`;
+}
+
+/** User preference row for AI recommendations. TTL: 5 minutes. */
+export const PREFS_TTL = 300;
+export function prefsKey(userId: string) {
+  return `prefs:v1:${userId}`;
+}
+
+/** Owned-clothes list used by AI recommendations. TTL: 3 minutes. */
+export const OWNED_CLOTHES_TTL = 180;
+export function ownedClothesKey(userId: string) {
+  return `clothes:owned:v1:${userId}`;
+}
