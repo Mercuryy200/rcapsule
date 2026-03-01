@@ -336,7 +336,7 @@ export default function CalendarTracker({
                           <p className="opacity-70 text-[10px] uppercase tracking-widest">
                             {entry.metadata.occasion || "No occasion"}
                           </p>
-                          {entry.data.timesWorn > 0 && (
+                          {(entry.data.timesWorn ?? 0) > 0 && (
                             <div className="flex items-center gap-1 mt-2 text-[10px] opacity-60">
                               <ClockIcon className="w-3 h-3" />
                               Worn {entry.data.timesWorn}x
@@ -402,7 +402,7 @@ export default function CalendarTracker({
                         <Chip color="primary" size="sm" variant="dot">
                           Outfit
                         </Chip>
-                        {entry.data.timesWorn > 0 && (
+                        {(entry.data.timesWorn ?? 0) > 0 && (
                           <Chip
                             size="sm"
                             startContent={<FireIcon className="w-3 h-3" />}
@@ -637,7 +637,7 @@ export default function CalendarTracker({
                         <Avatar radius="sm" size="sm" src={item.imageUrl} />
                         <div className="flex-1">
                           <p className="font-medium">{item.name}</p>
-                          {item.timesWorn > 0 && (
+                          {(item.timesWorn ?? 0) > 0 && (
                             <p className="text-xs text-default-400">
                               Worn {item.timesWorn}x
                             </p>

@@ -53,7 +53,17 @@ export default function ClothesFilter({
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
 
-  const FILTER_SECTIONS = [
+  interface FilterSection {
+    key: string;
+    label: string;
+    items: readonly string[];
+    value: string[];
+    onChange: (v: string[]) => void;
+    hidden?: boolean;
+    colorSwatch?: boolean;
+  }
+
+  const FILTER_SECTIONS: FilterSection[] = [
     { key: "category", label: "Category", items: categories, value: selectedCategories, onChange: setSelectedCategories },
     { key: "color", label: "Color", items: colors, value: selectedColors, onChange: setSelectedColors, colorSwatch: true },
     { key: "brand", label: "Brand", items: availableBrands, value: selectedBrands, onChange: setSelectedBrands, hidden: availableBrands.length === 0 },
@@ -61,7 +71,7 @@ export default function ClothesFilter({
     { key: "condition", label: "Condition", items: conditions, value: selectedConditions, onChange: setSelectedConditions },
     { key: "occasion", label: "Occasion", items: occasions, value: selectedOccasions, onChange: setSelectedOccasions },
     { key: "season", label: "Season", items: seasons, value: selectedSeasons, onChange: setSelectedSeasons },
-  ] as const;
+  ];
 
   const handleApplyFilters = () => {
     Sentry.addBreadcrumb({
@@ -143,64 +153,65 @@ export default function ClothesFilter({
           selectionMode="multiple"
           showDivider={false}
         >
-          <AccordionItem key="price" aria-label="Price" title="Price Range">
-            <div className="px-2 pt-2">
-              <Slider
-                classNames={{
-                  thumb: "bg-foreground w-4 h-4 after:bg-foreground",
-                  track: "bg-default-200 h-1",
-                  filler: "bg-foreground",
-                }}
-                color="foreground"
-                formatOptions={{ style: "currency", currency: "USD" }}
-                maxValue={maxPrice}
-                minValue={0}
-                size="sm"
-                step={10}
-                value={priceRange}
-                onChange={(value) => setPriceRange(value as [number, number])}
-              />
-              <div className="flex justify-between mt-4 text-xs font-medium text-default-500">
-                <span>${priceRange[0]}</span>
-                <span>${priceRange[1]}+</span>
+          {[
+            <AccordionItem key="price" aria-label="Price" title="Price Range">
+              <div className="px-2 pt-2">
+                <Slider
+                  classNames={{
+                    thumb: "bg-foreground w-4 h-4 after:bg-foreground",
+                    track: "bg-default-200 h-1",
+                    filler: "bg-foreground",
+                  }}
+                  color="foreground"
+                  formatOptions={{ style: "currency", currency: "USD" }}
+                  maxValue={maxPrice}
+                  minValue={0}
+                  size="sm"
+                  step={10}
+                  value={priceRange}
+                  onChange={(value) => setPriceRange(value as [number, number])}
+                />
+                <div className="flex justify-between mt-4 text-xs font-medium text-default-500">
+                  <span>${priceRange[0]}</span>
+                  <span>${priceRange[1]}+</span>
+                </div>
               </div>
-            </div>
-          </AccordionItem>
-
-          {FILTER_SECTIONS.filter((s) => !s.hidden).map(({ key, label, items, value, onChange, colorSwatch }) => (
-            <AccordionItem key={key} aria-label={label} title={label}>
-              <CheckboxGroup
-                classNames={{ wrapper: `gap-3${colorSwatch ? " grid grid-cols-2" : ""}` }}
-                orientation={colorSwatch ? "horizontal" : undefined}
-                value={[...value]}
-                onValueChange={onChange as (v: string[]) => void}
-              >
-                {items.map((item) => (
-                  <Checkbox
-                    key={item}
-                    classNames={{
-                      label: "text-sm text-default-500 capitalize ml-1",
-                    }}
-                    radius="none"
-                    size="sm"
-                    value={item}
-                  >
-                    {colorSwatch ? (
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 border border-default-200 shadow-sm"
-                          style={{ background: (colorMap as Record<string, string>)[item] || item }}
-                        />
-                        {item}
-                      </div>
-                    ) : (
-                      item
-                    )}
-                  </Checkbox>
-                ))}
-              </CheckboxGroup>
-            </AccordionItem>
-          ))}
+            </AccordionItem>,
+            ...FILTER_SECTIONS.filter((s) => !s.hidden).map(({ key, label, items, value, onChange, colorSwatch }) => (
+              <AccordionItem key={key} aria-label={label} title={label}>
+                <CheckboxGroup
+                  classNames={{ wrapper: `gap-3${colorSwatch ? " grid grid-cols-2" : ""}` }}
+                  orientation={colorSwatch ? "horizontal" : undefined}
+                  value={[...value]}
+                  onValueChange={onChange}
+                >
+                  {items.map((item) => (
+                    <Checkbox
+                      key={item}
+                      classNames={{
+                        label: "text-sm text-default-500 capitalize ml-1",
+                      }}
+                      radius="none"
+                      size="sm"
+                      value={item}
+                    >
+                      {colorSwatch ? (
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 border border-default-200 shadow-sm"
+                            style={{ background: (colorMap as Record<string, string>)[item] || item }}
+                          />
+                          {item}
+                        </div>
+                      ) : (
+                        item
+                      )}
+                    </Checkbox>
+                  ))}
+                </CheckboxGroup>
+              </AccordionItem>
+            )),
+          ]}
         </Accordion>
       </ScrollShadow>
 
